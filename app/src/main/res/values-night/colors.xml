@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget Adaptive Colors (Dark Mode) -->
+    <color name="widget_bg">#232220</color>
+    <color name="widget_border">#3A3835</color>
+    <color name="widget_text_week">#A5A19C</color>
+    <color name="widget_text_primary">#E6E3DE</color>
+    <color name="widget_text_red">#EF5350</color>
+    <color name="widget_text_secondary">#A5A19C</color>
+</resources>

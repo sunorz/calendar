@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Calendar</string>
+    <string name="widget_description">动态日历小部件：展示星期缩写与工作日/休息日数字</string>
+    <string name="workday_label">工作日</string>
+    <string name="restday_label">休息日</string>
+    <string name="today_label">今天</string>
+</resources>

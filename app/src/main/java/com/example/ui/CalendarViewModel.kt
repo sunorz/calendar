@@ -1,0 +1,118 @@
+package com.example.ui
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.data.model.CalendarConfig
+import com.example.data.model.DayInfo
+import com.example.data.model.ThemeMode
+import com.example.data.repository.CalendarRepository
+import com.example.data.repository.SyncState
+import com.example.data.repository.ThemePreferences
+import com.example.util.LunarCalculator
+import com.example.widget.CalendarAppWidgetProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.util.Calendar
+
+data class MonthItem(
+    val index: Int,
+    val year: Int,
+    val month: Int,
+    val days: List<DayInfo>
+)
+
+class CalendarViewModel(application: Application) : AndroidViewModel(application) {
+
+    companion object {
+        const val START_YEAR = 2020
+        const val END_YEAR = 2040
+        val TOTAL_MONTHS = (END_YEAR - START_YEAR + 1) * 12
+
+        fun getMonthIndex(year: Int, month: Int): Int {
+            val clampedYear = year.coerceIn(START_YEAR, END_YEAR)
+            return (clampedYear - START_YEAR) * 12 + (month - 1)
+        }
+
+        fun getYearMonthFromIndex(index: Int): Pair<Int, Int> {
+            val y = START_YEAR + (index / 12)
+            val m = (index % 12) + 1
+            return Pair(y, m)
+        }
+    }
+
+    private val repository = CalendarRepository(application)
+    private val themePreferences = ThemePreferences(application)
+
+    val config: StateFlow<CalendarConfig> = repository.configState
+    val syncState: StateFlow<SyncState> = repository.syncState
+    val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
+
+    private val _showSettingsDialog = MutableStateFlow(false)
+    val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
+
+    private val _selectedDay = MutableStateFlow<DayInfo?>(null)
+    val selectedDay: StateFlow<DayInfo?> = _selectedDay.asStateFlow()
+
+    val todayMonthIndex: Int
+        get() {
+            val cal = Calendar.getInstance()
+            val y = cal.get(Calendar.YEAR)
+            val m = cal.get(Calendar.MONTH) + 1
+            return getMonthIndex(y, m)
+        }
+
+    init {
+        // Auto-sync remote config
+        refreshConfig()
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        themePreferences.setThemeMode(mode)
+    }
+
+    fun openSettingsDialog() {
+        _showSettingsDialog.value = true
+    }
+
+    fun closeSettingsDialog() {
+        _showSettingsDialog.value = false
+    }
+
+    fun selectDay(dayInfo: DayInfo?) {
+        _selectedDay.value = dayInfo
+    }
+
+    fun getConfigUrl(): String = repository.getConfigUrl()
+
+    fun updateConfigUrlAndRefresh(url: String) {
+        repository.setConfigUrl(url)
+        refreshConfig()
+    }
+
+    fun resetConfigUrlToDefault() {
+        repository.setConfigUrl(CalendarRepository.DEFAULT_CONFIG_URL)
+        refreshConfig()
+    }
+
+    fun refreshConfig() {
+        viewModelScope.launch {
+            repository.fetchRemoteConfig().onSuccess {
+                // Update home screen widget
+                CalendarAppWidgetProvider.updateAllWidgets(getApplication())
+            }
+        }
+    }
+
+    /**
+     * Helper to get days for any month index using current config
+     */
+    fun getDaysForMonth(year: Int, month: Int): List<DayInfo> {
+        return LunarCalculator.getMonthDays(year, month, config.value)
+    }
+}

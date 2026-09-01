@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_widget_card"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <!-- Top Row: 周二 9月 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_text_weekday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="周二"
+            android:textColor="@color/widget_text_red"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_text_month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="9月"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+    <!-- Center Row: Date Number + Vertical Lunar / Festival Text -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+        <TextView
+            android:id="@+id/widget_text_day_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="58sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/widget_text_lunar_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="七\n月\n二\n十"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="-2dp"
+            android:layout_marginStart="10dp" />
+    </LinearLayout>
+
+</LinearLayout>
