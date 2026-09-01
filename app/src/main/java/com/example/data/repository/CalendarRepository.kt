@@ -29,10 +29,12 @@ class CalendarRepository(private val context: Context) {
 
     companion object {
         const val DEFAULT_CONFIG_URL = "https://kkii.org/assets/js/cals/config.json"
+        const val VERSION_CHECK_URL = "https://kkii.org/app/calendar-version.json"
         private const val PREFS_NAME = "calendar_prefs"
         private const val KEY_CACHED_JSON = "cached_config_json"
         private const val KEY_LAST_SYNC = "last_sync_timestamp"
         private const val KEY_CUSTOM_URL = "custom_config_url"
+        private const val KEY_APP_VERSION = "app_version_override"
         private const val TAG = "CalendarRepository"
     }
 
@@ -59,6 +61,102 @@ class CalendarRepository(private val context: Context) {
 
     fun getLastSyncTime(): Long {
         return prefs.getLong(KEY_LAST_SYNC, 0L)
+    }
+
+    fun getAppVersion(): String {
+        return try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "0.6.0"
+        } catch (e: Exception) {
+            prefs.getString(KEY_APP_VERSION, "0.6.0") ?: "0.6.0"
+        }
+    }
+
+    fun setAppVersion(version: String) {
+        prefs.edit().putString(KEY_APP_VERSION, version).apply()
+    }
+
+    fun isVersionNewer(remoteVersion: String, localVersion: String): Boolean {
+        try {
+            val remoteParts = remoteVersion.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
+            val localParts = localVersion.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
+            val maxLen = maxOf(remoteParts.size, localParts.size)
+            for (i in 0 until maxLen) {
+                val r = remoteParts.getOrElse(i) { 0 }
+                val l = localParts.getOrElse(i) { 0 }
+                if (r > l) return true
+                if (r < l) return false
+            }
+        } catch (e: Exception) {
+            // fallback
+        }
+        return remoteVersion != localVersion
+    }
+
+    data class VersionCheckResult(
+        val remoteMain: String,
+        val isNewer: Boolean,
+        val configUpdated: Boolean
+    )
+
+    suspend fun checkAndSyncVersion(): Result<VersionCheckResult> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url(VERSION_CHECK_URL)
+                    .header("User-Agent", "CalendarApp/1.0 (Android)")
+                    .header("Cache-Control", "no-cache")
+                    .header("Pragma", "no-cache")
+                    .build()
+
+                val response = okHttpClient.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(Exception("HTTP ${response.code}"))
+                }
+
+                val bodyStr = response.body?.string()
+                if (bodyStr.isNullOrBlank()) {
+                    return@withContext Result.failure(Exception("Empty body"))
+                }
+
+                val root = JSONObject(bodyStr)
+                val remoteMain = root.optString("main", "0.6.0")
+                val localVersion = getAppVersion()
+                Log.d(TAG, "Version check: remoteMain=$remoteMain, localVersion=$localVersion")
+
+                var configUpdated = false
+                val configVal = root.opt("config")
+                val remoteConfigStr = when (configVal) {
+                    is JSONObject -> configVal.toString()
+                    is String -> {
+                        if (configVal.trim().startsWith("{")) {
+                            configVal
+                        } else {
+                            null
+                        }
+                    }
+                    else -> null
+                }
+                if (remoteConfigStr != null) {
+                    val localCached = prefs.getString(KEY_CACHED_JSON, null)
+                    if (remoteConfigStr != localCached) {
+                        val parsed = parseConfigJson(remoteConfigStr)
+                        if (parsed != null) {
+                            prefs.edit().putString(KEY_CACHED_JSON, remoteConfigStr).apply()
+                            _configState.value = parsed
+                            configUpdated = true
+                        }
+                    }
+                }
+
+                val isNewer = isVersionNewer(remoteMain, localVersion)
+
+                Result.success(VersionCheckResult(remoteMain, isNewer, configUpdated))
+            } catch (e: Exception) {
+                Log.e(TAG, "Version check error", e)
+                Result.failure(e)
+            }
+        }
     }
 
     /**

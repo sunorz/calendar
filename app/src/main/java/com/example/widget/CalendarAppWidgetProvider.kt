@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.example.MainActivity
@@ -58,16 +59,11 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                 ContextCompat.getColor(context, R.color.widget_text_secondary)
             )
 
-            // Date Number (Red if Rest Day, Primary text color if Work Day)
+            // Date Number always uses primary text color (never red)
             views.setTextViewText(R.id.widget_text_day_number, dayInfo.day.toString())
-            val numberColorRes = if (dayInfo.isRestDay) {
-                R.color.widget_text_red
-            } else {
-                R.color.widget_text_primary
-            }
             views.setTextColor(
                 R.id.widget_text_day_number,
-                ContextCompat.getColor(context, numberColorRes)
+                ContextCompat.getColor(context, R.color.widget_text_primary)
             )
 
             // Vertical Text on Right (Priority: Festival > 24 Solar Term > Lunar Date with Month, e.g. "七\n月\n二\n十")
@@ -78,6 +74,10 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                 R.id.widget_text_lunar_vertical,
                 ContextCompat.getColor(context, R.color.widget_text_primary)
             )
+
+            // Rest Day Red Indicator (Red line in blank space)
+            val indicatorVisibility = if (dayInfo.isRestDay) View.VISIBLE else View.GONE
+            views.setViewVisibility(R.id.widget_rest_indicator, indicatorVisibility)
 
             // Click Intent -> Open MainActivity
             val intent = Intent(context, MainActivity::class.java).apply {

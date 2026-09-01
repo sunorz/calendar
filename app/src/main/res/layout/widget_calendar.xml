@@ -35,7 +35,7 @@
             android:layout_marginStart="6dp" />
     </LinearLayout>
 
-    <!-- Center Row: Date Number + Vertical Lunar / Festival Text -->
+    <!-- Center Row: Date Number + Vertical Lunar / Festival Text + Rest Day Red Indicator -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -64,6 +64,15 @@
             android:includeFontPadding="false"
             android:lineSpacingExtra="-2dp"
             android:layout_marginStart="10dp" />
+
+        <!-- Rest Day Red Indicator Bar/Dot in blank space -->
+        <View
+            android:id="@+id/widget_rest_indicator"
+            android:layout_width="4dp"
+            android:layout_height="16dp"
+            android:background="@color/widget_text_red"
+            android:layout_marginStart="6dp"
+            android:visibility="gone" />
     </LinearLayout>
 
 </LinearLayout>

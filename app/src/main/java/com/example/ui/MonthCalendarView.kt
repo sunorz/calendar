@@ -1,5 +1,8 @@
 package com.example.ui
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,11 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,13 +90,15 @@ fun MinimalMonthSection(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "${year} 年",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.size(6.dp))
+            if (month == 1) {
+                Text(
+                    text = "${year} 年",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+            }
             Text(
                 text = "${month} 月",
                 fontSize = 20.sp,
@@ -157,7 +164,7 @@ fun MinimalMonthSection(
  *     - Only RED when the day has a festival and it is a rest day (isHolidayWithRest).
  *     - GREEN for locale festivals (isLocaleHoliday).
  *     - Regular subtle color for ordinary rest days and non-holiday workdays.
- * - Today: Marked with a clean circular indicator.
+ * - Today: Green bar if workday, Red bar if rest day. Smoothly animates into selection box when selected.
  */
 @Composable
 fun MinimalDayCell(
@@ -169,16 +176,24 @@ fun MinimalDayCell(
     val restColor = MaterialTheme.colorScheme.error
     val workColor = MaterialTheme.colorScheme.onSurface
 
-    // Determine day number text color: Red for rest day, Green for locale holiday (if not rest day), onSurface for work day
+    // Normal date bar logic for unselected today: Rest day -> restColor, Workday -> green
+    val unselectedBarColor = if (dayInfo.isRestDay) {
+        restColor
+    } else {
+        Color(0xFF2E7D32)
+    }
+
+    // Selection box style: restColor border for ALL selected dates
+    val selectionBorderColor = restColor
+
+    // Determine day number text color
     val numColor = when {
-        dayInfo.isToday -> Color.White
         dayInfo.isRestDay -> restColor
         dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
         else -> workColor
     }
 
-    // Determine cell container background for Today & Selected state
-    val todayBgColor = if (dayInfo.isRestDay) restColor else MaterialTheme.colorScheme.primary
+    val isTodaySelected = dayInfo.isToday && isSelected
 
     Box(
         modifier = modifier
@@ -187,13 +202,16 @@ fun MinimalDayCell(
             .clip(RoundedCornerShape(10.dp))
             .clickable { onClick() }
             .then(
-                if (isSelected && !dayInfo.isToday) {
-                    Modifier.border(
-                        width = 1.5.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                } else Modifier
+                if (isSelected) {
+                    Modifier
+                        .border(
+                            width = 1.5.dp,
+                            color = selectionBorderColor,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                } else {
+                    Modifier
+                }
             )
             .padding(vertical = 2.dp),
         contentAlignment = Alignment.Center
@@ -202,39 +220,18 @@ fun MinimalDayCell(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Day Number Container (Special circle badge if Today)
-            if (dayInfo.isToday) {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(todayBgColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = dayInfo.day.toString(),
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                Text(
-                    text = dayInfo.day.toString(),
-                    color = numColor,
-                    fontSize = 16.sp,
-                    fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
-                    textAlign = TextAlign.Center
-                )
-            }
+            // Day Number
+            Text(
+                text = dayInfo.day.toString(),
+                color = numColor,
+                fontSize = 16.sp,
+                fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Subtitle text:
-            // 1. Locale festival (e.g. 三月三) -> Green
-            // 2. Festival on a rest day -> Red
-            // 3. Others (normal rest day lunar text, work day lunar text) -> onSurfaceVariant
+            // Subtitle text
             val subText = dayInfo.displayNote
             val subColor = when {
                 dayInfo.isHolidayWithRest -> restColor
@@ -250,6 +247,18 @@ fun MinimalDayCell(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
+
+            // If today and NOT selected, show small horizontal bar under subtitle
+            if (dayInfo.isToday && !isSelected) {
+                Spacer(modifier = Modifier.height(1.dp))
+                Box(
+                    modifier = Modifier
+                        .width(14.dp)
+                        .height(2.dp)
+                        .clip(RoundedCornerShape(1.dp))
+                        .background(unselectedBarColor)
+                )
+            }
         }
     }
 }

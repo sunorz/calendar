@@ -1,6 +1,8 @@
 package com.example.ui
 
 import android.app.Application
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.CalendarConfig
@@ -59,6 +61,18 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val _selectedDay = MutableStateFlow<DayInfo?>(null)
     val selectedDay: StateFlow<DayInfo?> = _selectedDay.asStateFlow()
 
+    private val _remoteVersion = MutableStateFlow<String?>(null)
+    val remoteVersion: StateFlow<String?> = _remoteVersion.asStateFlow()
+
+    private val _updateAvailable = MutableStateFlow(false)
+    val updateAvailable: StateFlow<Boolean> = _updateAvailable.asStateFlow()
+
+    private val _downloadProgress = MutableStateFlow(0f)
+    val downloadProgress: StateFlow<Float> = _downloadProgress.asStateFlow()
+
+    private val _isDownloading = MutableStateFlow(false)
+    val isDownloading: StateFlow<Boolean> = _isDownloading.asStateFlow()
+
     val todayMonthIndex: Int
         get() {
             val cal = Calendar.getInstance()
@@ -68,8 +82,40 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
 
     init {
-        // Auto-sync remote config
+        // Auto-sync remote config & check version
         refreshConfig()
+        checkVersion()
+    }
+
+    fun checkVersion() {
+        viewModelScope.launch {
+            repository.checkAndSyncVersion().onSuccess { result ->
+                _remoteVersion.value = result.remoteMain
+                if (result.configUpdated) {
+                    CalendarAppWidgetProvider.updateAllWidgets(getApplication())
+                }
+                if (result.isNewer) {
+                    _updateAvailable.value = true
+                }
+            }
+        }
+    }
+
+    fun downloadAndUpdate() {
+        val newVer = _remoteVersion.value ?: "0.6.0"
+        val downloadUrl = "https://kkii.org/app/calendar-v$newVer-release.apk"
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            getApplication<Application>().startActivity(intent)
+        } catch (e: Exception) {
+            // fallback
+        }
+    }
+
+    fun getAppVersion(): String {
+        return repository.getAppVersion()
     }
 
     fun setThemeMode(mode: ThemeMode) {
@@ -78,6 +124,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun openSettingsDialog() {
         _showSettingsDialog.value = true
+        checkVersion()
     }
 
     fun closeSettingsDialog() {
@@ -86,6 +133,16 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun selectDay(dayInfo: DayInfo?) {
         _selectedDay.value = dayInfo
+    }
+
+    fun selectToday() {
+        val cal = Calendar.getInstance()
+        val y = cal.get(Calendar.YEAR)
+        val m = cal.get(Calendar.MONTH) + 1
+        val d = cal.get(Calendar.DAY_OF_MONTH)
+        val days = getDaysForMonth(y, m)
+        val todayInfo = days.find { it.year == y && it.month == m && it.day == d }
+        _selectedDay.value = todayInfo
     }
 
     fun getConfigUrl(): String = repository.getConfigUrl()

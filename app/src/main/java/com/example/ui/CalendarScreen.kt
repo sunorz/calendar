@@ -61,6 +61,10 @@ fun CalendarScreen(
     val themeMode by viewModel.themeMode.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
+    val updateAvailable by viewModel.updateAvailable.collectAsState()
+    val remoteVersion by viewModel.remoteVersion.collectAsState()
+    val isDownloading by viewModel.isDownloading.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState(
@@ -97,6 +101,7 @@ fun CalendarScreen(
                                 .clickable {
                                     coroutineScope.launch {
                                         listState.animateScrollToItem(viewModel.todayMonthIndex)
+                                        viewModel.selectToday()
                                     }
                                 }
                                 .testTag("jump_today_button"),
@@ -218,12 +223,15 @@ fun CalendarScreen(
     if (showSettingsDialog) {
         SettingsDialog(
             currentThemeMode = themeMode,
-            currentConfigUrl = viewModel.getConfigUrl(),
             syncState = syncState,
+            currentVersion = viewModel.getAppVersion(),
+            updateAvailable = updateAvailable,
+            remoteVersion = remoteVersion,
+            isDownloading = isDownloading,
+            downloadProgress = downloadProgress,
             onThemeModeChange = { viewModel.setThemeMode(it) },
-            onSaveConfigUrl = { viewModel.updateConfigUrlAndRefresh(it) },
-            onResetDefaultUrl = { viewModel.resetConfigUrlToDefault() },
             onRefreshConfig = { viewModel.refreshConfig() },
+            onDownloadUpdate = { viewModel.downloadAndUpdate() },
             onDismiss = { viewModel.closeSettingsDialog() }
         )
     }
