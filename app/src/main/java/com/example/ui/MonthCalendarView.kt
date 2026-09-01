@@ -27,7 +27,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -174,12 +176,13 @@ fun MinimalDayCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
+    // Derive dark theme directly from current Compose MaterialTheme (respecting App setting!)
+    val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val restColor = MaterialTheme.colorScheme.error
     val workColor = MaterialTheme.colorScheme.onSurface
 
     // High contrast bar color for workdays in both light and dark modes
-    val workTodayBarColor = if (isDark) Color(0xFF66BB6A) else Color(0xFF2E7D32)
+    val workTodayBarColor = if (isAppDark) Color(0xFF66BB6A) else Color(0xFF2E7D32)
 
     // Normal date bar logic for unselected today: Rest day -> restColor, Workday -> green
     val unselectedBarColor = if (dayInfo.isRestDay) {
@@ -188,31 +191,65 @@ fun MinimalDayCell(
         workTodayBarColor
     }
 
-    // Selection box style: restColor border for ALL selected dates
-    val selectionBorderColor = restColor
+    // Selection border color for selected state
+    val selectionBorderColor = MaterialTheme.colorScheme.primary
 
-    // Determine day number text color
+    // Determine day number text color strictly based on calendar properties (Rest vs Work)
     val numColor = when {
         dayInfo.isRestDay -> restColor
         dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
-        dayInfo.isToday -> MaterialTheme.colorScheme.primary
         else -> workColor
     }
 
-    // Soft background tint for Today to guarantee high visibility across any screen / font size
-    val cellBackgroundModifier = when {
-        dayInfo.isToday && isSelected -> Modifier.background(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
-            shape = RoundedCornerShape(10.dp)
-        )
-        dayInfo.isToday -> Modifier.background(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-            shape = RoundedCornerShape(10.dp)
-        )
-        isSelected -> Modifier.background(
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            shape = RoundedCornerShape(10.dp)
-        )
+    // Gboard-key style elevated card for Today (Only active when NOT selected):
+    // When Today is clicked/selected by user, it switches to the standard selection box style.
+    // When user clicks anywhere else (or closes selection), Today seamlessly restores its elevated card highlight.
+    //
+    // Note: Modifier order is crucial! Apply background & borders cleanly inside the clipped shape.
+    // In light mode: clean solid white card background with soft border.
+    // In dark mode: clean elevated warm-charcoal card with subtle border.
+    val isLightMode = !isAppDark
+
+    val cellModifier = when {
+        isSelected -> {
+            Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = selectionBorderColor,
+                    shape = RoundedCornerShape(10.dp)
+                )
+        }
+        dayInfo.isToday -> {
+            if (isLightMode) {
+                // Light mode: Fresh white key background on parchment canvas with crisp subtle boundary
+                Modifier
+                    .background(
+                        color = Color(0xFFFFFFFF),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFDDD8CE),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            } else {
+                // Dark mode: Elevated dark charcoal key background on deep espresso canvas
+                Modifier
+                    .background(
+                        color = Color(0xFF302E2C),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF4C4844),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            }
+        }
         else -> Modifier
     }
 
@@ -220,21 +257,9 @@ fun MinimalDayCell(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(0.92f)
+            .then(cellModifier)
             .clip(RoundedCornerShape(10.dp))
-            .then(cellBackgroundModifier)
             .clickable { onClick() }
-            .then(
-                if (isSelected) {
-                    Modifier
-                        .border(
-                            width = 1.5.dp,
-                            color = selectionBorderColor,
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                } else {
-                    Modifier
-                }
-            )
             .padding(horizontal = 2.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -247,7 +272,7 @@ fun MinimalDayCell(
                 text = dayInfo.day.toString(),
                 color = numColor,
                 fontSize = 15.sp,
-                fontWeight = if (dayInfo.isToday || dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
+                fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
 
@@ -267,18 +292,6 @@ fun MinimalDayCell(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
-
-            // If today and NOT selected, show horizontal bar under subtitle inside the column
-            if (dayInfo.isToday && !isSelected) {
-                Spacer(modifier = Modifier.height(1.dp))
-                Box(
-                    modifier = Modifier
-                        .width(14.dp)
-                        .height(2.5.dp)
-                        .clip(RoundedCornerShape(1.dp))
-                        .background(unselectedBarColor)
-                )
-            }
         }
     }
 }
