@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import com.example.ui.CalendarScreen
 import com.example.ui.CalendarViewModel
 import com.example.ui.theme.MyApplicationTheme
+import com.example.widget.CalendarAppWidgetProvider
 
 class MainActivity : ComponentActivity() {
 
@@ -29,6 +30,11 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    CalendarAppWidgetProvider.updateAllWidgets(this)
   }
 }
 

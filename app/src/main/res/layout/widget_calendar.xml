@@ -66,13 +66,14 @@
             android:layout_marginStart="10dp" />
 
         <!-- Rest Day Red Indicator Bar/Dot in blank space -->
-        <View
+        <ImageView
             android:id="@+id/widget_rest_indicator"
             android:layout_width="4dp"
             android:layout_height="16dp"
             android:background="@color/widget_text_red"
             android:layout_marginStart="6dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:contentDescription="@null" />
     </LinearLayout>
 
 </LinearLayout>

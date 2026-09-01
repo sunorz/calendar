@@ -6,6 +6,8 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
@@ -27,80 +29,119 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle?
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        updateAppWidget(context, appWidgetManager, appWidgetId)
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        updateAllWidgets(context)
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        val action = intent.action
+        if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE ||
+            action == Intent.ACTION_DATE_CHANGED ||
+            action == Intent.ACTION_TIME_CHANGED ||
+            action == Intent.ACTION_TIMEZONE_CHANGED
+        ) {
+            updateAllWidgets(context)
+        }
+    }
+
     companion object {
+        private const val TAG = "CalendarWidget"
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            val repository = CalendarRepository(context)
-            val config = repository.configState.value
+            try {
+                val repository = CalendarRepository(context)
+                val config = repository.configState.value
 
-            val cal = Calendar.getInstance()
-            val year = cal.get(Calendar.YEAR)
-            val month = cal.get(Calendar.MONTH) + 1
-            val day = cal.get(Calendar.DAY_OF_MONTH)
+                val cal = Calendar.getInstance()
+                val year = cal.get(Calendar.YEAR)
+                val month = cal.get(Calendar.MONTH) + 1
+                val day = cal.get(Calendar.DAY_OF_MONTH)
 
-            val dayInfo = LunarCalculator.getDayInfoForDate(year, month, day, config)
+                val dayInfo = LunarCalculator.getDayInfoForDate(year, month, day, config)
 
-            val views = RemoteViews(context.packageName, R.layout.widget_calendar)
+                val views = RemoteViews(context.packageName, R.layout.widget_calendar)
 
-            // Top Left: Weekday in RED (e.g. "周二")
-            views.setTextViewText(R.id.widget_text_weekday, dayInfo.dayOfWeekChinese)
-            views.setTextColor(
-                R.id.widget_text_weekday,
-                ContextCompat.getColor(context, R.color.widget_text_red)
-            )
+                // Top Left: Weekday in RED (e.g. "周二")
+                views.setTextViewText(R.id.widget_text_weekday, dayInfo.dayOfWeekChinese)
+                views.setTextColor(
+                    R.id.widget_text_weekday,
+                    ContextCompat.getColor(context, R.color.widget_text_red)
+                )
 
-            // Top Right: Month in GRAY (e.g. "9月")
-            views.setTextViewText(R.id.widget_text_month, "${month}月")
-            views.setTextColor(
-                R.id.widget_text_month,
-                ContextCompat.getColor(context, R.color.widget_text_secondary)
-            )
+                // Top Right: Month in GRAY (e.g. "9月")
+                views.setTextViewText(R.id.widget_text_month, "${month}月")
+                views.setTextColor(
+                    R.id.widget_text_month,
+                    ContextCompat.getColor(context, R.color.widget_text_secondary)
+                )
 
-            // Date Number always uses primary text color (never red)
-            views.setTextViewText(R.id.widget_text_day_number, dayInfo.day.toString())
-            views.setTextColor(
-                R.id.widget_text_day_number,
-                ContextCompat.getColor(context, R.color.widget_text_primary)
-            )
+                // Date Number always uses primary text color
+                views.setTextViewText(R.id.widget_text_day_number, dayInfo.day.toString())
+                views.setTextColor(
+                    R.id.widget_text_day_number,
+                    ContextCompat.getColor(context, R.color.widget_text_primary)
+                )
 
-            // Vertical Text on Right (Priority: Festival > 24 Solar Term > Lunar Date with Month, e.g. "七\n月\n二\n十")
-            val rawNoteText = dayInfo.widgetNote
-            val verticalNoteText = rawNoteText.toCharArray().joinToString("\n")
-            views.setTextViewText(R.id.widget_text_lunar_vertical, verticalNoteText)
-            views.setTextColor(
-                R.id.widget_text_lunar_vertical,
-                ContextCompat.getColor(context, R.color.widget_text_primary)
-            )
+                // Vertical Text on Right
+                val rawNoteText = dayInfo.widgetNote.ifBlank { " " }
+                val verticalNoteText = rawNoteText.toCharArray().joinToString("\n")
+                views.setTextViewText(R.id.widget_text_lunar_vertical, verticalNoteText)
+                views.setTextColor(
+                    R.id.widget_text_lunar_vertical,
+                    ContextCompat.getColor(context, R.color.widget_text_primary)
+                )
 
-            // Rest Day Red Indicator (Red line in blank space)
-            val indicatorVisibility = if (dayInfo.isRestDay) View.VISIBLE else View.GONE
-            views.setViewVisibility(R.id.widget_rest_indicator, indicatorVisibility)
+                // Rest Day Red Indicator
+                val indicatorVisibility = if (dayInfo.isRestDay) View.VISIBLE else View.GONE
+                views.setViewVisibility(R.id.widget_rest_indicator, indicatorVisibility)
 
-            // Click Intent -> Open MainActivity
-            val intent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                // Click Intent -> Open MainActivity
+                val intent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating app widget: ${e.message}", e)
             }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-
-            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
         fun updateAllWidgets(context: Context) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val ids = appWidgetManager.getAppWidgetIds(
-                ComponentName(context, CalendarAppWidgetProvider::class.java)
-            )
-            for (id in ids) {
-                updateAppWidget(context, appWidgetManager, id)
+            try {
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val ids = appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, CalendarAppWidgetProvider::class.java)
+                )
+                if (ids != null && ids.isNotEmpty()) {
+                    for (id in ids) {
+                        updateAppWidget(context, appWidgetManager, id)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating all widgets: ${e.message}", e)
             }
         }
     }

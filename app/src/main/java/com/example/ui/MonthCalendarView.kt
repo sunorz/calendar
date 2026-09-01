@@ -195,7 +195,25 @@ fun MinimalDayCell(
     val numColor = when {
         dayInfo.isRestDay -> restColor
         dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
+        dayInfo.isToday -> MaterialTheme.colorScheme.primary
         else -> workColor
+    }
+
+    // Soft background tint for Today to guarantee high visibility across any screen / font size
+    val cellBackgroundModifier = when {
+        dayInfo.isToday && isSelected -> Modifier.background(
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+            shape = RoundedCornerShape(10.dp)
+        )
+        dayInfo.isToday -> Modifier.background(
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+            shape = RoundedCornerShape(10.dp)
+        )
+        isSelected -> Modifier.background(
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            shape = RoundedCornerShape(10.dp)
+        )
+        else -> Modifier
     }
 
     Box(
@@ -203,6 +221,7 @@ fun MinimalDayCell(
             .fillMaxWidth()
             .aspectRatio(0.92f)
             .clip(RoundedCornerShape(10.dp))
+            .then(cellBackgroundModifier)
             .clickable { onClick() }
             .then(
                 if (isSelected) {
@@ -216,7 +235,7 @@ fun MinimalDayCell(
                     Modifier
                 }
             )
-            .padding(vertical = 2.dp),
+            .padding(horizontal = 2.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -227,12 +246,10 @@ fun MinimalDayCell(
             Text(
                 text = dayInfo.day.toString(),
                 color = numColor,
-                fontSize = 15.5.sp,
-                fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
+                fontSize = 15.sp,
+                fontWeight = if (dayInfo.isToday || dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(1.dp))
 
             // Subtitle text
             val subText = dayInfo.displayNote
@@ -251,14 +268,14 @@ fun MinimalDayCell(
                 textAlign = TextAlign.Center
             )
 
-            // If today and NOT selected, show small horizontal bar under subtitle inside the column
+            // If today and NOT selected, show horizontal bar under subtitle inside the column
             if (dayInfo.isToday && !isSelected) {
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(1.dp))
                 Box(
                     modifier = Modifier
-                        .width(16.dp)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(1.5.dp))
+                        .width(14.dp)
+                        .height(2.5.dp)
+                        .clip(RoundedCornerShape(1.dp))
                         .background(unselectedBarColor)
                 )
             }

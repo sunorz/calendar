@@ -68,9 +68,9 @@ class CalendarRepository(private val context: Context) {
     fun getAppVersion(): String {
         return try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "0.6.0"
+            pInfo.versionName ?: "0.6.1"
         } catch (e: Exception) {
-            prefs.getString(KEY_APP_VERSION, "0.6.0") ?: "0.6.0"
+            prefs.getString(KEY_APP_VERSION, "0.6.1") ?: "0.6.1"
         }
     }
 
@@ -122,7 +122,7 @@ class CalendarRepository(private val context: Context) {
                 }
 
                 val root = JSONObject(bodyStr)
-                val remoteMain = root.optString("main", "0.6.0")
+                val remoteMain = root.optString("main", "0.6.1")
                 val localVersion = getAppVersion()
                 Log.d(TAG, "Version check: remoteMain=$remoteMain, localVersion=$localVersion")
 
