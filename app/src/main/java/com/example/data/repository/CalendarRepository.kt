@@ -48,7 +48,9 @@ class CalendarRepository(private val context: Context) {
     private val _configState = MutableStateFlow(loadInitialConfig())
     val configState: StateFlow<CalendarConfig> = _configState.asStateFlow()
 
-    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    private val _syncState = MutableStateFlow<SyncState>(
+        if (getLastSyncTime() > 0L) SyncState.Success("配置已同步", getLastSyncTime()) else SyncState.Idle
+    )
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
     fun getConfigUrl(): String {

@@ -189,9 +189,9 @@ fun SettingsDialog(
                             }
                         }
                         is SyncState.Success -> {
-                            val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(syncState.lastSyncTime))
+                            val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(syncState.lastSyncTime))
                             Text(
-                                text = "✓ ${syncState.message} ($timeStr)",
+                                text = "✓ 上次同步时间：$timeStr",
                                 fontSize = 11.5.sp,
                                 color = Color(0xFF2E7D32),
                                 fontWeight = FontWeight.Medium
@@ -267,7 +267,7 @@ fun SettingsDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "感悟",
+                                        text = "公告",
                                         fontSize = 12.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )

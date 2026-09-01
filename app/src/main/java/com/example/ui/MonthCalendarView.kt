@@ -217,6 +217,7 @@ fun MinimalDayCell(
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier.padding(bottom = if (dayInfo.isToday && !isSelected) 4.dp else 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -224,12 +225,12 @@ fun MinimalDayCell(
             Text(
                 text = dayInfo.day.toString(),
                 color = numColor,
-                fontSize = 16.sp,
+                fontSize = 15.5.sp,
                 fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(1.dp))
 
             // Subtitle text
             val subText = dayInfo.displayNote
@@ -241,24 +242,25 @@ fun MinimalDayCell(
             Text(
                 text = subText.ifBlank { " " },
                 color = subColor,
-                fontSize = 9.5.sp,
+                fontSize = 9.sp,
                 fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
+        }
 
-            // If today and NOT selected, show small horizontal bar under subtitle
-            if (dayInfo.isToday && !isSelected) {
-                Spacer(modifier = Modifier.height(1.dp))
-                Box(
-                    modifier = Modifier
-                        .width(14.dp)
-                        .height(2.dp)
-                        .clip(RoundedCornerShape(1.dp))
-                        .background(unselectedBarColor)
-                )
-            }
+        // If today and NOT selected, show small horizontal bar under subtitle
+        if (dayInfo.isToday && !isSelected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 2.dp)
+                    .width(14.dp)
+                    .height(2.5.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(unselectedBarColor)
+            )
         }
     }
 }
