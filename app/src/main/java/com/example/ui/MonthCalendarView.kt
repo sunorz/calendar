@@ -6,6 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -173,14 +174,18 @@ fun MinimalDayCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     val restColor = MaterialTheme.colorScheme.error
     val workColor = MaterialTheme.colorScheme.onSurface
+
+    // High contrast bar color for workdays in both light and dark modes
+    val workTodayBarColor = if (isDark) Color(0xFF66BB6A) else Color(0xFF2E7D32)
 
     // Normal date bar logic for unselected today: Rest day -> restColor, Workday -> green
     val unselectedBarColor = if (dayInfo.isRestDay) {
         restColor
     } else {
-        Color(0xFF2E7D32)
+        workTodayBarColor
     }
 
     // Selection box style: restColor border for ALL selected dates
@@ -192,8 +197,6 @@ fun MinimalDayCell(
         dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
         else -> workColor
     }
-
-    val isTodaySelected = dayInfo.isToday && isSelected
 
     Box(
         modifier = modifier
@@ -217,7 +220,6 @@ fun MinimalDayCell(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.padding(bottom = if (dayInfo.isToday && !isSelected) 4.dp else 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -248,19 +250,18 @@ fun MinimalDayCell(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
-        }
 
-        // If today and NOT selected, show small horizontal bar under subtitle
-        if (dayInfo.isToday && !isSelected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 2.dp)
-                    .width(14.dp)
-                    .height(2.5.dp)
-                    .clip(RoundedCornerShape(1.dp))
-                    .background(unselectedBarColor)
-            )
+            // If today and NOT selected, show small horizontal bar under subtitle inside the column
+            if (dayInfo.isToday && !isSelected) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .width(16.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(1.5.dp))
+                        .background(unselectedBarColor)
+                )
+            }
         }
     }
 }
