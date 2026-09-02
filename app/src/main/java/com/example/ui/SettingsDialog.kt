@@ -273,7 +273,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "东墙变成西墙，该开心吗？",
+                                    text = "累死个人。",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

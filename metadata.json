@@ -1,5 +1,5 @@
 {
-  "name": "Calendar",
+  "name": "调休日历",
   "description": "Dynamic date icon calendar app with workday and rest day indicators based on online config.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

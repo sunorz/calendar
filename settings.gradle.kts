@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Calendar"
+rootProject.name = "调休日历"
 
 include(":app")
