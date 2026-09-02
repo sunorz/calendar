@@ -1,11 +1,13 @@
 package com.example.widget
 
+import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -27,6 +29,7 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+        scheduleMidnightUpdate(context)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -42,6 +45,7 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
         updateAllWidgets(context)
+        scheduleMidnightUpdate(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -50,14 +54,19 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
         if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE ||
             action == Intent.ACTION_DATE_CHANGED ||
             action == Intent.ACTION_TIME_CHANGED ||
-            action == Intent.ACTION_TIMEZONE_CHANGED
+            action == Intent.ACTION_TIMEZONE_CHANGED ||
+            action == Intent.ACTION_BOOT_COMPLETED ||
+            action == Intent.ACTION_MY_PACKAGE_REPLACED ||
+            action == ACTION_MIDNIGHT_UPDATE
         ) {
             updateAllWidgets(context)
+            scheduleMidnightUpdate(context)
         }
     }
 
     companion object {
         private const val TAG = "CalendarWidget"
+        const val ACTION_MIDNIGHT_UPDATE = "com.sunplace.calendar.ACTION_MIDNIGHT_UPDATE"
 
         fun updateAppWidget(
             context: Context,
@@ -142,6 +151,38 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating all widgets: ${e.message}", e)
+            }
+        }
+
+        fun scheduleMidnightUpdate(context: Context) {
+            try {
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+                val intent = Intent(context, CalendarAppWidgetProvider::class.java).apply {
+                    action = ACTION_MIDNIGHT_UPDATE
+                }
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    1001,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+
+                // Next midnight: 00:00:02 tomorrow
+                val cal = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, 1)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 2)
+                    set(Calendar.MILLISECOND, 0)
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC, cal.timeInMillis, pendingIntent)
+                } else {
+                    alarmManager.set(AlarmManager.RTC, cal.timeInMillis, pendingIntent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error scheduling midnight update: ${e.message}", e)
             }
         }
     }

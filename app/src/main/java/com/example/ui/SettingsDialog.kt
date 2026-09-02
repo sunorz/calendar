@@ -273,7 +273,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "累死个人。",
+                                    text = "睡觉是大事。",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
