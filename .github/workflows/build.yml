@@ -35,6 +35,9 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
+      - name: List Build Tools
+        run: ls -la /usr/local/lib/android/sdk/build-tools/
+
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
