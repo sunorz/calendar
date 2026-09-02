@@ -225,27 +225,27 @@ fun MinimalDayCell(
         }
         dayInfo.isToday -> {
             if (isLightMode) {
-                // Light mode: Fresh white key background on parchment canvas with crisp subtle boundary
+                // 浅色模式：优雅柔和的淡淡薰衣草紫色背景与微紫边框
                 Modifier
                     .background(
-                        color = Color(0xFFFFFFFF),
+                        color = Color(0xFFEFE7F6),
                         shape = RoundedCornerShape(10.dp)
                     )
                     .border(
-                        width = 1.dp,
-                        color = Color(0xFFDDD8CE),
+                        width = 1.2.dp,
+                        color = Color(0xFFD0BCFF),
                         shape = RoundedCornerShape(10.dp)
                     )
             } else {
-                // Dark mode: Elevated dark charcoal key background on deep espresso canvas
+                // 深色模式：温润暗薰衣草紫底色与紫灰轮廓线
                 Modifier
                     .background(
-                        color = Color(0xFF302E2C),
+                        color = Color(0xFF3D3349),
                         shape = RoundedCornerShape(10.dp)
                     )
                     .border(
-                        width = 1.dp,
-                        color = Color(0xFF4C4844),
+                        width = 1.2.dp,
+                        color = Color(0xFF6E5B88),
                         shape = RoundedCornerShape(10.dp)
                     )
             }
