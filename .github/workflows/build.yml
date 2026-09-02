@@ -35,9 +35,6 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: List Build Tools
-        run: ls -la /usr/local/lib/android/sdk/build-tools/
-
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -47,6 +44,8 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "35.0.1"
           
       - name: Rename APK
         run: |
