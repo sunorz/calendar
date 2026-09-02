@@ -17,8 +17,8 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 9
-    versionName = "0.6.3"
+    versionCode = 10
+    versionName = "0.6.4"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -44,7 +44,6 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
     }
     debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
