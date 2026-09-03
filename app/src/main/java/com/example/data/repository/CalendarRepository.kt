@@ -68,9 +68,9 @@ class CalendarRepository(private val context: Context) {
     fun getAppVersion(): String {
         return try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "0.7.3"
+            pInfo.versionName ?: "0.7.4"
         } catch (e: Exception) {
-            prefs.getString(KEY_APP_VERSION, "0.7.3") ?: "0.7.3"
+            prefs.getString(KEY_APP_VERSION, "0.7.4") ?: "0.7.4"
         }
     }
 

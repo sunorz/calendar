@@ -219,7 +219,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "纵横裨益",
+                                    text = "多劳多得。",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

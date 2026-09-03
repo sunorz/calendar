@@ -1,6 +1,7 @@
 package com.example.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -161,31 +162,32 @@ fun LargeScreenCalendarView(
                         // Quick "Today" Jump Button
                         Surface(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .padding(end = 6.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                                .padding(end = 4.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .clickable {
+                                    viewModel.selectToday()
+                                    coroutineScope.launch {
+                                        gridState.animateScrollToItem(viewModel.todayMonthIndex)
+                                    }
+                                }
+                                .testTag("large_screen_jump_today_top_button"),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
+                            shape = RoundedCornerShape(24.dp)
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.padding(
+                                    horizontal = if (isElderlyMode) 12.dp else 10.dp,
+                                    vertical = if (isElderlyMode) 8.dp else 5.dp
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
                             ) {
-                                IconButton(
-                                    onClick = {
-                                        viewModel.selectToday()
-                                        coroutineScope.launch {
-                                            gridState.animateScrollToItem(viewModel.todayMonthIndex)
-                                        }
-                                    },
-                                    modifier = Modifier.size(if (isElderlyMode) 32.dp else 26.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Today,
-                                        contentDescription = "今日",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(if (isElderlyMode) 22.dp else 18.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.Today,
+                                    contentDescription = "今日",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 16.dp)
+                                )
                                 Text(
                                     text = "今",
                                     color = MaterialTheme.colorScheme.primary,
@@ -343,24 +345,6 @@ private fun LargeScreenDetailPanel(
                     .padding(horizontal = 16.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Section Title with indicator
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(2.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(width = 3.5.dp, height = 14.dp)
-                    ) {}
-                    Text(
-                        text = "当日详情",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
                 // Gregorian Date & Weekday
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     val dateTitle = if (dayInfo.isToday) {
@@ -474,28 +458,17 @@ private fun LargeScreenDetailPanel(
                     }
 
                     if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = neutralBadgeBg
                         ) {
                             Text(
-                                text = "节日：",
+                                text = dayInfo.festivalName,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.Bold,
+                                color = neutralBadgeText
                             )
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = neutralBadgeBg
-                            ) {
-                                Text(
-                                    text = dayInfo.festivalName,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    fontSize = if (isElderlyMode) 15.sp else 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = neutralBadgeText
-                                )
-                            }
                         }
                     }
                 }
