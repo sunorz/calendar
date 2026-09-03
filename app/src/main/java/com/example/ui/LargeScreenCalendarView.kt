@@ -306,7 +306,7 @@ fun LargeScreenCalendarView(
 
 /**
  * Persistent Right-hand Day Detail Panel for Large Screen / TV / Tablet.
- * No bottom sheet popup required; displays selected day details continuously.
+ * Vertically balanced and cohesive card layout without scattered spacing.
  */
 @Composable
 private fun LargeScreenDetailPanel(
@@ -318,190 +318,219 @@ private fun LargeScreenDetailPanel(
     val neutralBadgeBg = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
     val neutralBadgeText = MaterialTheme.colorScheme.onSurface
 
-    Column(
+    Box(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        // Section Title
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("large_screen_detail_card"),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+            )
         ) {
-            Surface(
-                shape = RoundedCornerShape(4.dp),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(width = 4.dp, height = 18.dp)
-            ) {}
-            Text(
-                text = "日程与黄历详情",
-                fontWeight = FontWeight.Bold,
-                fontSize = if (isElderlyMode) 18.sp else 15.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        // Gregorian Date Title
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            val dateTitle = if (dayInfo.isToday) {
-                "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日 (今天)"
-            } else {
-                "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日"
-            }
-            Text(
-                text = dateTitle,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = if (isElderlyMode) 26.sp else 22.sp,
-                lineHeight = 32.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = dayInfo.dayOfWeekChinese,
-                fontSize = if (isElderlyMode) 20.sp else 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-            thickness = 1.dp
-        )
-
-        // Workday / Restday status: Neutral gray bg + black text, NO red
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            val isRest = dayInfo.isRestDay
-            val tagText = if (dayInfo.isLocaleHoliday) {
-                dayInfo.localeHolidayName ?: "三月三"
-            } else if (isRest) {
-                "休息日"
-            } else {
-                "工作日"
-            }
-
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = neutralBadgeBg
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(
-                    text = tagText,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                    fontSize = if (isElderlyMode) 18.sp else 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = neutralBadgeText
-                )
-            }
-
-            if (dayInfo.isToday) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
+                // Section Title with indicator
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    Surface(
+                        shape = RoundedCornerShape(2.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(width = 3.5.dp, height = 14.dp)
+                    ) {}
                     Text(
-                        text = "今日",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        fontSize = if (isElderlyMode) 16.sp else 14.sp,
+                        text = "当日详情",
                         fontWeight = FontWeight.Bold,
+                        fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-        }
 
-        // Lunar & Solar Term Details
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            if (dayInfo.fullLunarText.isNotBlank()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                // Gregorian Date & Weekday
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    val dateTitle = if (dayInfo.isToday) {
+                        "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日 (今天)"
+                    } else {
+                        "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日"
+                    }
                     Text(
-                        text = "农历：",
-                        fontSize = if (isElderlyMode) 20.sp else 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = dayInfo.fullLunarText,
-                        fontSize = if (isElderlyMode) 21.sp else 17.sp,
+                        text = dateTitle,
                         fontWeight = FontWeight.ExtraBold,
+                        fontSize = if (isElderlyMode) 22.sp else 18.sp,
+                        lineHeight = if (isElderlyMode) 26.sp else 22.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-            }
-
-            if (!dayInfo.solarTermName.isNullOrBlank()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
                     Text(
-                        text = "节气：",
-                        fontSize = if (isElderlyMode) 20.sp else 16.sp,
-                        fontWeight = FontWeight.Medium,
+                        text = dayInfo.dayOfWeekChinese,
+                        fontSize = if (isElderlyMode) 17.sp else 14.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = dayInfo.solarTermName,
-                        fontSize = if (isElderlyMode) 21.sp else 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
                 }
-            }
 
-            // Festival / Memorial / Commemoration: Gray bg + black text
-            if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
+                // Workday / Restday & Today status badges
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val isRest = dayInfo.isRestDay
+                    val tagText = if (dayInfo.isLocaleHoliday) {
+                        dayInfo.localeHolidayName ?: "三月三"
+                    } else if (isRest) {
+                        "休息日"
+                    } else {
+                        "工作日"
+                    }
+
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(6.dp),
                         color = neutralBadgeBg
                     ) {
                         Text(
-                            text = dayInfo.festivalName,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            fontSize = if (isElderlyMode) 19.sp else 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            text = tagText,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
+                            fontWeight = FontWeight.Bold,
                             color = neutralBadgeText
                         )
                     }
+
+                    if (dayInfo.isToday) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = "今日",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    thickness = 0.8.dp
+                )
+
+                // Lunar & Solar Term Details (Cohesive key-value format)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (dayInfo.fullLunarText.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "农历：",
+                                fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = dayInfo.fullLunarText,
+                                fontSize = if (isElderlyMode) 17.sp else 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    if (!dayInfo.solarTermName.isNullOrBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "节气：",
+                                fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = dayInfo.solarTermName,
+                                fontSize = if (isElderlyMode) 17.sp else 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "节日：",
+                                fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = neutralBadgeBg
+                            ) {
+                                Text(
+                                    text = dayInfo.festivalName,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    fontSize = if (isElderlyMode) 15.sp else 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = neutralBadgeText
+                                )
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    thickness = 0.8.dp
+                )
+
+                // Return to Today Button
+                Button(
+                    onClick = onJumpToday,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(if (isElderlyMode) 48.dp else 40.dp)
+                        .testTag("large_screen_jump_today_button"),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Today,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "定位到今日",
+                        fontSize = if (isElderlyMode) 15.sp else 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.weight(1f, fill = false))
-
-        // Return to Today Button
-        Button(
-            onClick = onJumpToday,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(if (isElderlyMode) 52.dp else 44.dp)
-                .testTag("large_screen_jump_today_button"),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Today,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "定位到今日",
-                fontSize = if (isElderlyMode) 16.sp else 14.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }

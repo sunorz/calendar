@@ -103,7 +103,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.7.2"
+        val newVer = _remoteVersion.value ?: "0.7.3"
         val downloadUrl = "https://kkii.org/app/calendar-v$newVer-release.apk"
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
