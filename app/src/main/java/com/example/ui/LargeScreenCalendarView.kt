@@ -113,12 +113,20 @@ fun LargeScreenCalendarView(
         // Available width for the month grid area
         val gridAreaWidth = totalWidth - rightPanelWidth
 
-        // Adaptive column count for months (1 to 4 columns!)
-        val columnCount = when {
-            gridAreaWidth >= 1200.dp -> 4  // TV / 4K landscape: 4 months in a row (full quarter/season spread)
-            gridAreaWidth >= 780.dp -> 3   // Desktop / Ultra-wide: 3 months
-            gridAreaWidth >= 480.dp -> 2   // Tablet: 2 months
-            else -> 1                      // Compact landscape phone: 1 month
+        // Adaptive column count for months (1 to 4 columns)
+        val columnCount = if (isElderlyMode) {
+            when {
+                gridAreaWidth >= 1350.dp -> 3  // TV / Ultra-wide: 3 months
+                gridAreaWidth >= 880.dp -> 2   // Large tablet: 2 months
+                else -> 1                      // Tablet / Landscape phone: 1 spacious month
+            }
+        } else {
+            when {
+                gridAreaWidth >= 1200.dp -> 4  // TV / 4K landscape: 4 months
+                gridAreaWidth >= 820.dp -> 3   // Desktop / Ultra-wide: 3 months
+                gridAreaWidth >= 520.dp -> 2   // Tablet: 2 months
+                else -> 1                      // Landscape phone: 1 month
+            }
         }
 
         Row(modifier = Modifier.fillMaxSize()) {
@@ -147,20 +155,6 @@ fun LargeScreenCalendarView(
                                 fontSize = if (isElderlyMode) 22.sp else 18.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            if (columnCount > 1) {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                ) {
-                                    Text(
-                                        text = "${columnCount}月并排",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
                         }
                     },
                     actions = {

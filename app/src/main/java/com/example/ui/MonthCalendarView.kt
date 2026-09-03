@@ -324,17 +324,19 @@ fun MinimalDayCell(
             .then(cellModifier)
             .clip(RoundedCornerShape(if (isElderlyMode) 12.dp else 10.dp))
             .clickable { onClick() }
-            .padding(horizontal = 2.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
+            .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
         if (isElderlyMode) {
-            // Elderly Mode: ONLY big, crisp, readable numbers
+            // Elderly Mode: Clear, bold, readable numbers (comfortably fitting two digits on any screen size/landscape)
             Text(
                 text = dayInfo.day.toString(),
                 color = displayNumColor,
-                fontSize = 28.sp,
+                fontSize = 21.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                softWrap = false
             )
         } else {
             // Standard Mode: Day number with lunar/festival subtitle
