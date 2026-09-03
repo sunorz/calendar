@@ -43,15 +43,22 @@ val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festival
 
 /**
  * Minimalist Weekday Header Row (一, 二, 三, 四, 五, 六, 日)
+ * In Elderly / Small-screen Mode: Pure single characters (一 ~ 日), larger and bolder, no redundant "周" prefix
  */
 @Composable
-fun WeekdayHeaderRow(modifier: Modifier = Modifier) {
+fun WeekdayHeaderRow(
+    isElderlyMode: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     val restColor = MaterialTheme.colorScheme.error
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(
+                horizontal = 8.dp,
+                vertical = if (isElderlyMode) 10.dp else 6.dp
+            ),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         WEEK_DAYS_MINIMAL.forEachIndexed { index, label ->
@@ -60,9 +67,9 @@ fun WeekdayHeaderRow(modifier: Modifier = Modifier) {
                 text = label,
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = if (isWeekend) restColor else MaterialTheme.colorScheme.onSurfaceVariant
+                fontWeight = if (isElderlyMode) FontWeight.ExtraBold else FontWeight.SemiBold,
+                fontSize = if (isElderlyMode) 18.sp else 13.sp,
+                color = if (isWeekend) restColor else MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -78,39 +85,66 @@ fun MinimalMonthSection(
     days: List<DayInfo>,
     selectedDay: DayInfo?,
     onDayClick: (DayInfo) -> Unit,
+    isElderlyMode: Boolean = false,
+    showWeekdayHeader: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 14.dp)
+            .padding(
+                horizontal = if (isElderlyMode) 10.dp else 12.dp,
+                vertical = if (isElderlyMode) 16.dp else 14.dp
+            )
             .testTag("month_section_${year}_$month")
     ) {
         // Month Title Header (Minimalist & Crisp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(
+                    horizontal = 8.dp,
+                    vertical = if (isElderlyMode) 6.dp else 4.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (month == 1) {
+            if (isElderlyMode) {
+                // In elderly mode: Always show Year and Month together clearly
                 Text(
-                    text = "${year} 年",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "${year} 年 ${month} 月",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.size(6.dp))
+            } else {
+                if (month == 1) {
+                    Text(
+                        text = "${year} 年",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                }
+                Text(
+                    text = "${month} 月",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Text(
-                text = "${month} 月",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(if (isElderlyMode) 8.dp else 6.dp))
+
+        if (showWeekdayHeader) {
+            WeekdayHeaderRow(
+                isElderlyMode = isElderlyMode,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp)
+            )
+        }
 
         // Days Grid: Empty leading spaces + Month days
         val firstDayOfWeek = days.firstOrNull()?.dayOfWeekNumber ?: 1
@@ -120,12 +154,12 @@ fun MinimalMonthSection(
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
         ) {
             for (r in 0 until rows) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 3.dp else 2.dp)
                 ) {
                     for (c in 0 until 7) {
                         val cellIndex = r * 7 + c
@@ -145,6 +179,7 @@ fun MinimalMonthSection(
                                 MinimalDayCell(
                                     dayInfo = dayInfo,
                                     isSelected = isSelected,
+                                    isElderlyMode = isElderlyMode,
                                     onClick = { onDayClick(dayInfo) }
                                 )
                             }
@@ -160,138 +195,174 @@ fun MinimalMonthSection(
 
 /**
  * Minimalist Day Cell:
- * - NO "休" or "班" text badges.
- * - Rest days: RED number (using colorScheme.error).
- * - Work days: Black in light mode, White in dark mode (using colorScheme.onSurface).
- * - Subtitle note:
- *     - Only RED when the day has a festival and it is a rest day (isHolidayWithRest).
- *     - GREEN for locale festivals (isLocaleHoliday).
- *     - Regular subtle color for ordinary rest days and non-holiday workdays.
- * - Today: Green bar if workday, Red bar if rest day. Smoothly animates into selection box when selected.
+ * Supports standard mode and Elderly Care mode (适老关怀模式)
+ * - Large legible fonts
+ * - Auspicious Chinese dual-color palette (Cinnabar Red for rest/festivals, Warm Ink/Moon Silk for workdays)
+ * - No harsh stark black-and-white blocks
+ * - Clear statutory rest/work tag indicators
  */
 @Composable
 fun MinimalDayCell(
     dayInfo: DayInfo,
     isSelected: Boolean,
     onClick: () -> Unit,
+    isElderlyMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Derive dark theme directly from current Compose MaterialTheme (respecting App setting!)
     val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val restColor = MaterialTheme.colorScheme.error
     val workColor = MaterialTheme.colorScheme.onSurface
-
-    // High contrast bar color for workdays in both light and dark modes
-    val workTodayBarColor = if (isAppDark) Color(0xFF66BB6A) else Color(0xFF2E7D32)
-
-    // Normal date bar logic for unselected today: Rest day -> restColor, Workday -> green
-    val unselectedBarColor = if (dayInfo.isRestDay) {
-        restColor
-    } else {
-        workTodayBarColor
-    }
-
-    // Selection border color for selected state
     val selectionBorderColor = MaterialTheme.colorScheme.primary
+    val isLightMode = !isAppDark
 
-    // Determine day number text color strictly based on calendar properties (Rest vs Work)
     val numColor = when {
         dayInfo.isRestDay -> restColor
         dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
         else -> workColor
     }
 
-    // Gboard-key style elevated card for Today (Only active when NOT selected):
-    // When Today is clicked/selected by user, it switches to the standard selection box style.
-    // When user clicks anywhere else (or closes selection), Today seamlessly restores its elevated card highlight.
-    //
-    // Note: Modifier order is crucial! Apply background & borders cleanly inside the clipped shape.
-    // In light mode: clean solid white card background with soft border.
-    // In dark mode: clean elevated warm-charcoal card with subtle border.
-    val isLightMode = !isAppDark
-
+    // Today & Selection cell styling
     val cellModifier = when {
-        isSelected -> {
-            Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .border(
-                    width = 1.5.dp,
-                    color = selectionBorderColor,
-                    shape = RoundedCornerShape(10.dp)
-                )
-        }
-        dayInfo.isToday -> {
-            if (isLightMode) {
-                // 浅色模式：优雅柔和的淡淡薰衣草紫色背景与微紫边框
+        isSelected && dayInfo.isToday -> {
+            // Selected AND Today: Strong distinct full highlight with high-contrast badge/border
+            if (isElderlyMode) {
                 Modifier
                     .background(
-                        color = Color(0xFFEFE7F6),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .border(
-                        width = 1.2.dp,
-                        color = Color(0xFFD0BCFF),
-                        shape = RoundedCornerShape(10.dp)
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(12.dp)
                     )
             } else {
-                // 深色模式：温润暗薰衣草紫底色与紫灰轮廓线
                 Modifier
                     .background(
-                        color = Color(0xFF3D3349),
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         shape = RoundedCornerShape(10.dp)
                     )
                     .border(
-                        width = 1.2.dp,
-                        color = Color(0xFF6E5B88),
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(10.dp)
                     )
+            }
+        }
+        isSelected -> {
+            // Selected Day: High-contrast solid primary background for elderly mode
+            if (isElderlyMode) {
+                Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            } else {
+                Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = selectionBorderColor,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            }
+        }
+        dayInfo.isToday -> {
+            // Today (not selected): A small red "今" dot/badge and a subtle dashed/thin border, NO solid fill!
+            if (isElderlyMode) {
+                Modifier
+                    .background(
+                        color = if (isLightMode) Color(0xFFF7F2EC) else Color(0xFF2C2723),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = Color(0xFFB8251B).copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            } else {
+                if (isLightMode) {
+                    Modifier
+                        .background(
+                            color = Color(0xFFEFE7F6),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .border(
+                            width = 1.2.dp,
+                            color = Color(0xFFD0BCFF),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                } else {
+                    Modifier
+                        .background(
+                            color = Color(0xFF3D3349),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .border(
+                            width = 1.2.dp,
+                            color = Color(0xFF6E5B88),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                }
             }
         }
         else -> Modifier
     }
 
+    // In elderly mode, cells are squarish and focus purely on huge numbers
+    val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
+
+    // Calculate text color (when selected in elderly mode with solid background, use high-contrast onPrimary)
+    val displayNumColor = if (isElderlyMode && isSelected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        numColor
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.92f)
+            .aspectRatio(cellAspectRatio)
             .then(cellModifier)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(if (isElderlyMode) 12.dp else 10.dp))
             .clickable { onClick() }
-            .padding(horizontal = 2.dp, vertical = 3.dp),
+            .padding(horizontal = 2.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Day Number
+        if (isElderlyMode) {
+            // Elderly Mode: ONLY big, crisp, readable numbers
             Text(
                 text = dayInfo.day.toString(),
-                color = numColor,
-                fontSize = 15.sp,
-                fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
+                color = displayNumColor,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
+        } else {
+            // Standard Mode: Day number with lunar/festival subtitle
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = dayInfo.day.toString(),
+                    color = numColor,
+                    fontSize = 15.sp,
+                    fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
 
-            // Subtitle text
-            val subText = dayInfo.displayNote
-            val subColor = when {
-                dayInfo.isHolidayWithRest -> restColor
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                val subText = dayInfo.displayNote
+                val subColor = if (dayInfo.isHolidayWithRest) restColor else MaterialTheme.colorScheme.onSurfaceVariant
+
+                Text(
+                    text = subText.ifBlank { " " },
+                    color = subColor,
+                    fontSize = 9.sp,
+                    fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
+                )
             }
-
-            Text(
-                text = subText.ifBlank { " " },
-                color = subColor,
-                fontSize = 9.sp,
-                fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }

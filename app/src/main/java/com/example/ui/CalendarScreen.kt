@@ -9,7 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,11 +22,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -43,8 +53,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.DayInfo
@@ -56,15 +68,78 @@ fun CalendarScreen(
     viewModel: CalendarViewModel,
     modifier: Modifier = Modifier
 ) {
-    val config by viewModel.config.collectAsState()
-    val syncState by viewModel.syncState.collectAsState()
     val themeMode by viewModel.themeMode.collectAsState()
-    val selectedDay by viewModel.selectedDay.collectAsState()
+    val isElderlyMode by viewModel.isElderlyMode.collectAsState()
+    val syncState by viewModel.syncState.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
     val updateAvailable by viewModel.updateAvailable.collectAsState()
     val remoteVersion by viewModel.remoteVersion.collectAsState()
     val isDownloading by viewModel.isDownloading.collectAsState()
     val downloadProgress by viewModel.downloadProgress.collectAsState()
+
+    // Responsive Breakpoint Container:
+    // 1. < 360dp: Smartwatch (Wear OS) / Micro Outer-screen (Day-by-Day Widget with swipe & fast date picker)
+    // 2. >= 600dp: Tablet / Android TV / Landscape / Foldable (Dynamic 1-4 Month Columns + Persistent Detail Panel)
+    // 3. 360dp..599dp: Standard Phone (Single Column Infinite Calendar + Bottom Pill)
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val screenWidth = maxWidth
+
+        when {
+            // Ultra-Small Screen: Android Watch / Wear OS / Tiny Cover Screen (< 360dp)
+            screenWidth < 360.dp -> {
+                WatchDayWidgetView(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Large Screen: Landscape / Foldable / Tablet / 4K Android TV (>= 600dp)
+            screenWidth >= 600.dp -> {
+                LargeScreenCalendarView(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Standard Smartphone Screen (360dp ~ 599dp)
+            else -> {
+                StandardPhoneCalendarView(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+
+    // Common Settings & Theme Dialog
+    if (showSettingsDialog) {
+        SettingsDialog(
+            currentThemeMode = themeMode,
+            isElderlyMode = isElderlyMode,
+            currentVersion = viewModel.getAppVersion(),
+            updateAvailable = updateAvailable,
+            remoteVersion = remoteVersion,
+            isDownloading = isDownloading,
+            downloadProgress = downloadProgress,
+            onThemeModeChange = { viewModel.setThemeMode(it) },
+            onDownloadUpdate = { viewModel.downloadAndUpdate() },
+            onDismiss = { viewModel.closeSettingsDialog() }
+        )
+    }
+}
+
+/**
+ * Standard Phone Calendar View for vertical handheld screens (360dp ~ 599dp)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StandardPhoneCalendarView(
+    viewModel: CalendarViewModel,
+    modifier: Modifier = Modifier
+) {
+    val config by viewModel.config.collectAsState()
+    val isElderlyMode by viewModel.isElderlyMode.collectAsState()
+    val selectedDay by viewModel.selectedDay.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState(
@@ -88,16 +163,16 @@ fun CalendarScreen(
                         Text(
                             text = "${currentVisibleYearMonth.first} 年 ${currentVisibleYearMonth.second} 月",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = if (isElderlyMode) 20.sp else 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     },
                     navigationIcon = {
-                        // "今日" Jump button
+                        // "今日" Jump button (Enlarged and bold for elderly mode)
                         Surface(
                             modifier = Modifier
-                                .padding(start = 12.dp)
-                                .clip(RoundedCornerShape(20.dp))
+                                .padding(start = if (isElderlyMode) 8.dp else 12.dp)
+                                .clip(RoundedCornerShape(24.dp))
                                 .clickable {
                                     coroutineScope.launch {
                                         listState.animateScrollToItem(viewModel.todayMonthIndex)
@@ -105,39 +180,89 @@ fun CalendarScreen(
                                     }
                                 }
                                 .testTag("jump_today_button"),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(20.dp)
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
+                            shape = RoundedCornerShape(24.dp)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                modifier = Modifier.padding(
+                                    horizontal = if (isElderlyMode) 14.dp else 10.dp,
+                                    vertical = if (isElderlyMode) 9.dp else 5.dp
+                                ),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Today,
                                     contentDescription = "今日",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(if (isElderlyMode) 24.dp else 15.dp)
                                 )
                                 Text(
                                     text = "今",
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 12.sp,
+                                    fontSize = if (isElderlyMode) 17.sp else 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
                     },
                     actions = {
-                        // Settings menu button
+                        // Senior-friendly Mode Toggle (Enlarged icons & touch target for elderly mode)
+                        Surface(
+                            modifier = Modifier
+                                .padding(end = if (isElderlyMode) 8.dp else 4.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .clickable { viewModel.toggleElderlyMode() }
+                                .testTag("elderly_mode_toggle_button"),
+                            color = if (isElderlyMode) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                Color.Transparent
+                            },
+                            shape = RoundedCornerShape(24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(
+                                    horizontal = if (isElderlyMode) 14.dp else 8.dp,
+                                    vertical = if (isElderlyMode) 9.dp else 6.dp
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = if (isElderlyMode) "退出关怀模式" else "开启关怀模式",
+                                    tint = if (isElderlyMode) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                    modifier = Modifier.size(if (isElderlyMode) 28.dp else 22.dp)
+                                )
+                                if (isElderlyMode) {
+                                    Text(
+                                        text = "关怀",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        // Settings menu button (Enlarged for elderly mode)
                         IconButton(
                             onClick = { viewModel.openSettingsDialog() },
-                            modifier = Modifier.testTag("settings_button")
+                            modifier = Modifier
+                                .padding(end = if (isElderlyMode) 4.dp else 0.dp)
+                                .size(if (isElderlyMode) 52.dp else 48.dp)
+                                .testTag("settings_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "设置",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(if (isElderlyMode) 28.dp else 24.dp)
                             )
                         }
                     },
@@ -148,6 +273,7 @@ fun CalendarScreen(
 
                 // Sticky Minimalist Weekday Header Row (一, 二, 三, 四, 五, 六, 日)
                 WeekdayHeaderRow(
+                    isElderlyMode = isElderlyMode,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
@@ -160,12 +286,15 @@ fun CalendarScreen(
             }
         }
     ) { innerPadding ->
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            val totalHeight = maxHeight
+            val elderlyCardMaxHeight = totalHeight * 2f / 3f
+
             // Infinite Scrolling List of Months
             LazyColumn(
                 state = listState,
@@ -187,8 +316,16 @@ fun CalendarScreen(
                         month = month,
                         days = days,
                         selectedDay = selectedDay,
+                        isElderlyMode = isElderlyMode,
                         onDayClick = { day ->
-                            viewModel.selectDay(if (selectedDay == day) null else day)
+                            val nextSelected = if (selectedDay == day) null else day
+                            viewModel.selectDay(nextSelected)
+                            if (nextSelected != null && isElderlyMode) {
+                                coroutineScope.launch {
+                                    // Scroll clicked month into view so the date row stays visible in top 1/3
+                                    listState.animateScrollToItem(index)
+                                }
+                            }
                         }
                     )
 
@@ -207,33 +344,22 @@ fun CalendarScreen(
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
                 selectedDay?.let { day ->
                     SelectedDayDetailPill(
                         dayInfo = day,
-                        onDismiss = { viewModel.selectDay(null) }
+                        isElderlyMode = isElderlyMode,
+                        maxCardHeight = if (isElderlyMode) elderlyCardMaxHeight else null,
+                        onDismiss = { viewModel.selectDay(null) },
+                        modifier = Modifier.padding(
+                            horizontal = if (isElderlyMode) 8.dp else 16.dp,
+                            vertical = if (isElderlyMode) 6.dp else 16.dp
+                        )
                     )
                 }
             }
         }
-    }
-
-    // Settings & Theme Dialog
-    if (showSettingsDialog) {
-        SettingsDialog(
-            currentThemeMode = themeMode,
-            syncState = syncState,
-            currentVersion = viewModel.getAppVersion(),
-            updateAvailable = updateAvailable,
-            remoteVersion = remoteVersion,
-            isDownloading = isDownloading,
-            downloadProgress = downloadProgress,
-            onThemeModeChange = { viewModel.setThemeMode(it) },
-            onRefreshConfig = { viewModel.refreshConfig() },
-            onDownloadUpdate = { viewModel.downloadAndUpdate() },
-            onDismiss = { viewModel.closeSettingsDialog() }
-        )
     }
 }
 
@@ -244,99 +370,316 @@ fun CalendarScreen(
 private fun SelectedDayDetailPill(
     dayInfo: DayInfo,
     onDismiss: () -> Unit,
+    isElderlyMode: Boolean = false,
+    maxCardHeight: Dp? = null,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .testTag("selected_day_detail_pill"),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shadowElevation = 6.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline
-        )
-    ) {
-        Row(
-            modifier = Modifier
+    if (isElderlyMode) {
+        // High-Legibility Senior-Friendly Day Card:
+        // Height adapts to content (wrapContentHeight), capped at maxCardHeight (~2/3 screen), so it never wastes space while remaining scrollable if needed.
+        val surfaceModifier = if (maxCardHeight != null) {
+            modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .heightIn(max = maxCardHeight)
+        } else {
+            modifier.fillMaxWidth()
+        }
+
+        // Neutral gray badge background and black/dark-ink text per user directive
+        val neutralBadgeBg = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        val neutralBadgeText = MaterialTheme.colorScheme.onSurface
+
+        Surface(
+            modifier = surfaceModifier
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp))
+                .testTag("selected_day_detail_pill"),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shadowElevation = 12.dp,
+            border = androidx.compose.foundation.BorderStroke(
+                1.5.dp,
+                MaterialTheme.colorScheme.outline
+            )
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 22.dp, vertical = 22.dp)
+            ) {
+                // Header Row: Full Date (with prominent '（今天）' if today), Weekday, and Enlarged Close Button
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = dayInfo.dayOfWeekChinese,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Tag indicator:
-                    // If locale festival (e.g. 三月三) -> Display "三月三" in Green!
-                    // Else -> Display "休息日" (Red) or "工作日" (Non-red)
-                    if (dayInfo.isLocaleHoliday) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        val dateTitle = if (dayInfo.isToday) {
+                            "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日 (今天)"
+                        } else {
+                            "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日"
+                        }
                         Text(
-                            text = dayInfo.localeHolidayName ?: "三月三",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LOCALE_FESTIVAL_COLOR
+                            text = dateTitle,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 28.sp,
+                            lineHeight = 36.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = if (dayInfo.isRestDay) "休息日" else "工作日",
-                            fontSize = 12.sp,
+                            text = dayInfo.dayOfWeekChinese,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (dayInfo.isRestDay) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    if (dayInfo.fullLunarText.isNotBlank()) {
-                        Text(
-                            text = dayInfo.fullLunarText,
-                            fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    if (dayInfo.festivalName != null && !dayInfo.isLocaleHoliday) {
-                        Text(
-                            text = "· ${dayInfo.festivalName}",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (dayInfo.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .testTag("close_detail_card_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "关闭卡片",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
-            }
 
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier.size(28.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "关闭",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                Spacer(modifier = Modifier.height(20.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    thickness = 1.5.dp
                 )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Workday / Restday / Special day Status Badges:
+                // Strictly black text with light gray background, generous spacing, no red.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    if (dayInfo.isLocaleHoliday) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = neutralBadgeBg
+                        ) {
+                            Text(
+                                text = dayInfo.localeHolidayName ?: "三月三",
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = neutralBadgeText
+                            )
+                        }
+                    } else {
+                        val isRest = dayInfo.isRestDay
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = neutralBadgeBg
+                        ) {
+                            Text(
+                                text = if (isRest) "休息日" else "工作日",
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = neutralBadgeText
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Lunar Date & Commemoration / Solar Term Information with generous line spacing
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    if (dayInfo.fullLunarText.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "农历：",
+                                fontSize = 23.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = dayInfo.fullLunarText,
+                                fontSize = 24.sp,
+                                lineHeight = 32.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    // 24 Solar Term
+                    if (!dayInfo.solarTermName.isNullOrBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "节气：",
+                                fontSize = 23.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = dayInfo.solarTermName,
+                                fontSize = 24.sp,
+                                lineHeight = 32.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    // Special Day / Commemoration / Memorial / Festival Name:
+                    // Black text, gray background, NO red coloring per user requirement.
+                    if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = neutralBadgeBg
+                            ) {
+                                Text(
+                                    text = dayInfo.festivalName,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    fontSize = 22.sp,
+                                    lineHeight = 30.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = neutralBadgeText
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // Standard Mode Minimal Pill
+        Surface(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .testTag("selected_day_detail_pill"),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shadowElevation = 6.dp,
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = dayInfo.dayOfWeekChinese,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        if (dayInfo.isLocaleHoliday) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
+                            ) {
+                                Text(
+                                    text = dayInfo.localeHolidayName ?: "三月三",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = LOCALE_FESTIVAL_COLOR
+                                )
+                            }
+                        } else {
+                            val isRest = dayInfo.isRestDay
+                            val tagBgColor = if (isRest) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                            }
+                            val tagTextColor = if (isRest) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = tagBgColor
+                            ) {
+                                Text(
+                                    text = if (isRest) "休息日" else "工作日",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tagTextColor
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (dayInfo.fullLunarText.isNotBlank()) {
+                            Text(
+                                text = dayInfo.fullLunarText,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (dayInfo.festivalName != null && !dayInfo.isLocaleHoliday) {
+                            Text(
+                                text = "· ${dayInfo.festivalName}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (dayInfo.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

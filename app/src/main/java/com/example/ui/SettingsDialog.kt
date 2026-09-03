@@ -22,23 +22,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,29 +42,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ThemeMode
-import com.example.data.repository.SyncState
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun SettingsDialog(
     currentThemeMode: ThemeMode,
-    syncState: SyncState,
+    isElderlyMode: Boolean = false,
     currentVersion: String,
     updateAvailable: Boolean,
     remoteVersion: String?,
     isDownloading: Boolean,
     downloadProgress: Float,
     onThemeModeChange: (ThemeMode) -> Unit,
-    onRefreshConfig: () -> Unit,
     onDownloadUpdate: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -114,14 +104,42 @@ fun SettingsDialog(
                     .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Section 1: Appearance & Theme
+                // Section 1: Appearance & Theme / 主题切换
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "外观主题",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "外观主题",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (isElderlyMode) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "关怀模式锁定",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (isElderlyMode) {
+                        Text(
+                            text = "老年关怀模式下已强制启用高清晰浅色模式，禁止切换深色模式。退出关怀模式后方可自由切换。",
+                            fontSize = 11.5.sp,
+                            lineHeight = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -130,21 +148,24 @@ fun SettingsDialog(
                         ThemeOptionChip(
                             label = "跟随系统",
                             icon = Icons.Default.BrightnessAuto,
-                            isSelected = currentThemeMode == ThemeMode.SYSTEM,
+                            isSelected = !isElderlyMode && currentThemeMode == ThemeMode.SYSTEM,
+                            enabled = !isElderlyMode,
                             onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
                             modifier = Modifier.weight(1f)
                         )
                         ThemeOptionChip(
                             label = "浅色",
                             icon = Icons.Default.LightMode,
-                            isSelected = currentThemeMode == ThemeMode.LIGHT,
+                            isSelected = isElderlyMode || currentThemeMode == ThemeMode.LIGHT,
+                            enabled = !isElderlyMode,
                             onClick = { onThemeModeChange(ThemeMode.LIGHT) },
                             modifier = Modifier.weight(1f)
                         )
                         ThemeOptionChip(
                             label = "深色",
                             icon = Icons.Default.DarkMode,
-                            isSelected = currentThemeMode == ThemeMode.DARK,
+                            isSelected = !isElderlyMode && currentThemeMode == ThemeMode.DARK,
+                            enabled = !isElderlyMode,
                             onClick = { onThemeModeChange(ThemeMode.DARK) },
                             modifier = Modifier.weight(1f)
                         )
@@ -153,82 +174,7 @@ fun SettingsDialog(
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                // Section 2: Online Configuration & Sync
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "调休配置文件同步",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Text(
-                        text = "每年节假日及调休安排将依据官方配置自动同步",
-                        fontSize = 11.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Sync Status message
-                    when (syncState) {
-                        is SyncState.Loading -> {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.padding(vertical = 2.dp)
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(14.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "正在同步配置...",
-                                    fontSize = 11.5.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        is SyncState.Success -> {
-                            val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(syncState.lastSyncTime))
-                            Text(
-                                text = "✓ 上次同步时间：$timeStr",
-                                fontSize = 11.5.sp,
-                                color = Color(0xFF2E7D32),
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        is SyncState.Error -> {
-                            Text(
-                                text = "✗ ${syncState.error}",
-                                fontSize = 11.5.sp,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                        else -> {}
-                    }
-
-                    Button(
-                        onClick = { onRefreshConfig() },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("立即同步配置", fontSize = 12.5.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                // Section 3: About / 关于
+                // Section 2: About / 关于
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.testTag("about_section")
@@ -273,7 +219,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "睡觉是大事。",
+                                    text = "纵横裨益",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -452,21 +398,37 @@ private fun ThemeOptionChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    val alpha = if (enabled) 1f else 0.45f
+    val clickModifier = if (enabled) {
+        Modifier.clickable { onClick() }
+    } else {
+        Modifier
+    }
+
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
+            .then(clickModifier)
             .then(
                 if (isSelected) {
-                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                    Modifier.border(
+                        1.5.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.5f),
+                        RoundedCornerShape(12.dp)
+                    )
                 } else {
                     Modifier
                 }
             ),
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (enabled) 0.7f else 0.4f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        }
     ) {
         Column(
             modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
@@ -476,14 +438,14 @@ private fun ThemeOptionChip(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = (if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = alpha),
                 modifier = Modifier.size(20.dp)
             )
             Text(
                 text = label,
                 fontSize = 11.5.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = (if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = alpha)
             )
         }
     }

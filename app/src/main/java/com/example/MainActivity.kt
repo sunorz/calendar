@@ -24,7 +24,8 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       val themeMode by calendarViewModel.themeMode.collectAsState()
-      MyApplicationTheme(themeMode = themeMode) {
+      val isElderlyMode by calendarViewModel.isElderlyMode.collectAsState()
+      MyApplicationTheme(themeMode = themeMode, isElderlyMode = isElderlyMode) {
         Surface(modifier = Modifier.fillMaxSize()) {
           CalendarScreen(viewModel = calendarViewModel)
         }

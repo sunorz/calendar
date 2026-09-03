@@ -54,6 +54,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     val config: StateFlow<CalendarConfig> = repository.configState
     val syncState: StateFlow<SyncState> = repository.syncState
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
+    val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
 
     private val _showSettingsDialog = MutableStateFlow(false)
     val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
@@ -102,7 +103,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.6.3"
+        val newVer = _remoteVersion.value ?: "0.7.0"
         val downloadUrl = "https://kkii.org/app/calendar-v$newVer-release.apk"
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
@@ -119,7 +120,19 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setThemeMode(mode: ThemeMode) {
+        if (isElderlyMode.value) {
+            // In elderly mode, theme switching is forbidden; light mode is forced
+            return
+        }
         themePreferences.setThemeMode(mode)
+    }
+
+    fun toggleElderlyMode() {
+        themePreferences.toggleElderlyMode()
+    }
+
+    fun setElderlyMode(enabled: Boolean) {
+        themePreferences.setElderlyMode(enabled)
     }
 
     fun openSettingsDialog() {
