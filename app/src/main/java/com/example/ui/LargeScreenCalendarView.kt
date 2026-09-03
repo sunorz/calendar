@@ -150,7 +150,7 @@ fun LargeScreenCalendarView(
                                 modifier = Modifier.size(if (isElderlyMode) 28.dp else 22.dp)
                             )
                             Text(
-                                text = "智能万年历",
+                                text = "调休日历",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = if (isElderlyMode) 22.sp else 18.sp,
                                 color = MaterialTheme.colorScheme.onSurface
