@@ -57,6 +57,7 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
             action == Intent.ACTION_TIMEZONE_CHANGED ||
             action == Intent.ACTION_BOOT_COMPLETED ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED ||
+            action == Intent.ACTION_USER_PRESENT ||
             action == ACTION_MIDNIGHT_UPDATE
         ) {
             updateAllWidgets(context)
@@ -194,8 +195,8 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
 
-                // Next midnight: 00:00:02 tomorrow
-                val cal = Calendar.getInstance().apply {
+                // Next midnight: 00:00:02 tomorrow in China Standard Time (UTC+8)
+                val cal = LunarCalculator.getChinaCalendar().apply {
                     add(Calendar.DAY_OF_YEAR, 1)
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
@@ -203,10 +204,16 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                     set(Calendar.MILLISECOND, 0)
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC, cal.timeInMillis, pendingIntent)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (alarmManager.canScheduleExactAlarms()) {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+                    } else {
+                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
                 } else {
-                    alarmManager.set(AlarmManager.RTC, cal.timeInMillis, pendingIntent)
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error scheduling midnight update: ${e.message}", e)

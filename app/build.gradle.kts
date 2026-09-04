@@ -17,8 +17,8 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 19
-    versionName = "0.7.6"
+    versionCode = 20
+    versionName = "0.7.7"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
