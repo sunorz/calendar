@@ -32,19 +32,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.DayInfo
 
-val WEEK_DAYS_MINIMAL = listOf("一", "二", "三", "四", "五", "六", "日")
 val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festivals like "三月三"
 
 /**
- * Minimalist Weekday Header Row (一, 二, 三, 四, 五, 六, 日)
- * In Elderly / Small-screen Mode: Pure single characters (一 ~ 日), larger and bolder, no redundant "周" prefix
+ * Minimalist Weekday Header Row
+ * Displays Mon-Sun using localized string resources.
  */
 @Composable
 fun WeekdayHeaderRow(
@@ -52,6 +53,15 @@ fun WeekdayHeaderRow(
     modifier: Modifier = Modifier
 ) {
     val restColor = MaterialTheme.colorScheme.error
+    val weekdayResIds = listOf(
+        R.string.weekday_mon,
+        R.string.weekday_tue,
+        R.string.weekday_wed,
+        R.string.weekday_thu,
+        R.string.weekday_fri,
+        R.string.weekday_sat,
+        R.string.weekday_sun
+    )
 
     Row(
         modifier = modifier
@@ -62,10 +72,10 @@ fun WeekdayHeaderRow(
             ),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        WEEK_DAYS_MINIMAL.forEachIndexed { index, label ->
+        weekdayResIds.forEachIndexed { index, resId ->
             val isWeekend = index >= 5
             Text(
-                text = label,
+                text = stringResource(resId),
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
                 fontWeight = if (isElderlyMode) FontWeight.ExtraBold else FontWeight.SemiBold,
@@ -111,8 +121,13 @@ fun MinimalMonthSection(
         ) {
             if (isElderlyMode) {
                 // In elderly mode: Always show Year and Month together clearly
+                val monthTitle = if (com.example.util.TranslationHelper.isEnglish()) {
+                    "${com.example.util.TranslationHelper.getMonthName(month)} $year"
+                } else {
+                    stringResource(R.string.year_month_format, year, month)
+                }
                 Text(
-                    text = "${year} 年 ${month} 月",
+                    text = monthTitle,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -120,15 +135,20 @@ fun MinimalMonthSection(
             } else {
                 if (month == 1) {
                     Text(
-                        text = "${year} 年",
+                        text = stringResource(R.string.single_year_format, year),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.size(6.dp))
                 }
+                val monthTitle = if (com.example.util.TranslationHelper.isEnglish()) {
+                    com.example.util.TranslationHelper.getMonthName(month)
+                } else {
+                    stringResource(R.string.single_month_format, month)
+                }
                 Text(
-                    text = "${month} 月",
+                    text = monthTitle,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -353,7 +373,7 @@ fun MinimalDayCell(
                     textAlign = TextAlign.Center
                 )
 
-                val subText = dayInfo.displayNote
+                val subText = com.example.util.TranslationHelper.getLocalizedDisplayNote(dayInfo)
                 val subColor = if (dayInfo.isHolidayWithRest) restColor else MaterialTheme.colorScheme.onSurfaceVariant
 
                 Text(
@@ -367,5 +387,21 @@ fun MinimalDayCell(
                 )
             }
         }
+    }
+}
+
+/**
+ * Returns the string resource ID for full weekday name (Monday..Sunday)
+ */
+fun getFullWeekdayResId(dayOfWeekNumber: Int): Int {
+    return when (dayOfWeekNumber) {
+        1 -> R.string.weekday_full_mon
+        2 -> R.string.weekday_full_tue
+        3 -> R.string.weekday_full_wed
+        4 -> R.string.weekday_full_thu
+        5 -> R.string.weekday_full_fri
+        6 -> R.string.weekday_full_sat
+        7 -> R.string.weekday_full_sun
+        else -> R.string.weekday_full_mon
     }
 }

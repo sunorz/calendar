@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">Holiday Calendar</string>
+    <string name="widget_description">Dynamic Calendar Widget: Displays weekday, workday/restday status and date</string>
+    <string name="workday_label">Workday</string>
+    <string name="restday_label">Rest Day</string>
+    <string name="today_label">Today</string>
+
+    <!-- Top Bar & Navigation -->
+    <string name="year_month_format">%1$d-%2$02d</string>
+    <string name="month_name_format">%1$d / %2$d</string>
+    <string name="single_year_format">%1$d</string>
+    <string name="single_month_format">%1$s</string>
+    <string name="today_btn">Today</string>
+    <string name="today_btn_short">Today</string>
+    <string name="elderly_mode_title">Senior</string>
+    <string name="elderly_mode_enter">Enable Senior Mode</string>
+    <string name="elderly_mode_exit">Exit Senior Mode</string>
+    <string name="settings_title">Settings</string>
+    <string name="jump_today">Go to Today</string>
+
+    <!-- Weekday Headers -->
+    <string name="weekday_mon">Mon</string>
+    <string name="weekday_tue">Tue</string>
+    <string name="weekday_wed">Wed</string>
+    <string name="weekday_thu">Thu</string>
+    <string name="weekday_fri">Fri</string>
+    <string name="weekday_sat">Sat</string>
+    <string name="weekday_sun">Sun</string>
+
+    <!-- Weekday Full Names -->
+    <string name="weekday_full_mon">Monday</string>
+    <string name="weekday_full_tue">Tuesday</string>
+    <string name="weekday_full_wed">Wednesday</string>
+    <string name="weekday_full_thu">Thursday</string>
+    <string name="weekday_full_fri">Friday</string>
+    <string name="weekday_full_sat">Saturday</string>
+    <string name="weekday_full_sun">Sunday</string>
+
+    <!-- Day details -->
+    <string name="date_format_full">%1$d-%2$02d-%3$02d</string>
+    <string name="date_format_full_today">%1$d-%2$02d-%3$02d (Today)</string>
+    <string name="lunar_label">Lunar:</string>
+    <string name="solar_term_label">Solar Term:</string>
+    <string name="close_btn">Close</string>
+
+    <!-- Settings Dialog -->
+    <string name="settings_dialog_title">Settings</string>
+    <string name="theme_section_title">Theme</string>
+    <string name="elderly_mode_locked">Locked in Senior Mode</string>
+    <string name="elderly_mode_theme_tip">Senior mode enforces high-contrast light theme. Exit Senior Mode to customize theme.</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="about_section_title">About</string>
+    <string name="announcement_label">Notice</string>
+    <string name="author_label">Author</string>
+    <string name="website_label">Website</string>
+    <string name="version_label">Version</string>
+    <string name="new_version_detected">New version detected: v%1$s</string>
+    <string name="download_now">Download</string>
+    <string name="downloading">Downloading…</string>
+    <string name="dialog_done">Done</string>
+
+    <!-- Watch / Small Screen -->
+    <string name="widget_month_format">%1$s</string>
+    <string name="watch_quick_jump">Jump to Date</string>
+    <string name="watch_year_label">Year:</string>
+    <string name="watch_month_label">Month:</string>
+    <string name="watch_day_label">Day:</string>
+    <string name="watch_prev_day">Previous day</string>
+    <string name="watch_next_day">Next day</string>
+    <string name="watch_select_date">Select Date</string>
+    <string name="watch_mode_toggle">Toggle Mode</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_jump">Jump</string>
+</resources>

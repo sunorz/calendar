@@ -51,10 +51,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.CalendarConfig
 import com.example.data.model.DayInfo
 import com.example.util.LunarCalculator
@@ -151,7 +153,7 @@ fun LargeScreenCalendarView(
                                 modifier = Modifier.size(if (isElderlyMode) 28.dp else 22.dp)
                             )
                             Text(
-                                text = "调休日历",
+                                text = stringResource(R.string.app_name),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = if (isElderlyMode) 22.sp else 18.sp,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -184,12 +186,12 @@ fun LargeScreenCalendarView(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Today,
-                                    contentDescription = "今日",
+                                    contentDescription = stringResource(R.string.today_btn),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(if (isElderlyMode) 22.dp else 16.dp)
                                 )
                                 Text(
-                                    text = "今",
+                                    text = stringResource(R.string.today_btn_short),
                                     color = MaterialTheme.colorScheme.primary,
                                     fontSize = if (isElderlyMode) 16.sp else 13.sp,
                                     fontWeight = FontWeight.Bold
@@ -204,7 +206,7 @@ fun LargeScreenCalendarView(
                         ) {
                             Icon(
                                 imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "模式切换",
+                                contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
                                 tint = if (isElderlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(if (isElderlyMode) 26.dp else 22.dp)
                             )
@@ -217,7 +219,7 @@ fun LargeScreenCalendarView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "设置",
+                                contentDescription = stringResource(R.string.settings_title),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(if (isElderlyMode) 26.dp else 22.dp)
                             )
@@ -348,9 +350,9 @@ private fun LargeScreenDetailPanel(
                 // Gregorian Date & Weekday
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     val dateTitle = if (dayInfo.isToday) {
-                        "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日 (今天)"
+                        stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
                     } else {
-                        "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日"
+                        stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
                     }
                     Text(
                         text = dateTitle,
@@ -360,7 +362,7 @@ private fun LargeScreenDetailPanel(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = dayInfo.dayOfWeekChinese,
+                        text = stringResource(getFullWeekdayResId(dayInfo.dayOfWeekNumber)),
                         fontSize = if (isElderlyMode) 17.sp else 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -374,11 +376,11 @@ private fun LargeScreenDetailPanel(
                 ) {
                     val isRest = dayInfo.isRestDay
                     val tagText = if (dayInfo.isLocaleHoliday) {
-                        dayInfo.localeHolidayName ?: "三月三"
+                        com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi"
                     } else if (isRest) {
-                        "休息日"
+                        stringResource(R.string.restday_label)
                     } else {
-                        "工作日"
+                        stringResource(R.string.workday_label)
                     }
 
                     Surface(
@@ -400,7 +402,7 @@ private fun LargeScreenDetailPanel(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "今日",
+                                text = stringResource(R.string.today_btn),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
                                 fontWeight = FontWeight.Bold,
@@ -417,19 +419,20 @@ private fun LargeScreenDetailPanel(
 
                 // Lunar & Solar Term Details (Cohesive key-value format)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (dayInfo.fullLunarText.isNotBlank()) {
+                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    if (fullLunar.isNotBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "农历：",
+                                text = stringResource(R.string.lunar_label),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = dayInfo.fullLunarText,
+                                text = fullLunar,
                                 fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -437,19 +440,20 @@ private fun LargeScreenDetailPanel(
                         }
                     }
 
-                    if (!dayInfo.solarTermName.isNullOrBlank()) {
+                    val solarTerm = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
+                    if (!solarTerm.isNullOrBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "节气：",
+                                text = stringResource(R.string.solar_term_label),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = dayInfo.solarTermName,
+                                text = solarTerm,
                                 fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -457,13 +461,14 @@ private fun LargeScreenDetailPanel(
                         }
                     }
 
-                    if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
+                    val festival = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
+                    if (!festival.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = neutralBadgeBg
                         ) {
                             Text(
-                                text = dayInfo.festivalName,
+                                text = festival,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
                                 fontWeight = FontWeight.Bold,
@@ -498,7 +503,7 @@ private fun LargeScreenDetailPanel(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "定位到今日",
+                        text = stringResource(R.string.jump_today),
                         fontSize = if (isElderlyMode) 15.sp else 13.sp,
                         fontWeight = FontWeight.Bold
                     )

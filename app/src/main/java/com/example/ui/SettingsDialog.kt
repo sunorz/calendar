@@ -44,9 +44,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.ThemeMode
 
 @Composable
@@ -89,7 +91,7 @@ fun SettingsDialog(
                     }
                 }
                 Text(
-                    text = "应用设置",
+                    text = stringResource(R.string.settings_dialog_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -111,7 +113,7 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "外观主题",
+                            text = stringResource(R.string.theme_section_title),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.primary
@@ -122,7 +124,7 @@ fun SettingsDialog(
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                             ) {
                                 Text(
-                                    text = "关怀模式锁定",
+                                    text = stringResource(R.string.elderly_mode_locked),
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.primary,
@@ -134,7 +136,7 @@ fun SettingsDialog(
 
                     if (isElderlyMode) {
                         Text(
-                            text = "老年关怀模式下已强制启用高清晰浅色模式，禁止切换深色模式。退出关怀模式后方可自由切换。",
+                            text = stringResource(R.string.elderly_mode_theme_tip),
                             fontSize = 11.5.sp,
                             lineHeight = 16.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -146,7 +148,7 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         ThemeOptionChip(
-                            label = "跟随系统",
+                            label = stringResource(R.string.theme_system),
                             icon = Icons.Default.BrightnessAuto,
                             isSelected = !isElderlyMode && currentThemeMode == ThemeMode.SYSTEM,
                             enabled = !isElderlyMode,
@@ -154,7 +156,7 @@ fun SettingsDialog(
                             modifier = Modifier.weight(1f)
                         )
                         ThemeOptionChip(
-                            label = "浅色",
+                            label = stringResource(R.string.theme_light),
                             icon = Icons.Default.LightMode,
                             isSelected = isElderlyMode || currentThemeMode == ThemeMode.LIGHT,
                             enabled = !isElderlyMode,
@@ -162,7 +164,7 @@ fun SettingsDialog(
                             modifier = Modifier.weight(1f)
                         )
                         ThemeOptionChip(
-                            label = "深色",
+                            label = stringResource(R.string.theme_dark),
                             icon = Icons.Default.DarkMode,
                             isSelected = !isElderlyMode && currentThemeMode == ThemeMode.DARK,
                             enabled = !isElderlyMode,
@@ -180,7 +182,7 @@ fun SettingsDialog(
                     modifier = Modifier.testTag("about_section")
                 ) {
                     Text(
-                        text = "关于应用",
+                        text = stringResource(R.string.about_section_title),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -213,7 +215,7 @@ fun SettingsDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "公告",
+                                        text = stringResource(R.string.announcement_label),
                                         fontSize = 12.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -243,7 +245,7 @@ fun SettingsDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "作者",
+                                        text = stringResource(R.string.author_label),
                                         fontSize = 12.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -284,7 +286,7 @@ fun SettingsDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "官方网址",
+                                        text = stringResource(R.string.website_label),
                                         fontSize = 12.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -325,7 +327,7 @@ fun SettingsDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "当前版本",
+                                        text = stringResource(R.string.version_label),
                                         fontSize = 12.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -347,7 +349,7 @@ fun SettingsDialog(
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "检测到新版本 v${remoteVersion ?: ""}",
+                                            text = stringResource(R.string.new_version_detected, remoteVersion ?: ""),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -372,7 +374,7 @@ fun SettingsDialog(
                                         ),
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                                     ) {
-                                        Text(if (isDownloading) "下载中..." else "立即下载", fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                                        Text(if (isDownloading) stringResource(R.string.downloading) else stringResource(R.string.download_now), fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
@@ -386,7 +388,7 @@ fun SettingsDialog(
                 onClick = onDismiss,
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("完成", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.dialog_done), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
             }
         }
     )

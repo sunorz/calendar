@@ -53,11 +53,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.R
 import com.example.data.model.DayInfo
 import com.example.util.LunarCalculator
 import java.util.Calendar
@@ -158,7 +160,7 @@ fun WatchDayWidgetView(
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
             ) {
                 Text(
-                    text = "今",
+                    text = stringResource(R.string.today_btn_short),
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.primary,
@@ -179,15 +181,20 @@ fun WatchDayWidgetView(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
+                    val pickerText = if (com.example.util.TranslationHelper.isEnglish()) {
+                        "${com.example.util.TranslationHelper.getMonthName(currentMonth).take(3)} $currentYear"
+                    } else {
+                        "${currentYear}.${currentMonth}"
+                    }
                     Text(
-                        text = "${currentYear}.${currentMonth}",
+                        text = pickerText,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "选择日期",
+                        contentDescription = stringResource(R.string.watch_select_date),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
@@ -202,7 +209,7 @@ fun WatchDayWidgetView(
                 ) {
                     Icon(
                         imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "模式切换",
+                        contentDescription = stringResource(R.string.watch_mode_toggle),
                         tint = if (isElderlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
@@ -213,7 +220,7 @@ fun WatchDayWidgetView(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "设置",
+                        contentDescription = stringResource(R.string.settings_title),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
@@ -224,7 +231,7 @@ fun WatchDayWidgetView(
         // Subtitle Up Arrow indicator
         Icon(
             imageVector = Icons.Default.KeyboardArrowUp,
-            contentDescription = "前一天",
+            contentDescription = stringResource(R.string.watch_prev_day),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
             modifier = Modifier
                 .size(16.dp)
@@ -257,7 +264,7 @@ fun WatchDayWidgetView(
         // Down Arrow indicator
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = "后一天",
+            contentDescription = stringResource(R.string.watch_next_day),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
             modifier = Modifier
                 .size(16.dp)
@@ -316,7 +323,7 @@ private fun WatchDayCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = dayInfo.dayOfWeekChinese,
+                    text = stringResource(getFullWeekdayResId(dayInfo.dayOfWeekNumber)),
                     fontSize = if (isElderlyMode) 16.sp else 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -324,11 +331,11 @@ private fun WatchDayCard(
 
                 // High-contrast Gray background, black text badge
                 val tagText = if (dayInfo.isLocaleHoliday) {
-                    dayInfo.localeHolidayName ?: "三月三"
+                    com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi"
                 } else if (dayInfo.isRestDay) {
-                    "休息日"
+                    stringResource(R.string.restday_label)
                 } else {
-                    "工作日"
+                    stringResource(R.string.workday_label)
                 }
 
                 Surface(
@@ -350,7 +357,7 @@ private fun WatchDayCard(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "今天",
+                            text = stringResource(R.string.today_label),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -371,16 +378,18 @@ private fun WatchDayCard(
             )
 
             // Row 3: Year & Month
+            val yearMonthText = com.example.util.TranslationHelper.formatYearMonth(dayInfo.year, dayInfo.month)
             Text(
-                text = "${dayInfo.year}年${dayInfo.month}月",
+                text = yearMonthText,
                 fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Row 4: Lunar Date
+            val fullLunarText = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
             Text(
-                text = "农历 " + (dayInfo.fullLunarText.ifBlank { "七月廿三" }),
+                text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
                 fontSize = if (isElderlyMode) 15.sp else 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -389,7 +398,9 @@ private fun WatchDayCard(
             )
 
             // Row 5: Solar term or Special Holiday (if present)
-            val specialText = dayInfo.festivalName ?: dayInfo.solarTermName
+            val festivalTranslated = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
+            val termTranslated = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
+            val specialText = festivalTranslated ?: termTranslated
             if (!specialText.isNullOrBlank()) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -450,7 +461,7 @@ private fun WatchDatePickerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "快速跳转日期",
+                    text = stringResource(R.string.watch_quick_jump),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -463,7 +474,7 @@ private fun WatchDatePickerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("年份:", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.watch_year_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { if (selYear > CalendarViewModel.START_YEAR) selYear-- },
@@ -472,7 +483,7 @@ private fun WatchDatePickerDialog(
                             Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(
-                            text = "${selYear}年",
+                            text = stringResource(R.string.single_year_format, selYear),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.width(60.dp),
@@ -493,7 +504,7 @@ private fun WatchDatePickerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("月份:", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.watch_month_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { if (selMonth > 1) selMonth-- },
@@ -502,7 +513,7 @@ private fun WatchDatePickerDialog(
                             Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(
-                            text = "${selMonth}月",
+                            text = stringResource(R.string.single_month_format, selMonth),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.width(60.dp),
@@ -523,7 +534,7 @@ private fun WatchDatePickerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("日期:", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.watch_day_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { if (selDay > 1) selDay-- },
@@ -532,7 +543,7 @@ private fun WatchDatePickerDialog(
                             Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(
-                            text = "${selDay}日",
+                            text = "$selDay",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.width(60.dp),
@@ -554,11 +565,11 @@ private fun WatchDatePickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("取消", fontSize = 13.sp)
+                        Text(stringResource(R.string.btn_cancel), fontSize = 13.sp)
                     }
                     Spacer(modifier = Modifier.width(6.dp))
                     TextButton(onClick = { onConfirm(selYear, selMonth, selDay) }) {
-                        Text("跳转", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.btn_jump), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

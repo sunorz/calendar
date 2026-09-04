@@ -6,74 +6,130 @@
     android:orientation="vertical"
     android:background="@drawable/bg_widget_card"
     android:gravity="center"
-    android:padding="16dp">
+    android:padding="12dp">
 
-    <!-- Top Row: 周二 9月 -->
+    <!-- Chinese Layout Container -->
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:id="@+id/widget_layout_cn"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
 
-        <TextView
-            android:id="@+id/widget_text_weekday"
+        <!-- Top Row: 周二 9月 -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="周二"
-            android:textColor="@color/widget_text_red"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/widget_text_month"
+            <TextView
+                android:id="@+id/widget_text_weekday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="周二"
+                android:textColor="@color/widget_text_red"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/widget_text_month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="9月"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginStart="6dp" />
+        </LinearLayout>
+
+        <!-- Center Row: Date Number + Vertical Lunar / Festival Text -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="9月"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginStart="6dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="6dp">
+
+            <TextView
+                android:id="@+id/widget_text_day_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="58sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:id="@+id/widget_text_lunar_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="七\n月\n二\n十"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="-2dp"
+                android:layout_marginStart="10dp" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Center Row: Date Number + Vertical Lunar / Festival Text + Rest Day Red Indicator -->
+    <!-- English Layout Container -->
+    <!-- Row 1 (centered): Weekday -->
+    <!-- Row 2 (centered): Month -->
+    <!-- Row 3 (centered): Day (turns red if rest day) -->
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="6dp">
+        android:id="@+id/widget_layout_en"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
 
+        <!-- Line 1: Weekday -->
         <TextView
-            android:id="@+id/widget_text_day_number"
+            android:id="@+id/widget_en_text_weekday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="58sp"
+            android:text="Thursday"
+            android:textColor="@color/widget_text_red"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
+        <!-- Line 2: Month -->
         <TextView
-            android:id="@+id/widget_text_lunar_vertical"
+            android:id="@+id/widget_en_text_month"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="七\n月\n二\n十"
-            android:textColor="@color/widget_text_primary"
-            android:textSize="14sp"
+            android:text="September"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="15sp"
             android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Line 3: Day -->
+        <TextView
+            android:id="@+id/widget_en_text_day_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="54sp"
+            android:textStyle="bold"
+            android:gravity="center"
             android:includeFontPadding="false"
-            android:lineSpacingExtra="-2dp"
-            android:layout_marginStart="10dp" />
-
-        <!-- Rest Day Red Indicator Bar/Dot in blank space -->
-        <ImageView
-            android:id="@+id/widget_rest_indicator"
-            android:layout_width="4dp"
-            android:layout_height="16dp"
-            android:background="@color/widget_text_red"
-            android:layout_marginStart="6dp"
-            android:visibility="gone"
-            android:contentDescription="@null" />
+            android:layout_marginTop="2dp" />
     </LinearLayout>
 
 </LinearLayout>

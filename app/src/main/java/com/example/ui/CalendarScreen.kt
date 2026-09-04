@@ -55,11 +55,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.DayInfo
+import com.example.util.LunarCalculator
+import com.example.util.TranslationHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,8 +164,13 @@ private fun StandardPhoneCalendarView(
             Column(modifier = Modifier.fillMaxWidth()) {
                 CenterAlignedTopAppBar(
                     title = {
+                        val topBarTitle = if (TranslationHelper.isEnglish()) {
+                            "${TranslationHelper.getMonthName(currentVisibleYearMonth.second)} ${currentVisibleYearMonth.first}"
+                        } else {
+                            stringResource(R.string.year_month_format, currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                        }
                         Text(
-                            text = "${currentVisibleYearMonth.first} 年 ${currentVisibleYearMonth.second} 月",
+                            text = topBarTitle,
                             fontWeight = FontWeight.Bold,
                             fontSize = if (isElderlyMode) 20.sp else 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -190,15 +199,15 @@ private fun StandardPhoneCalendarView(
                                 ),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
-                            ) {
+                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Today,
-                                    contentDescription = "今日",
+                                    contentDescription = stringResource(R.string.today_btn),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(if (isElderlyMode) 24.dp else 15.dp)
                                 )
                                 Text(
-                                    text = "今",
+                                    text = stringResource(R.string.today_btn_short),
                                     color = MaterialTheme.colorScheme.primary,
                                     fontSize = if (isElderlyMode) 17.sp else 12.sp,
                                     fontWeight = FontWeight.Bold
@@ -231,7 +240,7 @@ private fun StandardPhoneCalendarView(
                             ) {
                                 Icon(
                                     imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (isElderlyMode) "退出关怀模式" else "开启关怀模式",
+                                    contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
                                     tint = if (isElderlyMode) {
                                         MaterialTheme.colorScheme.primary
                                     } else {
@@ -241,7 +250,7 @@ private fun StandardPhoneCalendarView(
                                 )
                                 if (isElderlyMode) {
                                     Text(
-                                        text = "关怀",
+                                        text = stringResource(R.string.elderly_mode_title),
                                         color = MaterialTheme.colorScheme.primary,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
@@ -260,7 +269,7 @@ private fun StandardPhoneCalendarView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "设置",
+                                contentDescription = stringResource(R.string.settings_title),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(if (isElderlyMode) 28.dp else 24.dp)
                             )
@@ -415,9 +424,9 @@ private fun SelectedDayDetailPill(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         val dateTitle = if (dayInfo.isToday) {
-                            "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日 (今天)"
+                            stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
                         } else {
-                            "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日"
+                            stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
                         }
                         Text(
                             text = dateTitle,
@@ -428,7 +437,7 @@ private fun SelectedDayDetailPill(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = dayInfo.dayOfWeekChinese,
+                            text = stringResource(getFullWeekdayResId(dayInfo.dayOfWeekNumber)),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -443,7 +452,7 @@ private fun SelectedDayDetailPill(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "关闭卡片",
+                            contentDescription = stringResource(R.string.close_btn),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(32.dp)
                         )
@@ -469,7 +478,7 @@ private fun SelectedDayDetailPill(
                             color = neutralBadgeBg
                         ) {
                             Text(
-                                text = dayInfo.localeHolidayName ?: "三月三",
+                                text = com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                 fontSize = 21.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -483,7 +492,7 @@ private fun SelectedDayDetailPill(
                             color = neutralBadgeBg
                         ) {
                             Text(
-                                text = if (isRest) "休息日" else "工作日",
+                                text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                 fontSize = 21.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -497,19 +506,20 @@ private fun SelectedDayDetailPill(
 
                 // Lunar Date & Commemoration / Solar Term Information with generous line spacing
                 Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    if (dayInfo.fullLunarText.isNotBlank()) {
+                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    if (fullLunar.isNotBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Text(
-                                text = "农历：",
+                                text = stringResource(R.string.lunar_label),
                                 fontSize = 23.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = dayInfo.fullLunarText,
+                                text = fullLunar,
                                 fontSize = 24.sp,
                                 lineHeight = 32.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -519,19 +529,20 @@ private fun SelectedDayDetailPill(
                     }
 
                     // 24 Solar Term
-                    if (!dayInfo.solarTermName.isNullOrBlank()) {
+                    val solarTerm = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
+                    if (!solarTerm.isNullOrBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Text(
-                                text = "节气：",
+                                text = stringResource(R.string.solar_term_label),
                                 fontSize = 23.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = dayInfo.solarTermName,
+                                text = solarTerm,
                                 fontSize = 24.sp,
                                 lineHeight = 32.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -542,7 +553,8 @@ private fun SelectedDayDetailPill(
 
                     // Special Day / Commemoration / Memorial / Festival Name:
                     // Black text, gray background, NO red coloring per user requirement.
-                    if (!dayInfo.festivalName.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
+                    val festival = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
+                    if (!festival.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -552,7 +564,7 @@ private fun SelectedDayDetailPill(
                                 color = neutralBadgeBg
                             ) {
                                 Text(
-                                    text = dayInfo.festivalName,
+                                    text = festival,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                     fontSize = 22.sp,
                                     lineHeight = 30.sp,
@@ -593,13 +605,13 @@ private fun SelectedDayDetailPill(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "${dayInfo.year}年${dayInfo.month}月${dayInfo.day}日",
+                            text = stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = dayInfo.dayOfWeekChinese,
+                            text = stringResource(getFullWeekdayResId(dayInfo.dayOfWeekNumber)),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -610,7 +622,7 @@ private fun SelectedDayDetailPill(
                                 color = LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
                             ) {
                                 Text(
-                                    text = dayInfo.localeHolidayName ?: "三月三",
+                                    text = com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
@@ -635,7 +647,7 @@ private fun SelectedDayDetailPill(
                                 color = tagBgColor
                             ) {
                                 Text(
-                                    text = if (isRest) "休息日" else "工作日",
+                                    text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
@@ -651,16 +663,22 @@ private fun SelectedDayDetailPill(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        if (dayInfo.fullLunarText.isNotBlank()) {
+                        val lunarDayStr = com.example.util.TranslationHelper.getLunarMonthAndDayText(
+                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).lunarMonth,
+                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).lunarDay,
+                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).isLeap
+                        )
+                        if (lunarDayStr.isNotBlank()) {
                             Text(
-                                text = dayInfo.fullLunarText,
+                                text = lunarDayStr,
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        if (dayInfo.festivalName != null && !dayInfo.isLocaleHoliday) {
+                        val pillFest = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
+                        if (pillFest != null && !dayInfo.isLocaleHoliday) {
                             Text(
-                                text = "· ${dayInfo.festivalName}",
+                                text = "· $pillFest",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (dayInfo.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
@@ -675,7 +693,7 @@ private fun SelectedDayDetailPill(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "关闭",
+                        contentDescription = stringResource(R.string.close_btn),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
