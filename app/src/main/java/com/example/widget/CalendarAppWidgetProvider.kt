@@ -92,60 +92,50 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                     views.setViewVisibility(R.id.widget_layout_cn, View.GONE)
                     views.setViewVisibility(R.id.widget_layout_en, View.VISIBLE)
 
-                    // Line 1: Weekday centered in RED
+                    // Line 1: Weekday centered
                     views.setTextViewText(R.id.widget_en_text_weekday, context.getString(weekdayResId))
-                    views.setTextColor(
-                        R.id.widget_en_text_weekday,
-                        ContextCompat.getColor(context, R.color.widget_text_red)
-                    )
 
                     // Line 2: Month centered (e.g. "September")
                     val monthText = com.example.util.TranslationHelper.getMonthName(month)
                     views.setTextViewText(R.id.widget_en_text_month, monthText)
 
                     // Line 3: Day centered (turns red if rest day)
-                    views.setTextViewText(R.id.widget_en_text_day_number, dayInfo.day.toString())
-                    val dayColor = if (dayInfo.isRestDay) {
-                        ContextCompat.getColor(context, R.color.widget_text_red)
+                    val dayStr = dayInfo.day.toString()
+                    if (dayInfo.isRestDay) {
+                        views.setViewVisibility(R.id.widget_en_text_day_number, View.GONE)
+                        views.setViewVisibility(R.id.widget_en_text_day_number_red, View.VISIBLE)
+                        views.setTextViewText(R.id.widget_en_text_day_number_red, dayStr)
                     } else {
-                        ContextCompat.getColor(context, R.color.widget_text_primary)
+                        views.setViewVisibility(R.id.widget_en_text_day_number, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_en_text_day_number_red, View.GONE)
+                        views.setTextViewText(R.id.widget_en_text_day_number, dayStr)
                     }
-                    views.setTextColor(R.id.widget_en_text_day_number, dayColor)
                 } else {
                     views.setViewVisibility(R.id.widget_layout_cn, View.VISIBLE)
                     views.setViewVisibility(R.id.widget_layout_en, View.GONE)
 
-                    // Top Left: Weekday in RED (e.g. "周二")
+                    // Top Left: Weekday (e.g. "周二")
                     views.setTextViewText(R.id.widget_text_weekday, context.getString(weekdayResId))
-                    views.setTextColor(
-                        R.id.widget_text_weekday,
-                        ContextCompat.getColor(context, R.color.widget_text_red)
-                    )
 
-                    // Top Right: Month in GRAY (e.g. "9月")
+                    // Top Right: Month (e.g. "9月")
                     views.setTextViewText(R.id.widget_text_month, "${month}月")
-                    views.setTextColor(
-                        R.id.widget_text_month,
-                        ContextCompat.getColor(context, R.color.widget_text_secondary)
-                    )
 
                     // Date Number: turns red if rest day, else primary color
-                    views.setTextViewText(R.id.widget_text_day_number, dayInfo.day.toString())
-                    val cnDayColor = if (dayInfo.isRestDay) {
-                        ContextCompat.getColor(context, R.color.widget_text_red)
+                    val dayStr = dayInfo.day.toString()
+                    if (dayInfo.isRestDay) {
+                        views.setViewVisibility(R.id.widget_text_day_number, View.GONE)
+                        views.setViewVisibility(R.id.widget_text_day_number_red, View.VISIBLE)
+                        views.setTextViewText(R.id.widget_text_day_number_red, dayStr)
                     } else {
-                        ContextCompat.getColor(context, R.color.widget_text_primary)
+                        views.setViewVisibility(R.id.widget_text_day_number, View.VISIBLE)
+                        views.setViewVisibility(R.id.widget_text_day_number_red, View.GONE)
+                        views.setTextViewText(R.id.widget_text_day_number, dayStr)
                     }
-                    views.setTextColor(R.id.widget_text_day_number, cnDayColor)
 
                     // Vertical Text on Right (Lunar / Festival)
                     val rawNoteText = dayInfo.widgetNote.ifBlank { " " }
                     val verticalNoteText = rawNoteText.toCharArray().joinToString("\n")
                     views.setTextViewText(R.id.widget_text_lunar_vertical, verticalNoteText)
-                    views.setTextColor(
-                        R.id.widget_text_lunar_vertical,
-                        ContextCompat.getColor(context, R.color.widget_text_primary)
-                    )
                 }
 
                 // Click Intent -> Open MainActivity
