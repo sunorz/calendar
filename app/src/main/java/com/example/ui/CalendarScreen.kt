@@ -506,31 +506,32 @@ private fun SelectedDayDetailPill(
 
                 // Lunar Date & Commemoration / Solar Term Information with generous line spacing
                 Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-                    if (fullLunar.isNotBlank()) {
+                    val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+
+                    // 1. Festival (if present)
+                    if (lunarPriority.hasFestival) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.lunar_label),
-                                fontSize = 23.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = fullLunar,
-                                fontSize = 24.sp,
-                                lineHeight = 32.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = neutralBadgeBg
+                            ) {
+                                Text(
+                                    text = lunarPriority.festivalText!!,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    fontSize = 22.sp,
+                                    lineHeight = 30.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = neutralBadgeText
+                                )
+                            }
                         }
                     }
 
-                    // 24 Solar Term
-                    val solarTerm = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
-                    if (!solarTerm.isNullOrBlank()) {
+                    // 2. 24 Solar Term (shown if present, either together with festival or by itself)
+                    if (lunarPriority.hasSolarTerm) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -542,7 +543,7 @@ private fun SelectedDayDetailPill(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = solarTerm,
+                                text = lunarPriority.solarTermText!!,
                                 fontSize = 24.sp,
                                 lineHeight = 32.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -551,25 +552,26 @@ private fun SelectedDayDetailPill(
                         }
                     }
 
-                    // Special Day / Commemoration / Memorial / Festival Name:
-                    // Black text, gray background, NO red coloring per user requirement.
-                    val festival = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
-                    if (!festival.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = neutralBadgeBg
+                    // 3. If neither festival nor solar term is present, or if it is a Gregorian festival, display full lunar date
+                    if ((!lunarPriority.hasFestival && !lunarPriority.hasSolarTerm) || (lunarPriority.hasFestival && !lunarPriority.isLunarFestival)) {
+                        val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                        if (fullLunar.isNotBlank()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Text(
-                                    text = festival,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                    fontSize = 22.sp,
-                                    lineHeight = 30.sp,
+                                    text = stringResource(R.string.lunar_label),
+                                    fontSize = 23.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = fullLunar,
+                                    fontSize = 24.sp,
+                                    lineHeight = 32.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = neutralBadgeText
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -659,30 +661,97 @@ private fun SelectedDayDetailPill(
 
                     Spacer(modifier = Modifier.height(2.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        val lunarDayStr = com.example.util.TranslationHelper.getLunarMonthAndDayText(
-                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).lunarMonth,
-                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).lunarDay,
-                            LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day).isLeap
-                        )
-                        if (lunarDayStr.isNotBlank()) {
-                            Text(
-                                text = lunarDayStr,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+
+                    if (com.example.util.TranslationHelper.isEnglish()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            if (lunarPriority.hasFestival) {
+                                Text(
+                                    text = lunarPriority.festivalText!!,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (!lunarPriority.isLunarFestival && lunarPriority.ordinaryLunarText.isNotBlank()) {
+                                    Text(
+                                        text = lunarPriority.ordinaryLunarText,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (lunarPriority.hasSolarTerm) {
+                                    Text(
+                                        text = lunarPriority.solarTermText!!,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else if (lunarPriority.hasSolarTerm) {
+                                Text(
+                                    text = lunarPriority.solarTermText!!,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                if (lunarPriority.ordinaryLunarText.isNotBlank()) {
+                                    Text(
+                                        text = lunarPriority.ordinaryLunarText,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
-                        val pillFest = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
-                        if (pillFest != null && !dayInfo.isLocaleHoliday) {
-                            Text(
-                                text = "· $pillFest",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (dayInfo.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (lunarPriority.hasFestival) {
+                                if (!lunarPriority.isLunarFestival && lunarPriority.ordinaryLunarText.isNotBlank()) {
+                                    Text(
+                                        text = lunarPriority.ordinaryLunarText,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "· ${lunarPriority.festivalText}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    Text(
+                                        text = lunarPriority.festivalText!!,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (lunarPriority.hasSolarTerm) {
+                                    Text(
+                                        text = "· ${lunarPriority.solarTermText}",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else if (lunarPriority.hasSolarTerm) {
+                                Text(
+                                    text = lunarPriority.solarTermText!!,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                if (lunarPriority.ordinaryLunarText.isNotBlank()) {
+                                    Text(
+                                        text = lunarPriority.ordinaryLunarText,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }

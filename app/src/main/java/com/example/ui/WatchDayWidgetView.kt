@@ -386,35 +386,74 @@ private fun WatchDayCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Row 4: Lunar Date
-            val fullLunarText = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-            Text(
-                text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
-                fontSize = if (isElderlyMode) 15.sp else 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
+            // Row 4 & 5: Card Lunar Priority (Festival + Solar Term, or Solar Term, or Ordinary Lunar)
+            val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
 
-            // Row 5: Solar term or Special Holiday (if present)
-            val festivalTranslated = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
-            val termTranslated = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
-            val specialText = festivalTranslated ?: termTranslated
-            if (!specialText.isNullOrBlank()) {
+            if (lunarPriority.hasFestival) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                 ) {
                     Text(
-                        text = specialText,
-                        fontSize = if (isElderlyMode) 14.sp else 11.5.sp,
+                        text = lunarPriority.festivalText!!,
+                        fontSize = if (isElderlyMode) 14.sp else 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         maxLines = 1
                     )
                 }
+                if (!lunarPriority.isLunarFestival) {
+                    val fullLunarText = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    if (fullLunarText.isNotBlank()) {
+                        Text(
+                            text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
+                            fontSize = if (isElderlyMode) 13.5.sp else 11.5.sp,
+                            lineHeight = if (isElderlyMode) 17.sp else 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            softWrap = true,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                if (lunarPriority.hasSolarTerm) {
+                    Text(
+                        text = lunarPriority.solarTermText!!,
+                        fontSize = if (isElderlyMode) 13.sp else 11.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else if (lunarPriority.hasSolarTerm) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                ) {
+                    Text(
+                        text = lunarPriority.solarTermText!!,
+                        fontSize = if (isElderlyMode) 14.sp else 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        maxLines = 1
+                    )
+                }
+            } else {
+                val fullLunarText = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                Text(
+                    text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
+                    fontSize = if (isElderlyMode) 13.5.sp else 11.5.sp,
+                    lineHeight = if (isElderlyMode) 17.sp else 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    softWrap = true,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

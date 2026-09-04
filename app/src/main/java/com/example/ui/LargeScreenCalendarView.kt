@@ -417,31 +417,26 @@ private fun LargeScreenDetailPanel(
                     thickness = 0.8.dp
                 )
 
-                // Lunar & Solar Term Details (Cohesive key-value format)
+                // Lunar & Solar Term Details (Follows card lunar priority rule)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-                    if (fullLunar.isNotBlank()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+
+                    if (lunarPriority.hasFestival) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = neutralBadgeBg
                         ) {
                             Text(
-                                text = stringResource(R.string.lunar_label),
+                                text = lunarPriority.festivalText!!,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = fullLunar,
-                                fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = neutralBadgeText
                             )
                         }
                     }
 
-                    val solarTerm = com.example.util.TranslationHelper.translateSolarTerm(dayInfo.solarTermName)
-                    if (!solarTerm.isNullOrBlank()) {
+                    if (lunarPriority.hasSolarTerm) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -453,7 +448,7 @@ private fun LargeScreenDetailPanel(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = solarTerm,
+                                text = lunarPriority.solarTermText!!,
                                 fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -461,19 +456,26 @@ private fun LargeScreenDetailPanel(
                         }
                     }
 
-                    val festival = com.example.util.TranslationHelper.translateFestival(dayInfo.festivalName)
-                    if (!festival.isNullOrBlank() && !dayInfo.isLocaleHoliday) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = neutralBadgeBg
-                        ) {
-                            Text(
-                                text = festival,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = neutralBadgeText
-                            )
+                    if ((!lunarPriority.hasFestival && !lunarPriority.hasSolarTerm) || (lunarPriority.hasFestival && !lunarPriority.isLunarFestival)) {
+                        val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                        if (fullLunar.isNotBlank()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.lunar_label),
+                                    fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = fullLunar,
+                                    fontSize = if (isElderlyMode) 17.sp else 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }

@@ -523,6 +523,7 @@ object LunarCalculator {
             }
 
             val festivalName = defaultLunarFestival ?: defaultSolarFestival
+            val isLunarFest = defaultLunarFestival != null
             val solarTermName = defaultSolarTerm
 
             val resolvedFestival = festivalName ?: solarTermName
@@ -545,6 +546,7 @@ object LunarCalculator {
                 isWorkDay = !isRest,
                 lunarText = standardLunarText,
                 festivalName = festivalName,
+                isLunarFestival = isLunarFest,
                 solarTermName = solarTermName,
                 lunarMonthAndDayText = lunarMonthAndDayText,
                 hasFestival = hasFestival,

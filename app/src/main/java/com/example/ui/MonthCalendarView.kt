@@ -375,14 +375,21 @@ fun MinimalDayCell(
 
                 val subText = com.example.util.TranslationHelper.getLocalizedDisplayNote(dayInfo)
                 val subColor = if (dayInfo.isHolidayWithRest) restColor else MaterialTheme.colorScheme.onSurfaceVariant
+                val isEn = com.example.util.TranslationHelper.isEnglish()
+                val subFontSize = when {
+                    isEn && subText.length > 7 -> 7.5.sp
+                    isEn && subText.length > 5 -> 8.sp
+                    else -> 9.sp
+                }
 
                 Text(
                     text = subText.ifBlank { " " },
                     color = subColor,
-                    fontSize = 9.sp,
+                    fontSize = subFontSize,
                     fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Clip,
+                    softWrap = false,
                     textAlign = TextAlign.Center
                 )
             }

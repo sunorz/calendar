@@ -68,6 +68,7 @@ data class DayInfo(
     val isWorkDay: Boolean,
     val lunarText: String, // e.g. "初一", "正月"
     val festivalName: String? = null, // e.g. "春节", "元旦", "国庆节"
+    val isLunarFestival: Boolean = false, // true if the festival is a Lunar festival (e.g. "春节", "中秋节")
     val solarTermName: String? = null, // e.g. "立春", "清明"
     val lunarMonthAndDayText: String = "", // e.g. "三月廿二", "七月初一"
     val hasFestival: Boolean = false, // Whether the day has a solar/lunar festival or 24 solar term

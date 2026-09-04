@@ -198,4 +198,56 @@ class LunarCalculatorTest {
         val text3_22 = LunarCalculator.getLunarMonthAndDayText(3, 22, false)
         assertEquals("三月廿二", text3_22)
     }
+
+    @Test
+    fun testCardLunarPriorityData() {
+        val originalLocale = java.util.Locale.getDefault()
+        try {
+            // Chinese Mode test
+            java.util.Locale.setDefault(java.util.Locale.SIMPLIFIED_CHINESE)
+            val bailuDayCn = LunarCalculator.getDayInfoForDate(2026, 9, 7, sampleConfig)
+            val bailuCardCn = com.example.util.TranslationHelper.getCardLunarPriorityData(bailuDayCn)
+            assertFalse(bailuCardCn.hasFestival)
+            assertTrue(bailuCardCn.hasSolarTerm)
+            assertEquals("白露", bailuCardCn.solarTermText)
+
+            val midAutumnDayCn = LunarCalculator.getDayInfoForDate(2026, 9, 25, sampleConfig)
+            val midAutumnCardCn = com.example.util.TranslationHelper.getCardLunarPriorityData(midAutumnDayCn)
+            assertTrue(midAutumnCardCn.hasFestival)
+            assertEquals("中秋节", midAutumnCardCn.festivalText)
+
+            val normalDayCn = LunarCalculator.getDayInfoForDate(2026, 9, 4, sampleConfig)
+            val normalCardCn = com.example.util.TranslationHelper.getCardLunarPriorityData(normalDayCn)
+            assertFalse(normalCardCn.hasFestival)
+            assertFalse(normalCardCn.hasSolarTerm)
+            assertTrue(normalCardCn.ordinaryLunarText.isNotBlank())
+
+            val nationalDayCn = LunarCalculator.getDayInfoForDate(2026, 10, 1, sampleConfig)
+            val nationalCardCn = com.example.util.TranslationHelper.getCardLunarPriorityData(nationalDayCn)
+            assertTrue(nationalCardCn.hasFestival)
+            assertFalse(nationalCardCn.isLunarFestival)
+            assertEquals("国庆节", nationalCardCn.festivalText)
+
+            // English Mode test
+            java.util.Locale.setDefault(java.util.Locale.US)
+            val bailuDayEn = LunarCalculator.getDayInfoForDate(2026, 9, 7, sampleConfig)
+            val bailuCardEn = com.example.util.TranslationHelper.getCardLunarPriorityData(bailuDayEn)
+            assertFalse(bailuCardEn.hasFestival)
+            assertTrue(bailuCardEn.hasSolarTerm)
+            assertEquals("White Dew", bailuCardEn.solarTermText)
+
+            val midAutumnDayEn = LunarCalculator.getDayInfoForDate(2026, 9, 25, sampleConfig)
+            val midAutumnCardEn = com.example.util.TranslationHelper.getCardLunarPriorityData(midAutumnDayEn)
+            assertTrue(midAutumnCardEn.hasFestival)
+            assertEquals("Mid-Autumn Festival", midAutumnCardEn.festivalText)
+
+            val normalDayEn = LunarCalculator.getDayInfoForDate(2026, 9, 4, sampleConfig)
+            val normalCardEn = com.example.util.TranslationHelper.getCardLunarPriorityData(normalDayEn)
+            assertFalse(normalCardEn.hasFestival)
+            assertFalse(normalCardEn.hasSolarTerm)
+            assertTrue(normalCardEn.ordinaryLunarText.isNotBlank())
+        } finally {
+            java.util.Locale.setDefault(originalLocale)
+        }
+    }
 }

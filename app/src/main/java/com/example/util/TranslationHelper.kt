@@ -256,18 +256,97 @@ object TranslationHelper {
         return "Year of $stem-$branchAndZodiac, $leapPrefix$monthName, $dayOrdinal"
     }
 
+    // Compact / Fitted translations for small Calendar Grid cells in English (prevents ugly '...' truncation)
+    private val FESTIVALS_CELL_SHORT_EN = mapOf(
+        "元旦" to "New Year",
+        "除夕" to "CNY Eve",
+        "春节" to "Spring",
+        "破五" to "Po Wu",
+        "元宵节" to "Lantern",
+        "龙抬头" to "Dragon Head",
+        "三月三" to "Shangsi",
+        "清明节" to "Qingming",
+        "端午" to "Dragon",
+        "端午节" to "Dragon",
+        "七夕节" to "Qixi",
+        "中元节" to "Ghost Day",
+        "中秋" to "Mid-Aut",
+        "中秋节" to "Mid-Aut",
+        "重阳节" to "Double 9",
+        "寒衣节" to "Hanyi",
+        "下元节" to "Xiayuan",
+        "腊八节" to "Laba",
+        "小年" to "Little CNY",
+        "北方小年" to "Little CNY",
+        "南方小年" to "Little CNY",
+        "劳动节" to "Labor",
+        "五一" to "Labor",
+        "国庆" to "National",
+        "国庆节" to "National",
+        "十一" to "National",
+        "情人节" to "Valentine",
+        "妇女节" to "Women",
+        "青年节" to "Youth",
+        "儿童节" to "Children",
+        "建党节" to "CPC Day",
+        "建军节" to "Army Day",
+        "教师节" to "Teachers",
+        "九一八" to "Sept 18",
+        "程序员节" to "Programmer",
+        "万圣节" to "Halloween",
+        "感恩节" to "Thanksgiving",
+        "平安夜" to "Xmas Eve",
+        "圣诞节" to "Christmas"
+    )
+
+    private val SOLAR_TERMS_CELL_SHORT_EN = mapOf(
+        "立春" to "Beg Spring",
+        "雨水" to "Rain Water",
+        "惊蛰" to "Insects",
+        "春分" to "Spring Eq",
+        "清明" to "Qingming",
+        "谷雨" to "Grain Rain",
+        "立夏" to "Beg Summer",
+        "小满" to "Lesser Full",
+        "芒种" to "Grain Ear",
+        "夏至" to "Summer Sol",
+        "小暑" to "Lesser Heat",
+        "大暑" to "Great Heat",
+        "立秋" to "Beg Autumn",
+        "处暑" to "End Heat",
+        "白露" to "White Dew",
+        "秋分" to "Autumn Eq",
+        "寒露" to "Cold Dew",
+        "霜降" to "Frost",
+        "立冬" to "Beg Winter",
+        "小雪" to "Lesser Snow",
+        "大雪" to "Great Snow",
+        "冬至" to "Winter Sol",
+        "小寒" to "Lesser Cold",
+        "大寒" to "Great Cold"
+    )
+
     /**
      * Localizes display note for calendar grid.
+     * Uses compact terms in English so text does not overflow tiny calendar cells.
      */
     fun getLocalizedDisplayNote(dayInfo: com.example.data.model.DayInfo): String {
         if (!isEnglish()) return dayInfo.displayNote
 
-        val translatedFest = translateFestival(dayInfo.festivalName)
-        if (!translatedFest.isNullOrBlank()) return translatedFest
+        // Check short festival name for grid cells
+        dayInfo.festivalName?.let { fest ->
+            FESTIVALS_CELL_SHORT_EN[fest]?.let { return it }
+            for ((key, value) in FESTIVALS_CELL_SHORT_EN) {
+                if (fest.contains(key) || key.contains(fest)) return value
+            }
+        }
 
-        val translatedTerm = translateSolarTerm(dayInfo.solarTermName)
-        if (!translatedTerm.isNullOrBlank()) return translatedTerm
+        // Check short solar term name
+        dayInfo.solarTermName?.let { term ->
+            SOLAR_TERMS_CELL_SHORT_EN[term]?.let { return it }
+        }
 
+        // Standard lunar day
         val lunar = LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day)
         return getStandardLunarDayText(lunar.lunarMonth, lunar.lunarDay, lunar.isLeap)
     }
@@ -278,5 +357,43 @@ object TranslationHelper {
     fun getLocalizedFullLunarText(dayInfo: com.example.data.model.DayInfo): String {
         if (!isEnglish()) return dayInfo.fullLunarText
         return getFullLunarDateString(dayInfo.year, dayInfo.month, dayInfo.day)
+    }
+
+    data class CardLunarPriorityData(
+        val hasFestival: Boolean,
+        val festivalText: String?,
+        val hasSolarTerm: Boolean,
+        val solarTermText: String?,
+        val ordinaryLunarText: String,
+        val isHolidayWithRest: Boolean,
+        val isLunarFestival: Boolean
+    )
+
+    /**
+     * Card Lunar Priority Rule (Chinese & English):
+     * 1. 农历节日时，同时显示农历节日和节气（如果有），不显示普通农历
+     * 2. 如果是公历节日（如国庆节），显示公历节日，并显示普通农历（和节气，如果有）
+     * 3. 如果没有节日但有节气，显示节气，（可以不显示普通农历或者按需，这里原逻辑是如果没有节日也没有节气才显示普通农历，
+     *    但如果是节气，原逻辑是不显示普通农历的。我们暂保持：无节日有节气时不显示普通农历，或者...等下，节气本身就是农历体系的，所以原逻辑是不显示普通农历）
+     * 4. 如果没有节日也没有节气，显示普通农历
+     */
+    fun getCardLunarPriorityData(dayInfo: com.example.data.model.DayInfo): CardLunarPriorityData {
+        val festival = translateFestival(dayInfo.festivalName)
+        val solarTerm = translateSolarTerm(dayInfo.solarTermName)
+        val lunarDate = LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day)
+        val ordinaryLunar = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
+
+        val hasFestival = !festival.isNullOrBlank() && !dayInfo.isLocaleHoliday
+        val hasSolarTerm = !solarTerm.isNullOrBlank()
+
+        return CardLunarPriorityData(
+            hasFestival = hasFestival,
+            festivalText = if (hasFestival) festival else null,
+            hasSolarTerm = hasSolarTerm,
+            solarTermText = if (hasSolarTerm) solarTerm else null,
+            ordinaryLunarText = ordinaryLunar,
+            isHolidayWithRest = dayInfo.isHolidayWithRest,
+            isLunarFestival = dayInfo.isLunarFestival
+        )
     }
 }
