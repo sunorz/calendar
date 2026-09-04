@@ -77,10 +77,10 @@ fun WatchDayWidgetView(
     val config by viewModel.config.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
 
-    // Current selected date state in Watch mode (defaults to current real date)
-    var currentYear by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
-    var currentMonth by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.MONTH) + 1) }
-    var currentDay by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) }
+    // Current selected date state in Watch mode (defaults to current real date in UTC+8)
+    var currentYear by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.YEAR)) }
+    var currentMonth by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.MONTH) + 1) }
+    var currentDay by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.DAY_OF_MONTH)) }
 
     // Dialog state for cross-date quick picker
     var showDatePickerDialog by remember { mutableStateOf(false) }
@@ -92,7 +92,7 @@ fun WatchDayWidgetView(
 
     // Helper functions to step days
     fun stepDay(delta: Int) {
-        val cal = Calendar.getInstance().apply {
+        val cal = LunarCalculator.getChinaCalendar().apply {
             set(currentYear, currentMonth - 1, currentDay)
             add(Calendar.DAY_OF_MONTH, delta)
         }
@@ -104,7 +104,7 @@ fun WatchDayWidgetView(
     }
 
     fun jumpToToday() {
-        val cal = Calendar.getInstance()
+        val cal = LunarCalculator.getChinaCalendar()
         currentYear = cal.get(Calendar.YEAR)
         currentMonth = cal.get(Calendar.MONTH) + 1
         currentDay = cal.get(Calendar.DAY_OF_MONTH)
@@ -425,7 +425,7 @@ private fun WatchDatePickerDialog(
     var selDay by remember { mutableIntStateOf(initialDay) }
 
     val maxDaysInMonth = remember(selYear, selMonth) {
-        val cal = Calendar.getInstance().apply {
+        val cal = LunarCalculator.getChinaCalendar().apply {
             set(Calendar.YEAR, selYear)
             set(Calendar.MONTH, selMonth - 1)
             set(Calendar.DAY_OF_MONTH, 1)

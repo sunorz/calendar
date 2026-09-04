@@ -77,7 +77,7 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                 val repository = CalendarRepository(context)
                 val config = repository.configState.value
 
-                val cal = Calendar.getInstance()
+                val cal = LunarCalculator.getChinaCalendar()
                 val year = cal.get(Calendar.YEAR)
                 val month = cal.get(Calendar.MONTH) + 1
                 val day = cal.get(Calendar.DAY_OF_MONTH)

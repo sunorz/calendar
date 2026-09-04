@@ -5,6 +5,7 @@ import com.example.data.model.DayInfo
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
+import java.util.TimeZone
 
 data class LunarDate(
     val lunarYear: Int,
@@ -14,6 +15,17 @@ data class LunarDate(
 )
 
 object LunarCalculator {
+
+    /**
+     * Fixed TimeZone for China Standard Time (UTC+8 / Asia/Shanghai).
+     * Ensures all calendar and date calculations strictly reflect UTC+8 regardless of system/device timezone.
+     */
+    val CHINA_TIME_ZONE: TimeZone = TimeZone.getTimeZone("GMT+8")
+
+    /**
+     * Get a Calendar instance initialized to the fixed UTC+8 TimeZone.
+     */
+    fun getChinaCalendar(): Calendar = Calendar.getInstance(CHINA_TIME_ZONE)
 
     private val CHINESE_DIGITS = listOf("一", "二", "三", "四", "五", "六", "七", "八", "九", "十")
     private val HEAVENLY_STEMS = listOf("甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸")
@@ -469,7 +481,7 @@ object LunarCalculator {
      */
     fun getMonthDays(year: Int, month: Int, config: CalendarConfig): List<DayInfo> {
         val daysInMonth = getDaysInMonth(year, month)
-        val todayCal = Calendar.getInstance()
+        val todayCal = getChinaCalendar()
         val todayYear = todayCal.get(Calendar.YEAR)
         val todayMonth = todayCal.get(Calendar.MONTH) + 1
         val todayDay = todayCal.get(Calendar.DAY_OF_MONTH)
@@ -478,7 +490,7 @@ object LunarCalculator {
         val isConfigYear = (year == config.curYear)
 
         for (d in 1..daysInMonth) {
-            val cal = Calendar.getInstance().apply {
+            val cal = getChinaCalendar().apply {
                 set(year, month - 1, d, 0, 0, 0)
                 set(Calendar.MILLISECOND, 0)
             }

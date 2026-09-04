@@ -219,7 +219,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "多劳多得。",
+                                    text = "海内存知己",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

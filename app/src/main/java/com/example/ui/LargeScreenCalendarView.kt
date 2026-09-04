@@ -86,7 +86,7 @@ fun LargeScreenCalendarView(
 
     // Today's DayInfo fallback if no date is explicitly clicked
     val todayInfo = remember(config) {
-        val cal = Calendar.getInstance()
+        val cal = LunarCalculator.getChinaCalendar()
         LunarCalculator.getDayInfoForDate(
             cal.get(Calendar.YEAR),
             cal.get(Calendar.MONTH) + 1,

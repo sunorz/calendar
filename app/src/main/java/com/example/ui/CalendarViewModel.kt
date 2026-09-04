@@ -76,7 +76,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     val todayMonthIndex: Int
         get() {
-            val cal = Calendar.getInstance()
+            val cal = LunarCalculator.getChinaCalendar()
             val y = cal.get(Calendar.YEAR)
             val m = cal.get(Calendar.MONTH) + 1
             return getMonthIndex(y, m)
@@ -103,7 +103,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.7.4"
+        val newVer = _remoteVersion.value ?: "0.7.5"
         val downloadUrl = "https://kkii.org/app/calendar-v$newVer-release.apk"
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
@@ -149,7 +149,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun selectToday() {
-        val cal = Calendar.getInstance()
+        val cal = LunarCalculator.getChinaCalendar()
         val y = cal.get(Calendar.YEAR)
         val m = cal.get(Calendar.MONTH) + 1
         val d = cal.get(Calendar.DAY_OF_MONTH)
