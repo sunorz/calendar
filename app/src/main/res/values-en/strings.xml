@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Holiday Calendar</string>
+    <string name="app_name">CN ShiftCal</string>
     <string name="widget_description">Dynamic Calendar Widget: Displays weekday, workday/restday status and date</string>
     <string name="workday_label">Workday</string>
     <string name="restday_label">Rest Day</string>
