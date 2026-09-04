@@ -221,7 +221,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "海内存知己",
+                                    text = "休息",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

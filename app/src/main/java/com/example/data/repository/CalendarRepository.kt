@@ -28,8 +28,12 @@ sealed class SyncState {
 class CalendarRepository(private val context: Context) {
 
     companion object {
-        const val DEFAULT_CONFIG_URL = "https://kkii.org/assets/js/cals/config.json"
-        const val VERSION_CHECK_URL = "https://kkii.org/app/calendar-version.json"
+        val DEFAULT_CONFIG_URL: String
+            get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9jb25maWcuanNvbg==", android.util.Base64.DEFAULT))
+            
+        val VERSION_CHECK_URL: String
+            get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdmVyc2lvbi5qc29u", android.util.Base64.DEFAULT))
+            
         private const val PREFS_NAME = "calendar_prefs"
         private const val KEY_CACHED_JSON = "cached_config_json"
         private const val KEY_LAST_SYNC = "last_sync_timestamp"
@@ -98,7 +102,7 @@ class CalendarRepository(private val context: Context) {
     data class VersionCheckResult(
         val remoteMain: String,
         val isNewer: Boolean,
-        val configUpdated: Boolean
+        val configNeedsFetch: Boolean
     )
 
     suspend fun checkAndSyncVersion(): Result<VersionCheckResult> {
@@ -106,7 +110,7 @@ class CalendarRepository(private val context: Context) {
             try {
                 val request = Request.Builder()
                     .url(VERSION_CHECK_URL)
-                    .header("User-Agent", "CalendarApp/1.0 (Android)")
+                    .header("User-Agent", "CN-ShiftCal/1.0 (Android)")
                     .header("Cache-Control", "no-cache")
                     .header("Pragma", "no-cache")
                     .build()
@@ -122,38 +126,24 @@ class CalendarRepository(private val context: Context) {
                 }
 
                 val root = JSONObject(bodyStr)
-                val remoteMain = root.optString("main", "0.6.1")
+                val remoteMain = root.optString("main", "0.7.6")
                 val localVersion = getAppVersion()
                 Log.d(TAG, "Version check: remoteMain=$remoteMain, localVersion=$localVersion")
 
-                var configUpdated = false
-                val configVal = root.opt("config")
-                val remoteConfigStr = when (configVal) {
-                    is JSONObject -> configVal.toString()
-                    is String -> {
-                        if (configVal.trim().startsWith("{")) {
-                            configVal
-                        } else {
-                            null
-                        }
-                    }
-                    else -> null
-                }
-                if (remoteConfigStr != null) {
-                    val localCached = prefs.getString(KEY_CACHED_JSON, null)
-                    if (remoteConfigStr != localCached) {
-                        val parsed = parseConfigJson(remoteConfigStr)
-                        if (parsed != null) {
-                            prefs.edit().putString(KEY_CACHED_JSON, remoteConfigStr).apply()
-                            _configState.value = parsed
-                            configUpdated = true
-                        }
-                    }
+                var configNeedsFetch = false
+                val remoteConfigVersion = root.optString("config", "")
+                val localConfigVersion = prefs.getString("config_version_hash", "")
+                val localCached = prefs.getString(KEY_CACHED_JSON, null)
+
+                // Fetch if we have no cache, OR if the remote version string changed
+                if (localCached.isNullOrEmpty() || (remoteConfigVersion.isNotEmpty() && remoteConfigVersion != localConfigVersion)) {
+                    configNeedsFetch = true
+                    prefs.edit().putString("config_version_hash", remoteConfigVersion).apply()
                 }
 
                 val isNewer = isVersionNewer(remoteMain, localVersion)
 
-                Result.success(VersionCheckResult(remoteMain, isNewer, configUpdated))
+                Result.success(VersionCheckResult(remoteMain, isNewer, configNeedsFetch))
             } catch (e: Exception) {
                 Log.e(TAG, "Version check error", e)
                 Result.failure(e)
@@ -171,23 +161,10 @@ class CalendarRepository(private val context: Context) {
                 val parsed = parseConfigJson(cached)
                 if (parsed != null) return parsed
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse cached config, falling back to assets", e)
+                Log.e(TAG, "Failed to parse cached config, returning empty layout", e)
             }
         }
-        return loadFromAssets()
-    }
-
-    /**
-     * Load bundled fallback config from APK assets
-     */
-    private fun loadFromAssets(): CalendarConfig {
-        return try {
-            val json = context.assets.open("config.json").bufferedReader().use { it.readText() }
-            parseConfigJson(json) ?: CalendarConfig()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to load config from assets", e)
-            CalendarConfig()
-        }
+        return CalendarConfig(curYear = 2026) // Provide empty structure when no cache exists
     }
 
     /**
@@ -206,7 +183,7 @@ class CalendarRepository(private val context: Context) {
             try {
                 val request = Request.Builder()
                     .url(targetUrl)
-                    .header("User-Agent", "CalendarApp/1.0 (Android)")
+                    .header("User-Agent", "CN-ShiftCal/1.0 (Android)")
                     .build()
 
                 val response = okHttpClient.newCall(request).execute()
@@ -300,10 +277,11 @@ class CalendarRepository(private val context: Context) {
             if (lunarFestivalsArray != null) {
                 for (i in 0 until lunarFestivalsArray.length()) {
                     val obj = lunarFestivalsArray.getJSONObject(i)
+                    val name = obj.optString("name")
                     lunarFestivals.add(
                         FestivalItem(
                             date = obj.optString("date"),
-                            name = obj.optString("name"),
+                            name = name,
                             tag = obj.optInt("tag", 0)
                         )
                     )
@@ -316,10 +294,11 @@ class CalendarRepository(private val context: Context) {
             if (festivalsArray != null) {
                 for (i in 0 until festivalsArray.length()) {
                     val obj = festivalsArray.getJSONObject(i)
+                    val name = obj.optString("name")
                     festivals.add(
                         FestivalItem(
                             date = obj.optString("date"),
-                            name = obj.optString("name"),
+                            name = name,
                             tag = obj.optInt("tag", 0)
                         )
                     )
@@ -337,7 +316,8 @@ class CalendarRepository(private val context: Context) {
                     val dArr = obj.optJSONArray("d")
                     if (dArr != null) {
                         for (k in 0 until dArr.length()) {
-                            dList.add(dArr.getInt(k))
+                            val day = dArr.getInt(k)
+                            dList.add(day)
                         }
                     }
                     localeFestivals.add(LocaleFestivalItem(m, dList))
@@ -355,7 +335,8 @@ class CalendarRepository(private val context: Context) {
                     val dArr = obj.optJSONArray("d")
                     if (dArr != null) {
                         for (k in 0 until dArr.length()) {
-                            dList.add(dArr.getInt(k))
+                            val day = dArr.getInt(k)
+                            dList.add(day)
                         }
                     }
                     restDays.add(RestDayMonth(m, dList))

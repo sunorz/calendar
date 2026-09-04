@@ -83,8 +83,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
 
     init {
-        // Auto-sync remote config & check version
-        refreshConfig()
+        // Only check version on startup. It will fetch config if needed.
         checkVersion()
     }
 
@@ -92,8 +91,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             repository.checkAndSyncVersion().onSuccess { result ->
                 _remoteVersion.value = result.remoteMain
-                if (result.configUpdated) {
-                    CalendarAppWidgetProvider.updateAllWidgets(getApplication())
+                if (result.configNeedsFetch) {
+                    refreshConfig()
                 }
                 if (result.isNewer) {
                     _updateAvailable.value = true
@@ -103,8 +102,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.7.5"
-        val downloadUrl = "https://kkii.org/app/calendar-v$newVer-release.apk"
+        val newVer = _remoteVersion.value ?: "0.7.6"
+        val baseDownloadUrl = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", android.util.Base64.DEFAULT))
+        val endDownloadUrl = String(android.util.Base64.decode("LXJlbGVhc2UuYXBr", android.util.Base64.DEFAULT))
+        val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl"
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
