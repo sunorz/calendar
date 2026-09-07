@@ -419,21 +419,6 @@ private fun LargeScreenDetailPanel(
                             )
                         }
                     }
-
-                    if (dayInfo.isToday) {
-                        Surface(
-                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Text(
-                                text = stringResource(R.string.today_btn),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
                 }
 
                 HorizontalDivider(
@@ -490,7 +475,7 @@ private fun LargeScreenDetailPanel(
                                 text = lunarPriority.solarTermText!!,
                                 fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = if (isElderlyMode) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -511,7 +496,7 @@ private fun LargeScreenDetailPanel(
                                 text = fullLunar,
                                 fontSize = if (isElderlyMode) 17.sp else 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = if (isElderlyMode) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -531,8 +516,8 @@ private fun LargeScreenDetailPanel(
                         .testTag("large_screen_jump_today_button"),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = if (isElderlyMode) neutralBadgeBg else MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = if (isElderlyMode) neutralBadgeText else MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 ) {
                     Icon(

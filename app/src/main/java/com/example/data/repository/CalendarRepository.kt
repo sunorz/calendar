@@ -126,7 +126,7 @@ class CalendarRepository(private val context: Context) {
                 }
 
                 val root = JSONObject(bodyStr)
-                val remoteMain = root.optString("main", "0.7.9")
+                val remoteMain = root.optString("main", "0.7.10")
                 val localVersion = getAppVersion()
                 Log.d(TAG, "Version check: remoteMain=$remoteMain, localVersion=$localVersion")
 

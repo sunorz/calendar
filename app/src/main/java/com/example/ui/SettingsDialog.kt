@@ -221,7 +221,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "强迫症犯了",
+                                    text = "何时才能升级到1.0",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

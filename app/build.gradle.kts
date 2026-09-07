@@ -17,8 +17,8 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 22
-    versionName = "0.7.9"
+    versionCode = 23
+    versionName = "0.7.10"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -136,5 +136,5 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
   // "ksp"(libs.androidx.room.compiler)
-  // "ksp"(libs.moshi.kotlin.codegen)
+  // "ksp"(libs.moshi.kotlin.codegen
 }
