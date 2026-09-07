@@ -60,6 +60,7 @@ class TodayAppWidgetProvider : AppWidgetProvider() {
             action == Intent.ACTION_BOOT_COMPLETED ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED ||
             action == Intent.ACTION_USER_PRESENT ||
+            action == Intent.ACTION_CONFIGURATION_CHANGED ||
             action == ACTION_MIDNIGHT_UPDATE
         ) {
             updateAllWidgets(context)

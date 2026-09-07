@@ -60,6 +60,7 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
             action == Intent.ACTION_BOOT_COMPLETED ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED ||
             action == Intent.ACTION_USER_PRESENT ||
+            action == Intent.ACTION_CONFIGURATION_CHANGED ||
             action == ACTION_MIDNIGHT_UPDATE
         ) {
             updateAllWidgets(context)
@@ -101,7 +102,6 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                 val views = RemoteViews(context.packageName, R.layout.widget_month)
 
                 val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
-                val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
 
                 // 1. Year & Month Title
                 val monthTitle = if (TranslationHelper.isEnglish()) {
@@ -110,7 +110,6 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                     "${year}年${month}月"
                 }
                 views.setTextViewText(R.id.widget_month_title, monthTitle)
-                views.setTextColor(R.id.widget_month_title, colorPrimary)
 
                 // 2. Days Grid
 
@@ -133,11 +132,9 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                         val dayInfo = daysList[dayNumber - 1]
                         views.setTextViewText(viewId, dayNumber.toString())
 
-                        // Text Color: Rest day is Red, Workday is Dark Primary
+                        // Text Color: Rest day is Red, Workday uses XML state list for dynamic light/dark theme switching
                         if (dayInfo.isRestDay) {
                             views.setTextColor(viewId, colorRed)
-                        } else {
-                            views.setTextColor(viewId, colorPrimary)
                         }
 
                         // Background: Highlight if Today
