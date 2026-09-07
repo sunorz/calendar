@@ -456,26 +456,24 @@ private fun LargeScreenDetailPanel(
                         }
                     }
 
-                    if ((!lunarPriority.hasFestival && !lunarPriority.hasSolarTerm) || (lunarPriority.hasFestival && !lunarPriority.isLunarFestival)) {
-                        val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-                        if (fullLunar.isNotBlank()) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.lunar_label),
-                                    fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = fullLunar,
-                                    fontSize = if (isElderlyMode) 17.sp else 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    if (fullLunar.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.lunar_label),
+                                fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = fullLunar,
+                                fontSize = if (isElderlyMode) 17.sp else 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }

@@ -184,11 +184,11 @@ class LunarCalculatorTest {
     fun testWidgetNotePriority() {
         // 1. Festival priority (e.g. 2026-10-01 National Day / 国庆节)
         val oct1 = LunarCalculator.getDayInfoForDate(2026, 10, 1, sampleConfig)
-        assertEquals("八月廿一·国庆节", oct1.widgetNote)
+        assertEquals("国庆节", oct1.widgetNote)
 
         // 2. 24 Solar Term priority when no festival (e.g. 2026-02-04 Lichun / 立春)
         val feb4 = LunarCalculator.getDayInfoForDate(2026, 2, 4, sampleConfig)
-        assertEquals("腊月十八·立春", feb4.widgetNote)
+        assertEquals("立春", feb4.widgetNote)
 
         // 3. Lunar Date with Month when no festival and no solar term (e.g. 2026-08-31 is Lunar 7-19 -> 七月十九)
         val aug31 = LunarCalculator.getDayInfoForDate(2026, 8, 31, sampleConfig)

@@ -555,28 +555,26 @@ private fun SelectedDayDetailPill(
                         }
                     }
 
-                    // 3. If neither festival nor solar term is present, or if it is a Gregorian festival, display full lunar date
-                    if ((!lunarPriority.hasFestival && !lunarPriority.hasSolarTerm) || (lunarPriority.hasFestival && !lunarPriority.isLunarFestival)) {
-                        val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-                        if (fullLunar.isNotBlank()) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.lunar_label),
-                                    fontSize = 23.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = fullLunar,
-                                    fontSize = 24.sp,
-                                    lineHeight = 32.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                    // 3. Full lunar date
+                    val fullLunar = com.example.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    if (fullLunar.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.lunar_label),
+                                fontSize = 23.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = fullLunar,
+                                fontSize = 24.sp,
+                                lineHeight = 32.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
