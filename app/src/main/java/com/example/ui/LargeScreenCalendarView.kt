@@ -334,11 +334,11 @@ private fun LargeScreenDetailPanel(
                 .testTag("large_screen_detail_card"),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+                if (isElderlyMode) 1.5.dp else 1.dp,
+                MaterialTheme.colorScheme.outline
             )
         ) {
             Column(
@@ -374,31 +374,55 @@ private fun LargeScreenDetailPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val isRest = dayInfo.isRestDay
-                    val tagText = if (dayInfo.isLocaleHoliday) {
-                        com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi"
-                    } else if (isRest) {
-                        stringResource(R.string.restday_label)
+                    if (dayInfo.isLocaleHoliday) {
+                        val tagBgColor = if (isElderlyMode) neutralBadgeBg else LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
+                        val tagTextColor = if (isElderlyMode) neutralBadgeText else LOCALE_FESTIVAL_COLOR
+                        Surface(
+                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
+                            color = tagBgColor
+                        ) {
+                            Text(
+                                text = com.example.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = tagTextColor
+                            )
+                        }
                     } else {
-                        stringResource(R.string.workday_label)
-                    }
+                        val isRest = dayInfo.isRestDay
+                        val tagBgColor = if (isElderlyMode) {
+                            neutralBadgeBg
+                        } else if (isRest) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        }
+                        val tagTextColor = if (isElderlyMode) {
+                            neutralBadgeText
+                        } else if (isRest) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
 
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = neutralBadgeBg
-                    ) {
-                        Text(
-                            text = tagText,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = neutralBadgeText
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
+                            color = tagBgColor
+                        ) {
+                            Text(
+                                text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = tagTextColor
+                            )
+                        }
                     }
 
                     if (dayInfo.isToday) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
@@ -422,16 +446,31 @@ private fun LargeScreenDetailPanel(
                     val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
 
                     if (lunarPriority.hasFestival) {
+                        val festBgColor = if (isElderlyMode) {
+                            neutralBadgeBg
+                        } else if (lunarPriority.isHolidayWithRest) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        }
+                        val festTextColor = if (isElderlyMode) {
+                            neutralBadgeText
+                        } else if (lunarPriority.isHolidayWithRest) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = neutralBadgeBg
+                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
+                            color = festBgColor
                         ) {
                             Text(
                                 text = lunarPriority.festivalText!!,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 16.sp else 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = neutralBadgeText
+                                color = festTextColor
                             )
                         }
                     }
