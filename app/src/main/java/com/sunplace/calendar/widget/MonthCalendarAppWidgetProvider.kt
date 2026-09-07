@@ -100,6 +100,9 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
 
                 val views = RemoteViews(context.packageName, R.layout.widget_month)
 
+                val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
+                val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
+
                 // 1. Year & Month Title
                 val monthTitle = if (TranslationHelper.isEnglish()) {
                     "${TranslationHelper.getMonthName(month)} $year"
@@ -107,10 +110,9 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                     "${year}年${month}月"
                 }
                 views.setTextViewText(R.id.widget_month_title, monthTitle)
+                views.setTextColor(R.id.widget_month_title, colorPrimary)
 
                 // 2. Days Grid
-                val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
-                val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
 
                 // Show/hide 6th week row if not needed
                 val totalCellsNeeded = startOffset + daysInMonth

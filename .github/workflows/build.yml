@@ -52,6 +52,14 @@ jobs:
         run: |
           echo "APK_PATH=${{ steps.sign_app.outputs.signedReleaseFile }}" >> $GITHUB_ENV
           
+      - name: Rename APK for Push/Dispatch
+        if: github.event_name != 'release'
+        run: |
+          TIMESTAMP=$(date +%s)
+          APK_NAME="calendar-beta-${TIMESTAMP}.apk"
+          mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "app/build/outputs/apk/release/${APK_NAME}"
+          echo "APK_PATH=app/build/outputs/apk/release/${APK_NAME}" >> $GITHUB_ENV
+
       - name: Rename APK for Release
         if: github.event_name == 'release'
         run: |
