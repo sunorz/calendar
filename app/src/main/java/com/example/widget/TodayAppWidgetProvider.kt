@@ -17,9 +17,10 @@ import com.example.MainActivity
 import com.example.R
 import com.example.data.repository.CalendarRepository
 import com.example.util.LunarCalculator
+import com.example.util.TranslationHelper
 import java.util.Calendar
 
-class CalendarAppWidgetProvider : AppWidgetProvider() {
+class TodayAppWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -66,8 +67,8 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        private const val TAG = "CalendarWidget"
-        const val ACTION_MIDNIGHT_UPDATE = "com.sunplace.calendar.ACTION_MIDNIGHT_UPDATE"
+        private const val TAG = "TodayWidget"
+        const val ACTION_MIDNIGHT_UPDATE = "com.sunplace.calendar.ACTION_TODAY_MIDNIGHT_UPDATE"
 
         fun updateAppWidget(
             context: Context,
@@ -85,21 +86,24 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
 
                 val dayInfo = LunarCalculator.getDayInfoForDate(year, month, day, config)
 
-                val views = RemoteViews(context.packageName, R.layout.widget_calendar)
+                val views = RemoteViews(context.packageName, R.layout.widget_today)
                 val weekdayResId = com.example.ui.getFullWeekdayResId(dayInfo.dayOfWeekNumber)
 
-                if (com.example.util.TranslationHelper.isEnglish()) {
+                val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
+
+                if (TranslationHelper.isEnglish()) {
                     views.setViewVisibility(R.id.widget_layout_cn, View.GONE)
                     views.setViewVisibility(R.id.widget_layout_en, View.VISIBLE)
 
-                    // Line 1: Weekday centered
+                    // Line 1: Weekday centered - ALWAYS RED (fixed as in 0.7.9)
                     views.setTextViewText(R.id.widget_en_text_weekday, context.getString(weekdayResId))
+                    views.setTextColor(R.id.widget_en_text_weekday, colorRed)
 
                     // Line 2: Month centered (e.g. "September")
-                    val monthText = com.example.util.TranslationHelper.getMonthName(month)
+                    val monthText = TranslationHelper.getMonthName(month)
                     views.setTextViewText(R.id.widget_en_text_month, monthText)
 
-                    // Line 3: Day centered (turns red if rest day)
+                    // Line 3: Day centered (turns red if rest day, else primary)
                     val dayStr = dayInfo.day.toString()
                     if (dayInfo.isRestDay) {
                         views.setViewVisibility(R.id.widget_en_text_day_number, View.GONE)
@@ -114,8 +118,9 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
                     views.setViewVisibility(R.id.widget_layout_cn, View.VISIBLE)
                     views.setViewVisibility(R.id.widget_layout_en, View.GONE)
 
-                    // Top Left: Weekday (e.g. "周二")
+                    // Top Left: Weekday (e.g. "周二") - ALWAYS RED (fixed as in 0.7.9)
                     views.setTextViewText(R.id.widget_text_weekday, context.getString(weekdayResId))
+                    views.setTextColor(R.id.widget_text_weekday, colorRed)
 
                     // Top Right: Month (e.g. "9月")
                     views.setTextViewText(R.id.widget_text_month, "${month}月")
@@ -152,61 +157,59 @@ class CalendarAppWidgetProvider : AppWidgetProvider() {
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating app widget: ${e.message}", e)
+                Log.e(TAG, "Error updating today widget", e)
             }
         }
 
         fun updateAllWidgets(context: Context) {
-            try {
-                val appWidgetManager = AppWidgetManager.getInstance(context)
-                val ids = appWidgetManager.getAppWidgetIds(
-                    ComponentName(context, CalendarAppWidgetProvider::class.java)
-                )
-                if (ids != null && ids.isNotEmpty()) {
-                    for (id in ids) {
-                        updateAppWidget(context, appWidgetManager, id)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error updating all widgets: ${e.message}", e)
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val thisWidget = ComponentName(context, TodayAppWidgetProvider::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget)
+            for (appWidgetId in appWidgetIds) {
+                updateAppWidget(context, appWidgetManager, appWidgetId)
             }
         }
 
         fun scheduleMidnightUpdate(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+            val intent = Intent(context, TodayAppWidgetProvider::class.java).apply {
+                action = ACTION_MIDNIGHT_UPDATE
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                1002,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val cal = LunarCalculator.getChinaCalendar().apply {
+                add(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 5)
+                set(Calendar.MILLISECOND, 0)
+            }
+
             try {
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-                val intent = Intent(context, CalendarAppWidgetProvider::class.java).apply {
-                    action = ACTION_MIDNIGHT_UPDATE
-                }
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    1001,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-                // Next midnight: 00:00:02 tomorrow in China Standard Time (UTC+8)
-                val cal = LunarCalculator.getChinaCalendar().apply {
-                    add(Calendar.DAY_OF_YEAR, 1)
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 2)
-                    set(Calendar.MILLISECOND, 0)
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
-                    } else {
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
-                    }
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.timeInMillis,
+                        pendingIntent
+                    )
                 } else {
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.timeInMillis,
+                        pendingIntent
+                    )
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error scheduling midnight update: ${e.message}", e)
+            } catch (e: SecurityException) {
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    cal.timeInMillis,
+                    pendingIntent
+                )
             }
         }
     }

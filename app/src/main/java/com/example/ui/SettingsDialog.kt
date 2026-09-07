@@ -106,75 +106,49 @@ fun SettingsDialog(
                     .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Section 1: Appearance & Theme / 主题切换
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                // Section 1: Appearance & Theme / 主题切换 (Hidden in Elderly Mode)
+                if (!isElderlyMode) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             text = stringResource(R.string.theme_section_title),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        if (isElderlyMode) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.elderly_mode_locked),
-                                    fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            ThemeOptionChip(
+                                label = stringResource(R.string.theme_system),
+                                icon = Icons.Default.BrightnessAuto,
+                                isSelected = currentThemeMode == ThemeMode.SYSTEM,
+                                enabled = true,
+                                onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeOptionChip(
+                                label = stringResource(R.string.theme_light),
+                                icon = Icons.Default.LightMode,
+                                isSelected = currentThemeMode == ThemeMode.LIGHT,
+                                enabled = true,
+                                onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeOptionChip(
+                                label = stringResource(R.string.theme_dark),
+                                icon = Icons.Default.DarkMode,
+                                isSelected = currentThemeMode == ThemeMode.DARK,
+                                enabled = true,
+                                onClick = { onThemeModeChange(ThemeMode.DARK) },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
-                    if (isElderlyMode) {
-                        Text(
-                            text = stringResource(R.string.elderly_mode_theme_tip),
-                            fontSize = 11.5.sp,
-                            lineHeight = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ThemeOptionChip(
-                            label = stringResource(R.string.theme_system),
-                            icon = Icons.Default.BrightnessAuto,
-                            isSelected = !isElderlyMode && currentThemeMode == ThemeMode.SYSTEM,
-                            enabled = !isElderlyMode,
-                            onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        ThemeOptionChip(
-                            label = stringResource(R.string.theme_light),
-                            icon = Icons.Default.LightMode,
-                            isSelected = isElderlyMode || currentThemeMode == ThemeMode.LIGHT,
-                            enabled = !isElderlyMode,
-                            onClick = { onThemeModeChange(ThemeMode.LIGHT) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        ThemeOptionChip(
-                            label = stringResource(R.string.theme_dark),
-                            icon = Icons.Default.DarkMode,
-                            isSelected = !isElderlyMode && currentThemeMode == ThemeMode.DARK,
-                            enabled = !isElderlyMode,
-                            onClick = { onThemeModeChange(ThemeMode.DARK) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // Section 2: About / 关于
                 Column(

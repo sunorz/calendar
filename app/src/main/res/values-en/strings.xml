@@ -1,9 +1,17 @@
 <resources>
     <string name="app_name">CN ShiftCal</string>
     <string name="widget_description">Dynamic Calendar Widget: Displays weekday, workday/restday status and date</string>
+    <string name="widget_today_name">Daily Card Widget</string>
+    <string name="widget_today_description">Dynamic daily widget with weekday, lunar date, and rest day status</string>
+    <string name="widget_month_name">Month Calendar Widget (2x2)</string>
+    <string name="widget_month_description">2x2 compact month calendar with full month dates and red rest days</string>
     <string name="workday_label">Workday</string>
     <string name="restday_label">Rest Day</string>
     <string name="today_label">Today</string>
+
+    <string name="elderly_btn_today">Today</string>
+    <string name="elderly_btn_mode_exit">Exit Senior</string>
+    <string name="elderly_btn_theme">Settings</string>
 
     <!-- Top Bar & Navigation -->
     <string name="year_month_format">%1$d-%2$02d</string>
@@ -61,7 +69,7 @@
     <string name="downloading">Downloading…</string>
     <string name="dialog_done">Done</string>
 
-    <!-- Watch / Small Screen -->
+    <!-- Watch / Small Screen / Widget -->
     <string name="widget_month_format">%1$s</string>
     <string name="watch_quick_jump">Jump to Date</string>
     <string name="watch_year_label">Year:</string>

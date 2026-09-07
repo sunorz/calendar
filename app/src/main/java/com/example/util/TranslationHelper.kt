@@ -136,6 +136,11 @@ object TranslationHelper {
         "July", "August", "September", "October", "November", "December"
     )
 
+    private val GREGORIAN_MONTHS_SHORT_EN = listOf(
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    )
+
     /**
      * Gets the month name according to language setting:
      * - In English: January, February, ..., September, etc.
@@ -147,6 +152,16 @@ object TranslationHelper {
     }
 
     /**
+     * Gets the abbreviated month name according to language setting:
+     * - In English: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+     * - In Chinese: 1月, 2月, ..., 9月, etc.
+     */
+    fun getShortMonthName(month: Int): String {
+        if (!isEnglish()) return "${month}月"
+        return GREGORIAN_MONTHS_SHORT_EN.getOrElse(month - 1) { "$month" }
+    }
+
+    /**
      * Formats Year and Month:
      * - In English: September 2026
      * - In Chinese: 2026年9月
@@ -154,6 +169,16 @@ object TranslationHelper {
     fun formatYearMonth(year: Int, month: Int): String {
         if (!isEnglish()) return "${year}年${month}月"
         return "${getMonthName(month)} $year"
+    }
+
+    /**
+     * Formats Year and Abbreviated Month (compact for TopBar):
+     * - In English: Sep 2026
+     * - In Chinese: 2026年9月
+     */
+    fun formatShortYearMonth(year: Int, month: Int): String {
+        if (!isEnglish()) return "${year}年${month}月"
+        return "${getShortMonthName(month)} $year"
     }
 
     /**

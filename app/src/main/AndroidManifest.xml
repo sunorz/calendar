@@ -29,10 +29,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Widget 1: Today Card Widget (今日日历卡片) -->
         <receiver
-            android:name=".widget.CalendarAppWidgetProvider"
+            android:name=".widget.TodayAppWidgetProvider"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/widget_today_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.intent.action.DATE_CHANGED" />
@@ -41,11 +42,31 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
-                <action android:name="com.sunplace.calendar.ACTION_MIDNIGHT_UPDATE" />
+                <action android:name="com.sunplace.calendar.ACTION_TODAY_MIDNIGHT_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/calendar_widget_info" />
+                android:resource="@xml/widget_today_info" />
+        </receiver>
+
+        <!-- Widget 2: 2x2 Month Calendar Widget (2x2 当月月历小组件) -->
+        <receiver
+            android:name=".widget.MonthCalendarAppWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_month_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="com.sunplace.calendar.ACTION_MONTH_MIDNIGHT_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_month_info" />
         </receiver>
     </application>
 

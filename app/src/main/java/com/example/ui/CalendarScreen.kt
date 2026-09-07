@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
@@ -168,22 +169,29 @@ private fun StandardPhoneCalendarView(
                 CenterAlignedTopAppBar(
                     title = {
                         val topBarTitle = if (TranslationHelper.isEnglish()) {
-                            "${TranslationHelper.getMonthName(currentVisibleYearMonth.second)} ${currentVisibleYearMonth.first}"
+                            if (isElderlyMode) {
+                                TranslationHelper.formatShortYearMonth(currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                            } else {
+                                TranslationHelper.formatYearMonth(currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                            }
                         } else {
                             stringResource(R.string.year_month_format, currentVisibleYearMonth.first, currentVisibleYearMonth.second)
                         }
                         Text(
                             text = topBarTitle,
                             fontWeight = FontWeight.Bold,
-                            fontSize = if (isElderlyMode) 20.sp else 18.sp,
+                            fontSize = if (isElderlyMode) 19.sp else 18.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     },
                     navigationIcon = {
-                        // "今日" Jump button (Enlarged and bold for elderly mode)
+                        // "今日" Jump button (Pure clear text for elderly mode, icon+text for standard mode)
                         Surface(
                             modifier = Modifier
-                                .padding(start = if (isElderlyMode) 8.dp else 12.dp)
+                                .padding(start = if (isElderlyMode) 6.dp else 12.dp)
                                 .clip(RoundedCornerShape(24.dp))
                                 .clickable {
                                     coroutineScope.launch {
@@ -195,87 +203,106 @@ private fun StandardPhoneCalendarView(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
                             shape = RoundedCornerShape(24.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = if (isElderlyMode) 14.dp else 10.dp,
-                                    vertical = if (isElderlyMode) 9.dp else 5.dp
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
-                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Today,
-                                    contentDescription = stringResource(R.string.today_btn),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(if (isElderlyMode) 24.dp else 15.dp)
-                                )
+                            if (isElderlyMode) {
                                 Text(
-                                    text = stringResource(R.string.today_btn_short),
+                                    text = stringResource(R.string.elderly_btn_today),
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontSize = if (isElderlyMode) 17.sp else 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
                                 )
-                            }
-                        }
-                    },
-                    actions = {
-                        // Senior-friendly Mode Toggle (Enlarged icons & touch target for elderly mode)
-                        Surface(
-                            modifier = Modifier
-                                .padding(end = if (isElderlyMode) 8.dp else 4.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .clickable { viewModel.toggleElderlyMode() }
-                                .testTag("elderly_mode_toggle_button"),
-                            color = if (isElderlyMode) {
-                                MaterialTheme.colorScheme.primaryContainer
                             } else {
-                                Color.Transparent
-                            },
-                            shape = RoundedCornerShape(24.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = if (isElderlyMode) 14.dp else 8.dp,
-                                    vertical = if (isElderlyMode) 9.dp else 6.dp
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
-                                    tint = if (isElderlyMode) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    },
-                                    modifier = Modifier.size(if (isElderlyMode) 28.dp else 22.dp)
-                                )
-                                if (isElderlyMode) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp,
+                                        vertical = 5.dp
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = stringResource(R.string.today_btn),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
                                     Text(
-                                        text = stringResource(R.string.elderly_mode_title),
+                                        text = stringResource(R.string.today_btn_short),
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 16.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
                         }
+                    },
+                    actions = {
+                        // Senior-friendly Mode Toggle (Pure clear text for elderly mode, icon for standard mode)
+                        if (isElderlyMode) {
+                            Surface(
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .clickable { viewModel.toggleElderlyMode() }
+                                    .testTag("elderly_mode_toggle_button"),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(24.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.elderly_btn_mode_exit),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp)
+                                )
+                            }
 
-                        // Settings menu button (Enlarged for elderly mode)
-                        IconButton(
-                            onClick = { viewModel.openSettingsDialog() },
-                            modifier = Modifier
-                                .padding(end = if (isElderlyMode) 4.dp else 0.dp)
-                                .size(if (isElderlyMode) 52.dp else 48.dp)
-                                .testTag("settings_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_title),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(if (isElderlyMode) 28.dp else 24.dp)
-                            )
+                            // Theme Color / Settings (Pure clear text for elderly mode)
+                            Surface(
+                                modifier = Modifier
+                                    .padding(end = 6.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .clickable { viewModel.openSettingsDialog() }
+                                    .testTag("settings_button"),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(24.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.elderly_btn_theme),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp)
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { viewModel.toggleElderlyMode() },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("elderly_mode_toggle_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.FavoriteBorder,
+                                    contentDescription = stringResource(R.string.elderly_mode_enter),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { viewModel.openSettingsDialog() },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("settings_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(R.string.settings_title),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -448,17 +475,20 @@ private fun SelectedDayDetailPill(
                         )
                     }
 
-                    IconButton(
-                        onClick = onDismiss,
+                    Surface(
                         modifier = Modifier
-                            .size(56.dp)
-                            .testTag("close_detail_card_button")
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onDismiss() }
+                            .testTag("close_detail_card_button"),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        shape = RoundedCornerShape(20.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close_btn),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
+                        Text(
+                            text = stringResource(R.string.close_btn),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
                 }

@@ -214,10 +214,10 @@ fun LargeScreenCalendarView(
                             )
                         }
 
-                        // Actions: Today Button + Mode Switch + Settings
+                        // Actions: Today Button + Mode Switch + Settings (Text in elderly mode, icons in standard mode)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
                         ) {
                             // Quick "Today" Jump Button
                             Surface(
@@ -236,53 +236,101 @@ fun LargeScreenCalendarView(
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
                                 shape = RoundedCornerShape(20.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(
-                                        horizontal = if (isElderlyMode) 10.dp else 8.dp,
-                                        vertical = if (isElderlyMode) 5.dp else 3.5.dp
-                                    ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 4.dp else 3.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Today,
-                                        contentDescription = stringResource(R.string.today_btn),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(if (isElderlyMode) 18.dp else 14.dp)
-                                    )
+                                if (isElderlyMode) {
                                     Text(
-                                        text = stringResource(R.string.today_btn_short),
+                                        text = stringResource(R.string.elderly_btn_today),
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontSize = if (isElderlyMode) 14.sp else 12.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
                                     )
+                                } else {
+                                    Row(
+                                        modifier = Modifier.padding(
+                                            horizontal = 8.dp,
+                                            vertical = 3.5.dp
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Today,
+                                            contentDescription = stringResource(R.string.today_btn),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.today_btn_short),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
 
-                            // Mode toggle
-                            IconButton(
-                                onClick = { viewModel.toggleElderlyMode() },
-                                modifier = Modifier.size(if (isElderlyMode) 42.dp else 36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
-                                    tint = if (isElderlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 19.dp)
-                                )
-                            }
+                            if (isElderlyMode) {
+                                // Mode toggle as clear text
+                                Surface(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .clickable { viewModel.toggleElderlyMode() }
+                                        .testTag("large_screen_elderly_toggle_button"),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.elderly_btn_mode_exit),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
+                                    )
+                                }
 
-                            // Settings
-                            IconButton(
-                                onClick = { viewModel.openSettingsDialog() },
-                                modifier = Modifier.size(if (isElderlyMode) 42.dp else 36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = stringResource(R.string.settings_title),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 19.dp)
-                                )
+                                // Settings / Theme Color as clear text
+                                Surface(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .clickable { viewModel.openSettingsDialog() }
+                                        .testTag("large_screen_settings_button"),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.elderly_btn_theme),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
+                                    )
+                                }
+                            } else {
+                                // Mode toggle icon
+                                IconButton(
+                                    onClick = { viewModel.toggleElderlyMode() },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FavoriteBorder,
+                                        contentDescription = stringResource(R.string.elderly_mode_enter),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+
+                                // Settings icon
+                                IconButton(
+                                    onClick = { viewModel.openSettingsDialog() },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = stringResource(R.string.settings_title),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -587,15 +635,17 @@ private fun LargeScreenDetailPanel(
                         contentColor = if (isElderlyMode) neutralBadgeText else MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Today,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    if (!isElderlyMode) {
+                        Icon(
+                            imageVector = Icons.Default.Today,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
                     Text(
                         text = stringResource(R.string.jump_today),
-                        fontSize = if (isElderlyMode) 15.sp else 13.sp,
+                        fontSize = if (isElderlyMode) 17.sp else 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }

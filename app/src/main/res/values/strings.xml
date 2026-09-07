@@ -1,9 +1,17 @@
 <resources>
     <string name="app_name">调休日历</string>
     <string name="widget_description">动态日历小部件：展示星期缩写与工作日/休息日数字</string>
+    <string name="widget_today_name">今日卡片小组件</string>
+    <string name="widget_today_description">动态展示今日星期、农历节日与休班状态</string>
+    <string name="widget_month_name">当月月历小组件 (2x2)</string>
+    <string name="widget_month_description">2x2 极简月历：展示当月全部日期与红字休息日</string>
     <string name="workday_label">工作日</string>
     <string name="restday_label">休息日</string>
     <string name="today_label">今天</string>
+
+    <string name="elderly_btn_today">今天</string>
+    <string name="elderly_btn_mode_exit">退出关怀</string>
+    <string name="elderly_btn_theme">设置</string>
 
     <!-- Top Bar & Navigation -->
     <string name="year_month_format">%1$d 年 %2$d 月</string>
@@ -61,7 +69,7 @@
     <string name="downloading">下载中...</string>
     <string name="dialog_done">完成</string>
 
-    <!-- Watch / Small Screen -->
+    <!-- Watch / Small Screen / Widget -->
     <string name="widget_month_format">%1$d月</string>
     <string name="watch_quick_jump">快速跳转日期</string>
     <string name="watch_year_label">年份:</string>

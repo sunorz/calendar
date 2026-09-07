@@ -12,7 +12,8 @@ import com.example.data.repository.CalendarRepository
 import com.example.data.repository.SyncState
 import com.example.data.repository.ThemePreferences
 import com.example.util.LunarCalculator
-import com.example.widget.CalendarAppWidgetProvider
+import com.example.widget.MonthCalendarAppWidgetProvider
+import com.example.widget.TodayAppWidgetProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -174,8 +175,9 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     fun refreshConfig() {
         viewModelScope.launch {
             repository.fetchRemoteConfig().onSuccess {
-                // Update home screen widget
-                CalendarAppWidgetProvider.updateAllWidgets(getApplication())
+                // Update home screen widgets
+                TodayAppWidgetProvider.updateAllWidgets(getApplication())
+                MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
             }
         }
     }
