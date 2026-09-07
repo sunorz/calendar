@@ -286,6 +286,7 @@ private fun StandardPhoneCalendarView(
                 // Sticky Minimalist Weekday Header Row (一, 二, 三, 四, 五, 六, 日)
                 WeekdayHeaderRow(
                     isElderlyMode = isElderlyMode,
+                    horizontalPadding = if (isElderlyMode) 10.dp else 12.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)

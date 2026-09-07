@@ -57,6 +57,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -112,6 +113,8 @@ fun LargeScreenCalendarView(
             .background(MaterialTheme.colorScheme.background)
     ) {
         val totalWidth = maxWidth
+        val totalHeight = maxHeight
+        val density = LocalDensity.current
 
         // Calculate right panel width based on total screen width
         val rightPanelWidth: Dp = when {
@@ -139,8 +142,37 @@ fun LargeScreenCalendarView(
             }
         }
 
+        // Helper to compute optimal vertical scroll offset so Today is comfortably visible and not cut off
+        val computeTodayScrollOffset = remember(columnCount, isElderlyMode, totalHeight) {
+            {
+                val cal = LunarCalculator.getChinaCalendar()
+                val todayDay = cal.get(Calendar.DAY_OF_MONTH)
+                val todayYear = cal.get(Calendar.YEAR)
+                val todayMonth = cal.get(Calendar.MONTH) + 1
+                val days = viewModel.getDaysForMonth(todayYear, todayMonth)
+                val firstDayOfWeek = days.firstOrNull()?.dayOfWeekNumber ?: 1
+                val leadingEmpty = firstDayOfWeek - 1
+                val todayCellIndex = leadingEmpty + (todayDay - 1)
+                val todayRow = todayCellIndex / 7
+
+                if (totalHeight < 550.dp || columnCount == 1) {
+                    if (todayRow >= 1) {
+                        val rowHeight = if (isElderlyMode) 58.dp else 48.dp
+                        with(density) {
+                            val offsetDp = (todayRow * rowHeight.value) + (if (isElderlyMode) 16 else 10)
+                            offsetDp.dp.roundToPx()
+                        }
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                }
+            }
+        }
+
         Row(modifier = Modifier.fillMaxSize()) {
-            // LEFT AREA: Top App Bar + Dynamic Multi-Column Month Grid
+            // LEFT AREA: Compact Top Bar + Dynamic Multi-Column Month Grid
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -148,9 +180,21 @@ fun LargeScreenCalendarView(
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
                     .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start + WindowInsetsSides.Bottom))
             ) {
-                // Large Screen Top Bar
-                TopAppBar(
-                    title = {
+                // Compact Landscape Top Bar (Protects status bar without wasting vertical space)
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top))
+                            .height(if (isElderlyMode) 46.dp else 40.dp)
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Title & Icon
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -159,85 +203,89 @@ fun LargeScreenCalendarView(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(if (isElderlyMode) 28.dp else 22.dp)
+                                modifier = Modifier.size(if (isElderlyMode) 24.dp else 20.dp)
                             )
                             Text(
                                 text = stringResource(R.string.app_name),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = if (isElderlyMode) 22.sp else 18.sp,
+                                fontSize = if (isElderlyMode) 19.sp else 16.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                    },
-                    actions = {
-                        // Quick "Today" Jump Button
-                        Surface(
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .clickable {
-                                    viewModel.selectToday()
-                                    coroutineScope.launch {
-                                        gridState.animateScrollToItem(viewModel.todayMonthIndex)
-                                    }
-                                }
-                                .testTag("large_screen_jump_today_top_button"),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
-                            shape = RoundedCornerShape(24.dp)
+
+                        // Actions: Today Button + Mode Switch + Settings
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = if (isElderlyMode) 12.dp else 10.dp,
-                                    vertical = if (isElderlyMode) 8.dp else 5.dp
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
+                            // Quick "Today" Jump Button
+                            Surface(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable {
+                                        viewModel.selectToday()
+                                        coroutineScope.launch {
+                                            gridState.animateScrollToItem(
+                                                index = viewModel.todayMonthIndex,
+                                                scrollOffset = computeTodayScrollOffset()
+                                            )
+                                        }
+                                    }
+                                    .testTag("large_screen_jump_today_top_button"),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = if (isElderlyMode) 10.dp else 8.dp,
+                                        vertical = if (isElderlyMode) 5.dp else 3.5.dp
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 4.dp else 3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = stringResource(R.string.today_btn),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(if (isElderlyMode) 18.dp else 14.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.today_btn_short),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = if (isElderlyMode) 14.sp else 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            // Mode toggle
+                            IconButton(
+                                onClick = { viewModel.toggleElderlyMode() },
+                                modifier = Modifier.size(if (isElderlyMode) 42.dp else 36.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Today,
-                                    contentDescription = stringResource(R.string.today_btn),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 16.dp)
+                                    imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
+                                    tint = if (isElderlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 19.dp)
                                 )
-                                Text(
-                                    text = stringResource(R.string.today_btn_short),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = if (isElderlyMode) 16.sp else 13.sp,
-                                    fontWeight = FontWeight.Bold
+                            }
+
+                            // Settings
+                            IconButton(
+                                onClick = { viewModel.openSettingsDialog() },
+                                modifier = Modifier.size(if (isElderlyMode) 42.dp else 36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(R.string.settings_title),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(if (isElderlyMode) 22.dp else 19.dp)
                                 )
                             }
                         }
-
-                        // Mode toggle
-                        IconButton(
-                            onClick = { viewModel.toggleElderlyMode() },
-                            modifier = Modifier.size(if (isElderlyMode) 48.dp else 40.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isElderlyMode) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = if (isElderlyMode) stringResource(R.string.elderly_mode_exit) else stringResource(R.string.elderly_mode_enter),
-                                tint = if (isElderlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(if (isElderlyMode) 26.dp else 22.dp)
-                            )
-                        }
-
-                        // Settings
-                        IconButton(
-                            onClick = { viewModel.openSettingsDialog() },
-                            modifier = Modifier.size(if (isElderlyMode) 48.dp else 40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_title),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(if (isElderlyMode) 26.dp else 22.dp)
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
+                    }
+                }
 
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -250,7 +298,7 @@ fun LargeScreenCalendarView(
                     state = gridState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
                         .testTag("large_screen_month_grid")
                 ) {
                     items(
@@ -305,14 +353,17 @@ fun LargeScreenCalendarView(
                 onJumpToday = {
                     viewModel.selectToday()
                     coroutineScope.launch {
-                        gridState.animateScrollToItem(viewModel.todayMonthIndex)
+                        gridState.animateScrollToItem(
+                            index = viewModel.todayMonthIndex,
+                            scrollOffset = computeTodayScrollOffset()
+                        )
                     }
                 },
                 modifier = Modifier
                     .width(rightPanelWidth)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.surface)
-                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top))
                     .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End))
                     .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.End + WindowInsetsSides.Bottom))
             )

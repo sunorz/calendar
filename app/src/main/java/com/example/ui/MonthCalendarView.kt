@@ -50,6 +50,7 @@ val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festival
 @Composable
 fun WeekdayHeaderRow(
     isElderlyMode: Boolean = false,
+    horizontalPadding: androidx.compose.ui.unit.Dp = 0.dp,
     modifier: Modifier = Modifier
 ) {
     val restColor = MaterialTheme.colorScheme.error
@@ -67,21 +68,25 @@ fun WeekdayHeaderRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = 8.dp,
-                vertical = if (isElderlyMode) 10.dp else 6.dp
+                horizontal = horizontalPadding,
+                vertical = if (isElderlyMode) 8.dp else 4.dp
             ),
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 3.dp else 2.dp)
     ) {
         weekdayResIds.forEachIndexed { index, resId ->
             val isWeekend = index >= 5
-            Text(
-                text = stringResource(resId),
+            Box(
                 modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-                fontWeight = if (isElderlyMode) FontWeight.ExtraBold else FontWeight.SemiBold,
-                fontSize = if (isElderlyMode) 18.sp else 13.sp,
-                color = if (isWeekend) restColor else MaterialTheme.colorScheme.onSurface
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(resId),
+                    textAlign = TextAlign.Center,
+                    fontWeight = if (isElderlyMode) FontWeight.ExtraBold else FontWeight.SemiBold,
+                    fontSize = if (isElderlyMode) 18.sp else 13.sp,
+                    color = if (isWeekend) restColor else MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
