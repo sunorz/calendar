@@ -172,15 +172,14 @@ fun LargeScreenCalendarView(
         }
 
         Row(modifier = Modifier.fillMaxSize()) {
-            // LEFT AREA: Compact Top Bar + Dynamic Multi-Column Month Grid
+            // LEFT AREA: Compact Top Bar + Dynamic Multi-Column Month Grid (Seamless Transparent Canvas)
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
-                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start + WindowInsetsSides.Bottom))
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                // Compact Landscape Top Bar (Protects status bar without wasting vertical space)
+                // Compact Landscape Top Bar (Spans full left width to screen edge x=0)
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.fillMaxWidth()
@@ -189,6 +188,8 @@ fun LargeScreenCalendarView(
                         modifier = Modifier
                             .fillMaxWidth()
                             .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top))
+                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start))
                             .height(if (isElderlyMode) 46.dp else 40.dp)
                             .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -292,13 +293,15 @@ fun LargeScreenCalendarView(
                     thickness = 0.8.dp
                 )
 
-                // Multi-Column Month Grid (1 to 4 columns)
+                // Multi-Column Month Grid (1 to 4 columns, Transparent Canvas seamlessly blending with background)
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columnCount),
                     state = gridState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start + WindowInsetsSides.Bottom))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                         .testTag("large_screen_month_grid")
                 ) {
                     items(
@@ -310,18 +313,10 @@ fun LargeScreenCalendarView(
                             viewModel.getDaysForMonth(year, month)
                         }
 
-                        Card(
+                        Column(
                             modifier = Modifier
-                                .padding(6.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            border = androidx.compose.foundation.BorderStroke(
-                                0.8.dp,
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-                            )
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
                         ) {
                             MinimalMonthSection(
                                 year = year,
@@ -329,12 +324,21 @@ fun LargeScreenCalendarView(
                                 days = days,
                                 selectedDay = selectedDay,
                                 isElderlyMode = isElderlyMode,
-                                showWeekdayHeader = true, // Each card in grid has its own self-contained week header
+                                showWeekdayHeader = true, // Each month column in grid has its own self-contained week header
                                 onDayClick = { day ->
                                     val nextSelected = if (selectedDay == day) null else day
                                     viewModel.selectDay(nextSelected)
                                 }
                             )
+
+                            if (columnCount == 1) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                                    thickness = 0.6.dp,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
