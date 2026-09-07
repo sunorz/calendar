@@ -15,108 +15,14 @@
         android:layout_height="wrap_content"
         android:text="2026年9月"
         android:textColor="@color/widget_text_primary"
-        android:textSize="13sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:gravity="center"
         android:maxLines="1"
         android:includeFontPadding="false"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="8dp" />
 
-    <!-- Row 2: Weekday Headers (一 二 三 四 五 六 日 / M T W T F S S) -->
-    <LinearLayout
-        android:id="@+id/widget_weekday_row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="2dp">
-
-        <TextView
-            android:id="@+id/widget_weekday_0"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="一"
-            android:textColor="@color/widget_text_week"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_1"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="二"
-            android:textColor="@color/widget_text_week"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_2"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="三"
-            android:textColor="@color/widget_text_week"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_3"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="四"
-            android:textColor="@color/widget_text_week"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_4"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="五"
-            android:textColor="@color/widget_text_week"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_5"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="六"
-            android:textColor="@color/widget_text_red"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-
-        <TextView
-            android:id="@+id/widget_weekday_6"
-            android:layout_width="0dp"
-            android:layout_height="18dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="日"
-            android:textColor="@color/widget_text_red"
-            android:textSize="10.5sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
-    </LinearLayout>
-
-    <!-- Row 3+: Days Grid (Up to 6 weeks, tightly and elegantly proportioned) -->
+    <!-- Days Grid (Up to 6 weeks, tightly and elegantly proportioned) -->
     <LinearLayout
         android:id="@+id/widget_days_grid"
         android:layout_width="match_parent"
@@ -127,9 +33,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_0"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -146,9 +52,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_1"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -165,9 +71,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_2"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -184,9 +90,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_3"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -203,9 +109,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_4"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -222,9 +128,9 @@
         <LinearLayout
             android:id="@+id/widget_week_row_5"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="1dp"
-            android:layout_marginBottom="1dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginBottom="1.5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 

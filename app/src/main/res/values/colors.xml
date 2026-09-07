@@ -16,4 +16,5 @@
     <color name="widget_text_primary">#222120</color>
     <color name="widget_text_red">#D32F2F</color>
     <color name="widget_text_secondary">#75716D</color>
+    <color name="widget_today_highlight_bg">#E2E4E8</color>
 </resources>

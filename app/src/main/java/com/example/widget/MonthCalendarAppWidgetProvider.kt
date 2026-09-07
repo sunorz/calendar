@@ -79,16 +79,6 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
             R.id.widget_day_35, R.id.widget_day_36, R.id.widget_day_37, R.id.widget_day_38, R.id.widget_day_39, R.id.widget_day_40, R.id.widget_day_41
         )
 
-        private val WEEKDAY_VIEW_IDS = intArrayOf(
-            R.id.widget_weekday_0,
-            R.id.widget_weekday_1,
-            R.id.widget_weekday_2,
-            R.id.widget_weekday_3,
-            R.id.widget_weekday_4,
-            R.id.widget_weekday_5,
-            R.id.widget_weekday_6
-        )
-
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -109,7 +99,7 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
 
                 val views = RemoteViews(context.packageName, R.layout.widget_month)
 
-                // 1. First Row: Year & Month Title
+                // 1. Year & Month Title
                 val monthTitle = if (TranslationHelper.isEnglish()) {
                     "${TranslationHelper.getMonthName(month)} $year"
                 } else {
@@ -117,17 +107,7 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                 }
                 views.setTextViewText(R.id.widget_month_title, monthTitle)
 
-                // 2. Second Row: Weekday Headers (一二三四五六日 / MTWTFSS)
-                val weekdayLabels = if (TranslationHelper.isEnglish()) {
-                    arrayOf("M", "T", "W", "T", "F", "S", "S")
-                } else {
-                    arrayOf("一", "二", "三", "四", "五", "六", "日")
-                }
-                for (i in 0 until 7) {
-                    views.setTextViewText(WEEKDAY_VIEW_IDS[i], weekdayLabels[i])
-                }
-
-                // 3. Days Grid
+                // 2. Days Grid
                 val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
                 val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
 
