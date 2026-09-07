@@ -195,7 +195,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "何时才能升级到1.0",
+                                    text = String(android.util.Base64.decode("5L2V5pe25omN6IO95Y2H57qn5YiwMS4w", android.util.Base64.DEFAULT), Charsets.UTF_8),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -225,7 +225,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "Sunplace",
+                                    text = String(android.util.Base64.decode("U3VucGxhY2U=", android.util.Base64.DEFAULT)),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -239,7 +239,8 @@ fun SettingsDialog(
                                     .clip(RoundedCornerShape(8.dp))
                                     .clickable {
                                         try {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://kkii.org"))
+                                            val url = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZw==", android.util.Base64.DEFAULT))
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
                                             // Handle exception
@@ -270,7 +271,7 @@ fun SettingsDialog(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        text = "kkii.org",
+                                        text = String(android.util.Base64.decode("a2tpaS5vcmc=", android.util.Base64.DEFAULT)),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.primary
