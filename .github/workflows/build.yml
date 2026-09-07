@@ -19,8 +19,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper --gradle-version 9.3.1
       - name: Restore debug keystore
         run: |
           if [ -f "debug.keystore.base64" ]; then
