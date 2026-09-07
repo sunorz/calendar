@@ -18,7 +18,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
-class GreetingScreenshotTest {
+class CalendarScreenshotTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -39,6 +39,6 @@ class GreetingScreenshotTest {
       }
     }
 
-    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
+    composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/calendar_month.png")
   }
 }

@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -138,6 +145,8 @@ fun LargeScreenCalendarView(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start + WindowInsetsSides.Bottom))
             ) {
                 // Large Screen Top Bar
                 TopAppBar(
@@ -303,6 +312,9 @@ fun LargeScreenCalendarView(
                     .width(rightPanelWidth)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.surface)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End))
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.End + WindowInsetsSides.Bottom))
             )
         }
     }
