@@ -3,6 +3,9 @@ name: Build APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - master
   release:
     types: [ published ]
 
@@ -44,10 +47,16 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: "35.0.1"
-          
-      - name: Rename APK
+
+      - name: Set Default APK Path
         run: |
-          SAFE_REF=$(echo "${{ github.event.release.tag_name || github.ref_name }}" | tr '/' '-')
+          echo "APK_PATH=${{ steps.sign_app.outputs.signedReleaseFile }}" >> $GITHUB_ENV
+          
+      - name: Rename APK for Release
+        if: github.event_name == 'release'
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          SAFE_REF=$(echo "$TAG_NAME" | tr '/' '-')
           APK_NAME="calendar-${SAFE_REF}-release.apk"
           mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "app/build/outputs/apk/release/${APK_NAME}"
           echo "APK_PATH=app/build/outputs/apk/release/${APK_NAME}" >> $GITHUB_ENV
@@ -59,10 +68,10 @@ jobs:
           path: ${{ env.APK_PATH }}
           
       - name: Attach to Release
-        if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.APK_PATH }}
-          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          tag_name: ${{ github.event.release.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
