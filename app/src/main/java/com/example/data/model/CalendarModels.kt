@@ -92,11 +92,18 @@ data class DayInfo(
      * Note for widget line 3: Priority -> Festival > 24 Solar Term > Lunar Date with Month (e.g. "三月廿二")
      */
     val widgetNote: String
-        get() = when {
-            !festivalName.isNullOrBlank() -> festivalName
-            isLocaleHoliday && !localeHolidayName.isNullOrBlank() -> localeHolidayName
-            !solarTermName.isNullOrBlank() -> solarTermName
-            else -> lunarMonthAndDayText.ifEmpty { lunarText }
+        get() {
+            val parts = mutableListOf<String>()
+            val lunarDateStr = lunarMonthAndDayText.ifEmpty { lunarText }
+            if (lunarDateStr.isNotBlank()) parts.add(lunarDateStr)
+            if (!solarTermName.isNullOrBlank()) parts.add(solarTermName)
+            if (!festivalName.isNullOrBlank()) {
+                parts.addAll(festivalName.split("·").filter { it.isNotBlank() })
+            }
+            if (isLocaleHoliday && !localeHolidayName.isNullOrBlank() && !parts.contains(localeHolidayName)) {
+                parts.add(localeHolidayName)
+            }
+            return parts.joinToString("·")
         }
 }
 

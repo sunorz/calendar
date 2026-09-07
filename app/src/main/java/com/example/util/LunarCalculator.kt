@@ -522,7 +522,11 @@ object LunarCalculator {
                 isLocale = false
             }
 
-            val festivalName = defaultLunarFestival ?: defaultSolarFestival
+            val festivalParts = mutableListOf<String>()
+            if (defaultLunarFestival != null) festivalParts.add(defaultLunarFestival)
+            if (defaultSolarFestival != null) festivalParts.add(defaultSolarFestival)
+            
+            val festivalName = if (festivalParts.isNotEmpty()) festivalParts.joinToString("·") else null
             val isLunarFest = defaultLunarFestival != null
             val solarTermName = defaultSolarTerm
 
@@ -530,7 +534,7 @@ object LunarCalculator {
             val hasFestival = (resolvedFestival != null)
 
             // Rule: ONLY red subtitle when it is one of the statutory holidays AND it is a rest day
-            val isHolidayWithRest = isRest && resolvedFestival != null && STATUTORY_HOLIDAY_NAMES.contains(resolvedFestival)
+            val isHolidayWithRest = isRest && resolvedFestival != null && resolvedFestival.split("·").any { STATUTORY_HOLIDAY_NAMES.contains(it) }
             val fullLunar = getFullLunarDateString(year, month, d)
 
             val isToday = (year == todayYear && month == todayMonth && d == todayDay)

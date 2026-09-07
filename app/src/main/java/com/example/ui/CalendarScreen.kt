@@ -57,6 +57,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -606,8 +609,13 @@ private fun SelectedDayDetailPill(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        val dateTitle = if (dayInfo.isToday) {
+                            stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
+                        } else {
+                            stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
+                        }
                         Text(
-                            text = stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day),
+                            text = dateTitle,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -663,96 +671,53 @@ private fun SelectedDayDetailPill(
 
                     val lunarPriority = com.example.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
 
-                    if (com.example.util.TranslationHelper.isEnglish()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (lunarPriority.combinedText.isNotBlank()) {
+                        val isEn = com.example.util.TranslationHelper.isEnglish()
+                        val separator = if (isEn) " · " else "·"
+                        val normalColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        val festColor = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else normalColor
+                        
+                        val annotatedText = buildAnnotatedString {
+                            // 1. Lunar Date
+                            val lunarStr = lunarPriority.ordinaryLunarText
+                            if (lunarStr.isNotBlank()) {
+                                withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.Normal)) {
+                                    append(lunarStr)
+                                }
+                            }
+                            
+                            // 2. Solar Term
+                            if (lunarPriority.hasSolarTerm) {
+                                if (this.length > 0) {
+                                    withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.Normal)) {
+                                        append(separator)
+                                    }
+                                }
+                                withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.SemiBold)) {
+                                    append(lunarPriority.solarTermText!!)
+                                }
+                            }
+                            
+                            // 3. Festivals
                             if (lunarPriority.hasFestival) {
-                                Text(
-                                    text = lunarPriority.festivalText!!,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (!lunarPriority.isLunarFestival && lunarPriority.ordinaryLunarText.isNotBlank()) {
-                                    Text(
-                                        text = lunarPriority.ordinaryLunarText,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                if (lunarPriority.hasSolarTerm) {
-                                    Text(
-                                        text = lunarPriority.solarTermText!!,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            } else if (lunarPriority.hasSolarTerm) {
-                                Text(
-                                    text = lunarPriority.solarTermText!!,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            } else {
-                                if (lunarPriority.ordinaryLunarText.isNotBlank()) {
-                                    Text(
-                                        text = lunarPriority.ordinaryLunarText,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                val festParts = lunarPriority.festivalText!!.split(" · ", "·").filter { it.isNotBlank() }
+                                festParts.forEach { f ->
+                                    if (this.length > 0) {
+                                        withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.Normal)) {
+                                            append(separator)
+                                        }
+                                    }
+                                    withStyle(SpanStyle(color = festColor, fontWeight = FontWeight.SemiBold)) {
+                                        append(f)
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            if (lunarPriority.hasFestival) {
-                                if (!lunarPriority.isLunarFestival && lunarPriority.ordinaryLunarText.isNotBlank()) {
-                                    Text(
-                                        text = lunarPriority.ordinaryLunarText,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "· ${lunarPriority.festivalText}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                } else {
-                                    Text(
-                                        text = lunarPriority.festivalText!!,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                if (lunarPriority.hasSolarTerm) {
-                                    Text(
-                                        text = "· ${lunarPriority.solarTermText}",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            } else if (lunarPriority.hasSolarTerm) {
-                                Text(
-                                    text = lunarPriority.solarTermText!!,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            } else {
-                                if (lunarPriority.ordinaryLunarText.isNotBlank()) {
-                                    Text(
-                                        text = lunarPriority.ordinaryLunarText,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
+                        
+                        Text(
+                            text = annotatedText,
+                            fontSize = 12.sp
+                        )
                     }
                 }
 

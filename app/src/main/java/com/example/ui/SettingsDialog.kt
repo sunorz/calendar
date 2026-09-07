@@ -221,7 +221,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "我在床上修麻雀",
+                                    text = "强迫症犯了",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

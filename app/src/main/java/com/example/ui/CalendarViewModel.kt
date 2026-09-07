@@ -102,7 +102,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.7.8"
+        val newVer = _remoteVersion.value ?: "0.7.9"
         val baseDownloadUrl = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", android.util.Base64.DEFAULT))
         val endDownloadUrl = String(android.util.Base64.decode("LXJlbGVhc2UuYXBr", android.util.Base64.DEFAULT))
         val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl"

@@ -163,19 +163,20 @@ object TranslationHelper {
         if (chineseName.isNullOrBlank()) return null
         if (!isEnglish()) return chineseName
 
-        // Direct match
-        FESTIVALS_EN[chineseName]?.let { return it }
+        val parts = chineseName.split("·")
+        val translatedParts = parts.map { part ->
+            FESTIVALS_EN[part] ?: SOLAR_TERMS_EN[part] ?: getPartialMatch(part)
+        }
+        return translatedParts.joinToString(" · ")
+    }
 
-        // Also check solar terms in case a festival is named after one (e.g. 清明)
-        SOLAR_TERMS_EN[chineseName]?.let { return it }
-
-        // Partial or trimmed match
+    private fun getPartialMatch(part: String): String {
         for ((key, value) in FESTIVALS_EN) {
-            if (chineseName.contains(key) || key.contains(chineseName)) {
+            if (part.contains(key) || key.contains(part)) {
                 return value
             }
         }
-        return chineseName
+        return part
     }
 
     /**
@@ -366,16 +367,13 @@ object TranslationHelper {
         val solarTermText: String?,
         val ordinaryLunarText: String,
         val isHolidayWithRest: Boolean,
-        val isLunarFestival: Boolean
+        val isLunarFestival: Boolean,
+        val combinedText: String
     )
 
     /**
      * Card Lunar Priority Rule (Chinese & English):
-     * 1. 农历节日时，同时显示农历节日和节气（如果有），不显示普通农历
-     * 2. 如果是公历节日（如国庆节），显示公历节日，并显示普通农历（和节气，如果有）
-     * 3. 如果没有节日但有节气，显示节气，（可以不显示普通农历或者按需，这里原逻辑是如果没有节日也没有节气才显示普通农历，
-     *    但如果是节气，原逻辑是不显示普通农历的。我们暂保持：无节日有节气时不显示普通农历，或者...等下，节气本身就是农历体系的，所以原逻辑是不显示普通农历）
-     * 4. 如果没有节日也没有节气，显示普通农历
+     * Completely combines lunar date, solar term, and festivals.
      */
     fun getCardLunarPriorityData(dayInfo: com.example.data.model.DayInfo): CardLunarPriorityData {
         val festival = translateFestival(dayInfo.festivalName)
@@ -385,6 +383,18 @@ object TranslationHelper {
 
         val hasFestival = !festival.isNullOrBlank() && !dayInfo.isLocaleHoliday
         val hasSolarTerm = !solarTerm.isNullOrBlank()
+        
+        val parts = mutableListOf<String>()
+        if (ordinaryLunar.isNotBlank()) {
+            parts.add(ordinaryLunar)
+        }
+        if (hasSolarTerm) {
+            parts.add(solarTerm!!)
+        }
+        if (hasFestival) {
+            parts.addAll(festival!!.split(" · ", "·").filter { it.isNotBlank() })
+        }
+        val combined = parts.joinToString(if (isEnglish()) " · " else "·")
 
         return CardLunarPriorityData(
             hasFestival = hasFestival,
@@ -393,7 +403,8 @@ object TranslationHelper {
             solarTermText = if (hasSolarTerm) solarTerm else null,
             ordinaryLunarText = ordinaryLunar,
             isHolidayWithRest = dayInfo.isHolidayWithRest,
-            isLunarFestival = dayInfo.isLunarFestival
+            isLunarFestival = dayInfo.isLunarFestival,
+            combinedText = combined
         )
     }
 }
