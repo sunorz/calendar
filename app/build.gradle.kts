@@ -10,15 +10,15 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.sunplace.calendar"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 23
-    versionName = "0.7.10"
+    versionCode = 24
+    versionName = "0.7.11"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
