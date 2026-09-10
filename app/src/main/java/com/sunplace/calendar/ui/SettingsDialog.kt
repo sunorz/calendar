@@ -195,7 +195,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = String(android.util.Base64.decode("5L2V5pe25omN6IO95Y2H57qn5YiwMS4w", android.util.Base64.DEFAULT), Charsets.UTF_8),
+                                    text = String(android.util.Base64.decode("55u45b+Y5LqO5rGf5rmW", android.util.Base64.DEFAULT), Charsets.UTF_8),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

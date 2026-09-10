@@ -7,5 +7,8 @@
     <color name="widget_text_primary">#E6E3DE</color>
     <color name="widget_text_red">#EF5350</color>
     <color name="widget_text_secondary">#A5A19C</color>
-    <color name="widget_today_highlight_bg">#3D3B37</color>
+    <color name="widget_today_highlight_bg">#4E4842</color>
+    <color name="widget_today_highlight_stroke">#E59891</color>
+    <color name="widget_today_highlight_bg_red">#4A2D2B</color>
+    <color name="widget_today_highlight_stroke_red">#FF6E6A</color>
 </resources>

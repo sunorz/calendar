@@ -62,5 +62,20 @@ class CalendarRobolectricTest {
     assertEquals("FRI", dayInfoMay1.dayOfWeekAbbr)
     assertTrue(dayInfoMay1.isRestDay)
   }
+
+  @Test
+  fun `verify announcement content`() {
+    val announcement = String(android.util.Base64.decode("55u45b+Y5LqO5rGf5rmW", android.util.Base64.DEFAULT), Charsets.UTF_8)
+    assertEquals("相忘于江湖", announcement)
+  }
+
+  @Test
+  fun `verify widget today highlight drawables exist and inflate`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val bgToday = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_widget_today)
+    val bgTodayRed = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_widget_today_red)
+    assertNotNull(bgToday)
+    assertNotNull(bgTodayRed)
+  }
 }
 
