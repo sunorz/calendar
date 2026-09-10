@@ -77,5 +77,12 @@ class CalendarRobolectricTest {
     assertNotNull(bgToday)
     assertNotNull(bgTodayRed)
   }
+
+  @Test
+  fun `verify app version name is 0 7 12`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val repository = CalendarRepository(context)
+    assertEquals("0.7.12", repository.getAppVersion())
+  }
 }
 
