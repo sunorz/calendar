@@ -102,6 +102,12 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                 val views = RemoteViews(context.packageName, R.layout.widget_month)
 
                 val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
+                val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
+                val colorLocale = ContextCompat.getColor(context, R.color.widget_text_locale)
+
+                val colorTodayTextWorkday = ContextCompat.getColor(context, R.color.widget_today_text_workday)
+                val colorTodayTextRestday = ContextCompat.getColor(context, R.color.widget_today_text_restday)
+                val colorTodayTextLocale = ContextCompat.getColor(context, R.color.widget_today_text_locale)
 
                 // 1. Year & Month Title
                 val monthTitle = if (TranslationHelper.isEnglish()) {
@@ -132,20 +138,35 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                         val dayInfo = daysList[dayNumber - 1]
                         views.setTextViewText(viewId, dayNumber.toString())
 
-                        // Text Color: Rest day is Red, Workday uses XML state list for dynamic light/dark theme switching
-                        if (dayInfo.isRestDay) {
-                            views.setTextColor(viewId, colorRed)
-                        }
-
-                        // Background: Highlight if Today
+                        // Highlight Today with Inverted Color Logic (反色高亮)
                         if (dayInfo.isToday) {
-                            if (dayInfo.isRestDay) {
-                                views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today_red)
-                            } else {
-                                views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today)
+                            when {
+                                dayInfo.isLocaleHoliday -> {
+                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today_locale)
+                                    views.setTextColor(viewId, colorTodayTextLocale)
+                                }
+                                dayInfo.isRestDay -> {
+                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today_red)
+                                    views.setTextColor(viewId, colorTodayTextRestday)
+                                }
+                                else -> {
+                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today)
+                                    views.setTextColor(viewId, colorTodayTextWorkday)
+                                }
                             }
                         } else {
                             views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
+                            when {
+                                dayInfo.isLocaleHoliday -> {
+                                    views.setTextColor(viewId, colorLocale)
+                                }
+                                dayInfo.isRestDay -> {
+                                    views.setTextColor(viewId, colorRed)
+                                }
+                                else -> {
+                                    views.setTextColor(viewId, colorPrimary)
+                                }
+                            }
                         }
                     }
                 }

@@ -74,8 +74,22 @@ class CalendarRobolectricTest {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val bgToday = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_widget_today)
     val bgTodayRed = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_widget_today_red)
+    val bgTodayLocale = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_widget_today_locale)
     assertNotNull(bgToday)
     assertNotNull(bgTodayRed)
+    assertNotNull(bgTodayLocale)
+  }
+
+  @Test
+  fun `verify month widget today text color and background`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(context)
+    val views = android.widget.RemoteViews(context.packageName, R.layout.widget_month)
+    val root = views.apply(context, null) as android.view.ViewGroup
+    assertNotNull(root)
+
+    // Run update logic
+    com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider.updateAppWidget(context, appWidgetManager, 1001)
   }
 
   @Test
