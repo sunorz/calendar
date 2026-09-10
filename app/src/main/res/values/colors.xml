@@ -15,9 +15,25 @@
     <color name="widget_text_week">#5D5B57</color>
     <color name="widget_text_primary">#222120</color>
     <color name="widget_text_red">#D32F2F</color>
+    <color name="widget_text_locale">#2E7D32</color>
     <color name="widget_text_secondary">#75716D</color>
-    <color name="widget_today_highlight_bg">#EAE6E1</color>
-    <color name="widget_today_highlight_stroke">#B85C53</color>
-    <color name="widget_today_highlight_bg_red">#FDECEB</color>
-    <color name="widget_today_highlight_stroke_red">#D32F2F</color>
+
+    <!-- Widget Today Inverted Highlight (Light Mode) -->
+    <!-- 浅色模式工作日：无边框，背景色黑，数字白 -->
+    <color name="widget_today_bg_workday">#000000</color>
+    <color name="widget_today_text_workday">#FFFFFF</color>
+
+    <!-- 浅色模式休息日：无边框，背景色红，数字白 -->
+    <color name="widget_today_bg_restday">#D32F2F</color>
+    <color name="widget_today_text_restday">#FFFFFF</color>
+
+    <!-- 本地节日：无边框，背景色绿，数字白 -->
+    <color name="widget_today_bg_locale">#2E7D32</color>
+    <color name="widget_today_text_locale">#FFFFFF</color>
+
+    <!-- Backward compatibility aliases -->
+    <color name="widget_today_highlight_bg">#000000</color>
+    <color name="widget_today_highlight_stroke">#00000000</color>
+    <color name="widget_today_highlight_bg_red">#D32F2F</color>
+    <color name="widget_today_highlight_stroke_red">#00000000</color>
 </resources>
