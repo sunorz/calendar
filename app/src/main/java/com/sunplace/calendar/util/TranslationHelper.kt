@@ -360,6 +360,12 @@ object TranslationHelper {
      * Optimized display note based on user priority and length constraints.
      */
     fun getFilteredDisplayNote(dayInfo: com.sunplace.calendar.data.model.DayInfo): String {
+        // Priority 0: Locale festival (e.g. 壮族三月三, displayed in green)
+        if (dayInfo.isLocaleHoliday && !dayInfo.localeHolidayName.isNullOrBlank()) {
+            val name = dayInfo.localeHolidayName
+            return if (isEnglish()) "Shangsi" else name
+        }
+
         val festival = dayInfo.festivalName
         val term = dayInfo.solarTermName
 

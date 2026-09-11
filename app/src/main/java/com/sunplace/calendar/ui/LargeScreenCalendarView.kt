@@ -359,7 +359,7 @@ fun LargeScreenCalendarView(
                         key = { index -> index }
                     ) { index ->
                         val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                        val days = remember(year, month, config) {
+                        val days = remember(year, month, config, nextYearConfig) {
                             viewModel.getDaysForMonth(year, month)
                         }
 

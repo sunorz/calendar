@@ -107,4 +107,36 @@ class CalendarConfigTest {
             )
         }
     }
+
+    /**
+     * User requirement verification:
+     * For 2027 localeFestivals: [{"m": 4, "d": [9]}]
+     * 2027-04-09 must be marked as locale holiday ("三月三"), subtitle displayed as "三月三".
+     */
+    @Test
+    fun test2027LocaleFestivalApril9IsGreenAndShowsSanyuesan() {
+        val json = """
+        {
+            "curYear": 2027,
+            "localeFestivals": [{"m": 4, "d": [9]}],
+            "restDays": [{"m": 4, "d": [5]}]
+        }
+        """.trimIndent()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val repository = CalendarRepository(context)
+        val nextConfig = repository.parseConfigJson(json)
+        assertNotNull(nextConfig)
+        assertEquals(1, nextConfig!!.localeFestivals.size)
+        assertEquals(4, nextConfig.localeFestivals[0].m)
+        assertEquals(listOf(9), nextConfig.localeFestivals[0].d)
+
+        val mainConfig = CalendarConfig(curYear = 2026)
+        val days = LunarCalculator.getMonthDays(2027, 4, mainConfig, nextConfig)
+        val apr9 = days.find { it.day == 9 }
+        assertNotNull(apr9)
+        assertTrue("2027-04-09 must be isLocaleHoliday", apr9!!.isLocaleHoliday)
+        assertEquals("三月三", apr9.localeHolidayName)
+        val note = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(apr9)
+        assertTrue("Note should be '三月三' or 'Shangsi', but was '$note'", note == "三月三" || note == "Shangsi")
+    }
 }
