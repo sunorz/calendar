@@ -127,14 +127,20 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             return
         }
         themePreferences.setThemeMode(mode)
+        TodayAppWidgetProvider.updateAllWidgets(getApplication())
+        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
     }
 
     fun toggleElderlyMode() {
         themePreferences.toggleElderlyMode()
+        TodayAppWidgetProvider.updateAllWidgets(getApplication())
+        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
     }
 
     fun setElderlyMode(enabled: Boolean) {
         themePreferences.setElderlyMode(enabled)
+        TodayAppWidgetProvider.updateAllWidgets(getApplication())
+        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
     }
 
     fun openSettingsDialog() {

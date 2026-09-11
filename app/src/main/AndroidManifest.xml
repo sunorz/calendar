@@ -42,6 +42,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
                 <action android:name="com.sunplace.calendar.ACTION_TODAY_MIDNIGHT_UPDATE" />
             </intent-filter>
             <meta-data
@@ -62,6 +63,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
                 <action android:name="com.sunplace.calendar.ACTION_MONTH_MIDNIGHT_UPDATE" />
             </intent-filter>
             <meta-data

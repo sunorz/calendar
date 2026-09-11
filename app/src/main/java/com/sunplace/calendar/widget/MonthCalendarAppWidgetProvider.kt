@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -15,7 +16,9 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.sunplace.calendar.MainActivity
 import com.sunplace.calendar.R
+import com.sunplace.calendar.data.model.ThemeMode
 import com.sunplace.calendar.data.repository.CalendarRepository
+import com.sunplace.calendar.data.repository.ThemePreferences
 import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.util.TranslationHelper
 import java.util.Calendar
@@ -88,105 +91,213 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
         ) {
             try {
                 val repository = CalendarRepository(context)
-                val config = repository.configState.value
+                val themePrefs = ThemePreferences(context)
+                val themeMode = themePrefs.themeMode.value
+                val isSystemNight = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
-                val cal = LunarCalculator.getChinaCalendar()
-                val year = cal.get(Calendar.YEAR)
-                val month = cal.get(Calendar.MONTH) + 1
-
-                val daysList = LunarCalculator.getMonthDays(year, month, config)
-                val daysInMonth = daysList.size
-                val firstDayOfWeek = if (daysList.isNotEmpty()) daysList[0].dayOfWeekNumber else 1
-                val startOffset = firstDayOfWeek - 1
-
-                val views = RemoteViews(context.packageName, R.layout.widget_month)
-
-                val colorRed = ContextCompat.getColor(context, R.color.widget_text_red)
-                val colorPrimary = ContextCompat.getColor(context, R.color.widget_text_primary)
-                val colorLocale = ContextCompat.getColor(context, R.color.widget_text_locale)
-
-                val colorTodayTextWorkday = ContextCompat.getColor(context, R.color.widget_today_text_workday)
-                val colorTodayTextRestday = ContextCompat.getColor(context, R.color.widget_today_text_restday)
-                val colorTodayTextLocale = ContextCompat.getColor(context, R.color.widget_today_text_locale)
-
-                // 1. Year & Month Title
-                val monthTitle = if (TranslationHelper.isEnglish()) {
-                    "${TranslationHelper.getMonthName(month)} $year"
-                } else {
-                    "${year}年${month}月"
-                }
-                views.setTextViewText(R.id.widget_month_title, monthTitle)
-
-                // 2. Days Grid
-
-                // Show/hide 6th week row if not needed
-                val totalCellsNeeded = startOffset + daysInMonth
-                if (totalCellsNeeded <= 35) {
-                    views.setViewVisibility(R.id.widget_week_row_5, View.GONE)
-                } else {
-                    views.setViewVisibility(R.id.widget_week_row_5, View.VISIBLE)
+                val isNight = when (themeMode) {
+                    ThemeMode.DARK -> true
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.SYSTEM -> isSystemNight
                 }
 
-                // Populate 42 cells
-                for (cell in 0 until 42) {
-                    val viewId = DAY_VIEW_IDS[cell]
-                    if (cell < startOffset || cell >= startOffset + daysInMonth) {
-                        views.setTextViewText(viewId, "")
-                        views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
-                    } else {
-                        val dayNumber = cell - startOffset + 1
-                        val dayInfo = daysList[dayNumber - 1]
-                        views.setTextViewText(viewId, dayNumber.toString())
-
-                        // Highlight Today with Inverted Color Logic (反色高亮)
-                        if (dayInfo.isToday) {
-                            when {
-                                dayInfo.isLocaleHoliday -> {
-                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today_locale)
-                                    views.setTextColor(viewId, colorTodayTextLocale)
-                                }
-                                dayInfo.isRestDay -> {
-                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today_red)
-                                    views.setTextColor(viewId, colorTodayTextRestday)
-                                }
-                                else -> {
-                                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_today)
-                                    views.setTextColor(viewId, colorTodayTextWorkday)
-                                }
-                            }
-                        } else {
-                            views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
-                            when {
-                                dayInfo.isLocaleHoliday -> {
-                                    views.setTextColor(viewId, colorLocale)
-                                }
-                                dayInfo.isRestDay -> {
-                                    views.setTextColor(viewId, colorRed)
-                                }
-                                else -> {
-                                    views.setTextColor(viewId, colorPrimary)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 4. Click Intent -> Launch MainActivity
-                val intent = Intent(context, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                }
-                val pendingIntent = PendingIntent.getActivity(
-                    context,
-                    0,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-
+                val views = buildRemoteViews(context, themeMode, isNight, repository)
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating month widget", e)
             }
+        }
+
+        private fun applyTextColor(
+            views: RemoteViews,
+            viewId: Int,
+            themeMode: ThemeMode,
+            colorDarkInt: Int,
+            colorLightInt: Int,
+            context: Context
+        ) {
+            when (themeMode) {
+                ThemeMode.SYSTEM -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        views.setColorInt(viewId, "setTextColor", colorLightInt, colorDarkInt)
+                    } else {
+                        val isSystemNight = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                        views.setTextColor(viewId, if (isSystemNight) colorDarkInt else colorLightInt)
+                    }
+                }
+                ThemeMode.DARK -> {
+                    views.setTextColor(viewId, colorDarkInt)
+                }
+                ThemeMode.LIGHT -> {
+                    views.setTextColor(viewId, colorLightInt)
+                }
+            }
+        }
+
+        private fun buildRemoteViews(
+            context: Context,
+            themeMode: ThemeMode,
+            isNight: Boolean,
+            repository: CalendarRepository
+        ): RemoteViews {
+            val config = repository.configState.value
+
+            val cal = LunarCalculator.getChinaCalendar()
+            val year = cal.get(Calendar.YEAR)
+            val month = cal.get(Calendar.MONTH) + 1
+
+            val daysList = LunarCalculator.getMonthDays(year, month, config)
+            val daysInMonth = daysList.size
+            val firstDayOfWeek = if (daysList.isNotEmpty()) daysList[0].dayOfWeekNumber else 1
+            val startOffset = firstDayOfWeek - 1
+
+            val views = RemoteViews(context.packageName, R.layout.widget_month)
+
+            // 0. Ensure Card Background matches theme mode
+            val bgCardRes = when (themeMode) {
+                ThemeMode.DARK -> R.drawable.bg_widget_card_dark
+                ThemeMode.LIGHT -> R.drawable.bg_widget_card_light
+                ThemeMode.SYSTEM -> R.drawable.bg_widget_card
+            }
+            views.setInt(R.id.widget_root, "setBackgroundResource", bgCardRes)
+
+            // 1. Year & Month Title
+            val monthTitle = if (TranslationHelper.isEnglish()) {
+                "${TranslationHelper.getMonthName(month)} $year"
+            } else {
+                "${year}年${month}月"
+            }
+            views.setTextViewText(R.id.widget_month_title, monthTitle)
+            applyTextColor(
+                views = views,
+                viewId = R.id.widget_month_title,
+                themeMode = themeMode,
+                colorDarkInt = 0xFFE8EAED.toInt(),
+                colorLightInt = 0xFF202124.toInt(),
+                context = context
+            )
+
+            // 2. Days Grid
+            val totalCellsNeeded = startOffset + daysInMonth
+            if (totalCellsNeeded <= 35) {
+                views.setViewVisibility(R.id.widget_week_row_5, View.GONE)
+            } else {
+                views.setViewVisibility(R.id.widget_week_row_5, View.VISIBLE)
+            }
+
+            // Populate 42 cells
+            for (cell in 0 until 42) {
+                val viewId = DAY_VIEW_IDS[cell]
+                if (cell < startOffset || cell >= startOffset + daysInMonth) {
+                    views.setTextViewText(viewId, "")
+                    views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
+                } else {
+                    val dayNumber = cell - startOffset + 1
+                    val dayInfo = daysList[dayNumber - 1]
+                    views.setTextViewText(viewId, dayNumber.toString())
+
+                    // Highlight Today
+                    if (dayInfo.isToday) {
+                        when {
+                            dayInfo.isLocaleHoliday -> {
+                                val bgRes = when (themeMode) {
+                                    ThemeMode.DARK -> R.drawable.bg_widget_today_dark_locale
+                                    ThemeMode.LIGHT -> R.drawable.bg_widget_today_light_locale
+                                    ThemeMode.SYSTEM -> R.drawable.bg_widget_today_locale
+                                }
+                                views.setInt(viewId, "setBackgroundResource", bgRes)
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFF04210B.toInt(),
+                                    colorLightInt = 0xFFFFFFFF.toInt(),
+                                    context = context
+                                )
+                            }
+                            dayInfo.isRestDay -> {
+                                val bgRes = when (themeMode) {
+                                    ThemeMode.DARK -> R.drawable.bg_widget_today_dark_restday
+                                    ThemeMode.LIGHT -> R.drawable.bg_widget_today_light_restday
+                                    ThemeMode.SYSTEM -> R.drawable.bg_widget_today_red
+                                }
+                                views.setInt(viewId, "setBackgroundResource", bgRes)
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFF370001.toInt(),
+                                    colorLightInt = 0xFFFFFFFF.toInt(),
+                                    context = context
+                                )
+                            }
+                            else -> {
+                                val bgRes = when (themeMode) {
+                                    ThemeMode.DARK -> R.drawable.bg_widget_today_dark_workday
+                                    ThemeMode.LIGHT -> R.drawable.bg_widget_today_light_workday
+                                    ThemeMode.SYSTEM -> R.drawable.bg_widget_today
+                                }
+                                views.setInt(viewId, "setBackgroundResource", bgRes)
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFF000000.toInt(),
+                                    colorLightInt = 0xFF000000.toInt(),
+                                    context = context
+                                )
+                            }
+                        }
+                    } else {
+                        views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
+                        when {
+                            dayInfo.isLocaleHoliday -> {
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFF81C995.toInt(),
+                                    colorLightInt = 0xFF188038.toInt(),
+                                    context = context
+                                )
+                            }
+                            dayInfo.isRestDay -> {
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFFF28B82.toInt(),
+                                    colorLightInt = 0xFFD93025.toInt(),
+                                    context = context
+                                )
+                            }
+                            else -> {
+                                applyTextColor(
+                                    views = views,
+                                    viewId = viewId,
+                                    themeMode = themeMode,
+                                    colorDarkInt = 0xFFE8EAED.toInt(),
+                                    colorLightInt = 0xFF202124.toInt(),
+                                    context = context
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+
+            return views
         }
 
         fun updateAllWidgets(context: Context) {

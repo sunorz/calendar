@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Widget Adaptive Colors (Dark Mode) -->
-    <color name="widget_bg">#232220</color>
-    <color name="widget_border">#3A3835</color>
-    <color name="widget_text_week">#A5A19C</color>
-    <color name="widget_text_primary">#E6E3DE</color>
-    <color name="widget_text_red">#EF5350</color>
-    <color name="widget_text_locale">#4CAF50</color>
-    <color name="widget_text_secondary">#A5A19C</color>
+    <color name="widget_bg">#202124</color>
+    <color name="widget_border">#3C4043</color>
+    <color name="widget_text_week">#9AA0A6</color>
+    <color name="widget_text_primary">#E8EAED</color>
+    <color name="widget_text_red">#F28B82</color>
+    <color name="widget_text_locale">#81C995</color>
+    <color name="widget_text_secondary">#9AA0A6</color>
 
-    <!-- Widget Today Inverted Highlight (Dark Mode) -->
-    <!-- 深色模式工作日：反色逻辑高亮，确保对比度与清晰可读 -> 背景色白，数字黑 -->
-    <color name="widget_today_bg_workday">#FFFFFF</color>
+    <!-- Widget Today Highlight (Dark Mode) -->
+    <!-- 工作日：无论深色还是浅色模式，黄色底加黑色数字 -->
+    <color name="widget_today_bg_workday">#F9AB00</color>
     <color name="widget_today_text_workday">#000000</color>
 
-    <!-- 深色模式休息日：无边框，背景色红，数字白 -->
-    <color name="widget_today_bg_restday">#D32F2F</color>
-    <color name="widget_today_text_restday">#FFFFFF</color>
+    <!-- 深色模式休息日：Google标准浅红(Red 200)背景，深色高对比数字 -->
+    <color name="widget_today_bg_restday">#F28B82</color>
+    <color name="widget_today_text_restday">#370001</color>
 
-    <!-- 本地节日：无边框，背景色绿，数字白 -->
-    <color name="widget_today_bg_locale">#2E7D32</color>
-    <color name="widget_today_text_locale">#FFFFFF</color>
+    <!-- 深色模式本地节日：Google标准浅绿(Green 200)背景，深色高对比数字 -->
+    <color name="widget_today_bg_locale">#81C995</color>
+    <color name="widget_today_text_locale">#04210B</color>
 
     <!-- Backward compatibility aliases -->
-    <color name="widget_today_highlight_bg">#FFFFFF</color>
+    <color name="widget_today_highlight_bg">#8AB4F8</color>
     <color name="widget_today_highlight_stroke">#00000000</color>
-    <color name="widget_today_highlight_bg_red">#D32F2F</color>
+    <color name="widget_today_highlight_bg_red">#F28B82</color>
     <color name="widget_today_highlight_stroke_red">#00000000</color>
 </resources>

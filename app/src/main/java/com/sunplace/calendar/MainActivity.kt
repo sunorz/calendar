@@ -23,6 +23,8 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    TodayAppWidgetProvider.updateAllWidgets(this)
+    MonthCalendarAppWidgetProvider.updateAllWidgets(this)
     setContent {
       val themeMode by calendarViewModel.themeMode.collectAsState()
       val isElderlyMode by calendarViewModel.isElderlyMode.collectAsState()
@@ -36,6 +38,12 @@ class MainActivity : ComponentActivity() {
 
   override fun onResume() {
     super.onResume()
+    TodayAppWidgetProvider.updateAllWidgets(this)
+    MonthCalendarAppWidgetProvider.updateAllWidgets(this)
+  }
+
+  override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+    super.onConfigurationChanged(newConfig)
     TodayAppWidgetProvider.updateAllWidgets(this)
     MonthCalendarAppWidgetProvider.updateAllWidgets(this)
   }
