@@ -92,7 +92,8 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
             try {
                 val repository = CalendarRepository(context)
                 val themePrefs = ThemePreferences(context)
-                val themeMode = themePrefs.themeMode.value
+                val isElderlyMode = themePrefs.isElderlyMode.value
+                val themeMode = if (isElderlyMode) ThemeMode.LIGHT else themePrefs.themeMode.value
                 val isSystemNight = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
                 val isNight = when (themeMode) {
