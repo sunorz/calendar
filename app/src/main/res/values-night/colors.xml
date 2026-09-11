@@ -10,17 +10,14 @@
     <color name="widget_text_secondary">#9AA0A6</color>
 
     <!-- Widget Today Highlight (Dark Mode) -->
-    <!-- 工作日：无论深色还是浅色模式，黄色底加黑色数字 -->
-    <color name="widget_today_bg_workday">#C9982E</color>
-    <color name="widget_today_text_workday">#000000</color>
+    <!-- 工作日：改为绿色 -->
+    <color name="widget_today_bg_workday">#81C995</color>
 
     <!-- 深色模式休息日：Google标准浅红(Red 200)背景，深色高对比数字 -->
     <color name="widget_today_bg_restday">#B75C5C</color>
-    <color name="widget_today_text_restday">#370001</color>
 
     <!-- 深色模式本地节日：Google标准浅绿(Green 200)背景，深色高对比数字 -->
     <color name="widget_today_bg_locale">#5C8F63</color>
-    <color name="widget_today_text_locale">#04210B</color>
 
     <!-- Backward compatibility aliases -->
     <color name="widget_today_highlight_bg">#8AB4F8</color>

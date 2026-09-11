@@ -210,8 +210,8 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                                     views = views,
                                     viewId = viewId,
                                     themeMode = themeMode,
-                                    colorDarkInt = 0xFF000000.toInt(),
-                                    colorLightInt = 0xFF000000.toInt(),
+                                    colorDarkInt = 0xFF81C995.toInt(),
+                                    colorLightInt = 0xFF188038.toInt(),
                                     context = context
                                 )
                             }
@@ -226,8 +226,8 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                                     views = views,
                                     viewId = viewId,
                                     themeMode = themeMode,
-                                    colorDarkInt = 0xFF000000.toInt(),
-                                    colorLightInt = 0xFF000000.toInt(),
+                                    colorDarkInt = 0xFFF28B82.toInt(),
+                                    colorLightInt = 0xFFD93025.toInt(),
                                     context = context
                                 )
                             }
@@ -242,8 +242,8 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                                     views = views,
                                     viewId = viewId,
                                     themeMode = themeMode,
-                                    colorDarkInt = 0xFF000000.toInt(),
-                                    colorLightInt = 0xFF000000.toInt(),
+                                    colorDarkInt = 0xFFE8EAED.toInt(),
+                                    colorLightInt = 0xFF202124.toInt(),
                                     context = context
                                 )
                             }
