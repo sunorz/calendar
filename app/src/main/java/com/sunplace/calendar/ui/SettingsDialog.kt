@@ -195,7 +195,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = String(android.util.Base64.decode("55u45b+Y5LqO5rGf5rmW", android.util.Base64.DEFAULT), Charsets.UTF_8),
+                                    text = "溜了",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
