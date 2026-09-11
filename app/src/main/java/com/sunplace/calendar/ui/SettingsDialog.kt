@@ -195,7 +195,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "溜了",
+                                    text = "TRAP",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
