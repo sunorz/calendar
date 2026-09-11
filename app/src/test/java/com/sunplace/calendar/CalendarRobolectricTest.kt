@@ -65,8 +65,8 @@ class CalendarRobolectricTest {
 
   @Test
   fun `verify announcement content`() {
-    val announcement = String(android.util.Base64.decode("55u45b+Y5LqO5rGf5rmW", android.util.Base64.DEFAULT), Charsets.UTF_8)
-    assertEquals("相忘于江湖", announcement)
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    assertEquals("十二天了。", context.getString(R.string.announcement_content))
   }
 
   @Test
@@ -93,10 +93,10 @@ class CalendarRobolectricTest {
   }
 
   @Test
-  fun `verify app version name is 0 7 12`() {
+  fun `verify app version name is 1 0 3`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val repository = CalendarRepository(context)
-    assertEquals("0.7.12", repository.getAppVersion())
+    assertEquals("1.0.3", repository.getAppVersion())
   }
 }
 

@@ -77,6 +77,7 @@ fun WatchDayWidgetView(
     modifier: Modifier = Modifier
 ) {
     val config by viewModel.config.collectAsState()
+    val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
 
     // Current selected date state in Watch mode (defaults to current real date in UTC+8)
@@ -88,8 +89,8 @@ fun WatchDayWidgetView(
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
     // Compute DayInfo for current date
-    val dayInfo = remember(currentYear, currentMonth, currentDay, config) {
-        LunarCalculator.getDayInfoForDate(currentYear, currentMonth, currentDay, config)
+    val dayInfo = remember(currentYear, currentMonth, currentDay, config, nextYearConfig) {
+        LunarCalculator.getDayInfoForDate(currentYear, currentMonth, currentDay, config, nextYearConfig)
     }
 
     // Helper functions to step days

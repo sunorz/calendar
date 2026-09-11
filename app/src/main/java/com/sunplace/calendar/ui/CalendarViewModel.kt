@@ -53,6 +53,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val themePreferences = ThemePreferences(application)
 
     val config: StateFlow<CalendarConfig> = repository.configState
+    val nextYearConfig: StateFlow<CalendarConfig?> = repository.nextYearConfigState
     val syncState: StateFlow<SyncState> = repository.syncState
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
     val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
@@ -84,7 +85,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
 
     init {
-        // Only check version on startup. It will fetch config if needed.
+        syncAllConfigs()
         checkVersion()
     }
 
@@ -92,9 +93,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             repository.checkAndSyncVersion().onSuccess { result ->
                 _remoteVersion.value = result.remoteMain
-                if (result.configNeedsFetch) {
-                    refreshConfig()
-                }
                 if (result.isNewer) {
                     _updateAvailable.value = true
                 }
@@ -179,20 +177,24 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         refreshConfig()
     }
 
-    fun refreshConfig() {
+    fun syncAllConfigs() {
         viewModelScope.launch {
-            repository.fetchRemoteConfig().onSuccess {
-                // Update home screen widgets
-                TodayAppWidgetProvider.updateAllWidgets(getApplication())
-                MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
-            }
+            repository.fetchRemoteConfig()
+            repository.fetchNextYearConfig()
+            // Update home screen widgets
+            TodayAppWidgetProvider.updateAllWidgets(getApplication())
+            MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
         }
+    }
+
+    fun refreshConfig() {
+        syncAllConfigs()
     }
 
     /**
      * Helper to get days for any month index using current config
      */
     fun getDaysForMonth(year: Int, month: Int): List<DayInfo> {
-        return LunarCalculator.getMonthDays(year, month, config.value)
+        return LunarCalculator.getMonthDays(year, month, config.value, nextYearConfig.value)
     }
 }

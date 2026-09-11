@@ -195,7 +195,7 @@ fun SettingsDialog(
                                     )
                                 }
                                 Text(
-                                    text = "TRAP",
+                                    text = stringResource(R.string.announcement_content),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface

@@ -89,19 +89,21 @@ fun LargeScreenCalendarView(
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
 
+    val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState(
         initialFirstVisibleItemIndex = viewModel.todayMonthIndex
     )
 
     // Today's DayInfo fallback if no date is explicitly clicked
-    val todayInfo = remember(config) {
+    val todayInfo = remember(config, nextYearConfig) {
         val cal = LunarCalculator.getChinaCalendar()
         LunarCalculator.getDayInfoForDate(
             cal.get(Calendar.YEAR),
             cal.get(Calendar.MONTH) + 1,
             cal.get(Calendar.DAY_OF_MONTH),
-            config
+            config,
+            nextYearConfig
         )
     }
 

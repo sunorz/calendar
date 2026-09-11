@@ -146,6 +146,7 @@ private fun StandardPhoneCalendarView(
     modifier: Modifier = Modifier
 ) {
     val config by viewModel.config.collectAsState()
+    val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
 
@@ -347,7 +348,7 @@ private fun StandardPhoneCalendarView(
                     key = { index -> index }
                 ) { index ->
                     val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                    val days = remember(year, month, config) {
+                    val days = remember(year, month, config, nextYearConfig) {
                         viewModel.getDaysForMonth(year, month)
                     }
 

@@ -479,7 +479,7 @@ object LunarCalculator {
      *    - If year == config.curYear: Apply JSON restDays and localeFestivals.
      *    - If year != config.curYear: Fall back to default weekend rest days.
      */
-    fun getMonthDays(year: Int, month: Int, config: CalendarConfig): List<DayInfo> {
+    fun getMonthDays(year: Int, month: Int, mainConfig: CalendarConfig, nextConfig: CalendarConfig? = null): List<DayInfo> {
         val daysInMonth = getDaysInMonth(year, month)
         val todayCal = getChinaCalendar()
         val todayYear = todayCal.get(Calendar.YEAR)
@@ -487,7 +487,12 @@ object LunarCalculator {
         val todayDay = todayCal.get(Calendar.DAY_OF_MONTH)
 
         val result = ArrayList<DayInfo>(daysInMonth)
-        val isConfigYear = (year == config.curYear)
+        
+        val currentYear = mainConfig.curYear
+        val nextYear = if (nextConfig != null) nextConfig.curYear else (currentYear + 1)
+
+        val isCurrentYear = (year == currentYear)
+        val isNextYear = (year == nextYear || (nextConfig != null && year == nextConfig.curYear))
 
         for (d in 1..daysInMonth) {
             val cal = getChinaCalendar().apply {
@@ -506,20 +511,40 @@ object LunarCalculator {
             val defaultSolarFestival = getDefaultSolarFestival(year, month, d, dow)
 
             val isRest: Boolean
-            val isLocale: Boolean
+            var isLocale: Boolean = false
             var localeName: String? = null
 
-            if (isConfigYear) {
-                // Year MATCHED JSON config
-                isRest = config.isRestDay(month, d)
-                isLocale = config.isLocaleHoliday(month, d)
-                if (isLocale) {
-                    localeName = "三月三"
+            when {
+                isCurrentYear -> {
+                    // 1. 今年（主配置年份）：完全依照 mainConfig
+                    isRest = mainConfig.isRestDay(month, d)
+                    isLocale = mainConfig.isLocaleHoliday(month, d)
+                    if (isLocale) {
+                        localeName = "三月三"
+                    }
                 }
-            } else {
-                // Year NOT in JSON config -> Fall back to default weekend rest days
-                isRest = (dow == 6 || dow == 7) // Weekends are rest days
-                isLocale = false
+                isNextYear -> {
+                    // 2. 明年（命中 next 的 curYear，即今年+1）：
+                    // 通用业务规则：
+                    // A. 首先清空明年的所有双休规则（所有日期全部还原成工作日，默认全黑）
+                    // B. 再根据请求到的 next 结果来重新确定休息日
+                    if (nextConfig != null && nextConfig.curYear == year) {
+                        isRest = nextConfig.isRestDay(month, d)
+                        isLocale = nextConfig.isLocaleHoliday(month, d)
+                        if (isLocale) {
+                            localeName = "三月三"
+                        }
+                    } else {
+                        // 次年尚未加载或未配置：清空所有双休规则，所有日期均作为工作日显示
+                        isRest = false
+                        isLocale = false
+                    }
+                }
+                else -> {
+                    // 3. 其他非配置年份：常规双休
+                    isRest = (dow == 6 || dow == 7)
+                    isLocale = false
+                }
             }
 
             val festivalParts = mutableListOf<String>()
@@ -566,8 +591,8 @@ object LunarCalculator {
         return result
     }
 
-    fun getDayInfoForDate(year: Int, month: Int, day: Int, config: CalendarConfig): DayInfo {
-        val list = getMonthDays(year, month, config)
+    fun getDayInfoForDate(year: Int, month: Int, day: Int, mainConfig: CalendarConfig, nextConfig: CalendarConfig? = null): DayInfo {
+        val list = getMonthDays(year, month, mainConfig, nextConfig)
         return list.find { it.day == day } ?: list.first()
     }
 }

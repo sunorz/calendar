@@ -30,16 +30,23 @@ class CalendarRepository(private val context: Context) {
     companion object {
         val DEFAULT_CONFIG_URL: String
             get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9jb25maWcuanNvbg==", android.util.Base64.DEFAULT))
+
+        val NEXT_CONFIG_URL: String
+            get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9jb25maWctbmV4dC5qc29u", android.util.Base64.DEFAULT))
             
         val VERSION_CHECK_URL: String
             get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdmVyc2lvbi5qc29u", android.util.Base64.DEFAULT))
             
         private const val PREFS_NAME = "calendar_prefs"
         private const val KEY_CACHED_JSON = "cached_config_json"
+        private const val KEY_CACHED_NEXT_JSON = "cached_next_config_json"
         private const val KEY_LAST_SYNC = "last_sync_timestamp"
         private const val KEY_CUSTOM_URL = "custom_config_url"
         private const val KEY_APP_VERSION = "app_version_override"
         private const val TAG = "CalendarRepository"
+
+        // Embedded initial fallback for next year (2027) so it is instantly available offline or before first network call
+        private const val EMBEDDED_NEXT_CONFIG_JSON = """{"curYear":2027,"startWeek":5,"monthsLimit":[31,28,31,30,31,30,31,31,30,31,30,31],"lunarStart":[0,24],"lunarMonth":[11,12,1,2,3,4,5,6,7,8,9,10,11],"lunarMonthLimit":[30,29,30,29,30,29,29,30,29,29,30,30,30],"lunarFestivals":[{"date":"0-28","name":"小寒","tag":0},{"date":"1-2","name":"大寒","tag":0},{"date":"1-8","name":"腊八节","tag":0},{"date":"1-17","name":"立春","tag":0},{"date":"1-23","name":"北方小年","tag":0},{"date":"1-24","name":"南方小年","tag":0},{"date":"1-29","name":"除夕","tag":0},{"date":"2-2","name":"雨水","tag":0},{"date":"2-15","name":"元宵节","tag":0},{"date":"3-2","name":"龙抬头","tag":0},{"date":"3-18","name":"清明节","tag":1},{"date":"4-4","name":"谷雨","tag":0},{"date":"4-19","name":"立夏","tag":0},{"date":"5-5","name":"小满","tag":0},{"date":"5-20","name":"芒种","tag":0},{"date":"6-5","name":"端午节","tag":1},{"date":"6-7","name":"夏至","tag":0},{"date":"6-23","name":"小暑","tag":0},{"date":"7-10","name":"大暑","tag":0},{"date":"7-25","name":"立秋","tag":0},{"date":"8-7","name":"七夕节","tag":0},{"date":"8-11","name":"处暑","tag":0},{"date":"8-15","name":"中元节","tag":0},{"date":"8-26","name":"白露","tag":0},{"date":"9-13","name":"秋分","tag":0},{"date":"9-15","name":"中秋节","tag":1},{"date":"9-28","name":"寒露","tag":0},{"date":"10-9","name":"重阳节","tag":0},{"date":"10-14","name":"霜降","tag":0},{"date":"10-29","name":"立冬","tag":0},{"date":"11-14","name":"小雪","tag":0},{"date":"11-29","name":"大雪","tag":0},{"date":"12-14","name":"冬至","tag":0}],"Festivals":[{"date":"1-10","name":"警察节","tag":0},{"date":"2-14","name":"情人节","tag":0},{"date":"3-5","name":"学雷锋日","tag":0},{"date":"3-8","name":"妇女节","tag":0},{"date":"3-12","name":"植树节","tag":0},{"date":"3-15","name":"消费者日","tag":0},{"date":"4-1","name":"愚人节","tag":0},{"date":"4-20","name":"复活节","tag":0},{"date":"5-1","name":"劳动节","tag":1},{"date":"5-4","name":"青年节","tag":0},{"date":"5-10","name":"母亲节","tag":0},{"date":"6-1","name":"儿童节","tag":0},{"date":"6-16","name":"父亲节","tag":0},{"date":"7-1","name":"建党节","tag":0},{"date":"8-1","name":"建军节","tag":0},{"date":"9-10","name":"教师节","tag":0},{"date":"10-1","name":"国庆节","tag":1},{"date":"10-31","name":"万圣夜","tag":0},{"date":"11-1","name":"万圣节","tag":0},{"date":"11-11","name":"购物节","tag":0},{"date":"11-26","name":"感恩节","tag":0},{"date":"12-1","name":"艾滋病日","tag":0},{"date":"12-20","name":"澳门回归","tag":0},{"date":"12-24","name":"平安夜","tag":0},{"date":"12-25","name":"圣诞节","tag":0}],"localeFestivals":[{}],"restDays":[{"m":1,"d":[1]},{"m":2,"d":[]},{"m":3,"d":[]},{"m":4,"d":[]},{"m":5,"d":[1,2,3]},{"m":6,"d":[]},{"m":7,"d":[]},{"m":8,"d":[]},{"m":9,"d":[]},{"m":10,"d":[1,2,3,4,5,6,7]},{"m":11,"d":[]},{"m":12,"d":[]}]}"""
     }
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -51,6 +58,9 @@ class CalendarRepository(private val context: Context) {
 
     private val _configState = MutableStateFlow(loadInitialConfig())
     val configState: StateFlow<CalendarConfig> = _configState.asStateFlow()
+
+    private val _nextYearConfigState = MutableStateFlow(loadInitialNextConfig())
+    val nextYearConfigState: StateFlow<CalendarConfig?> = _nextYearConfigState.asStateFlow()
 
     private val _syncState = MutableStateFlow<SyncState>(
         if (getLastSyncTime() > 0L) SyncState.Success("配置已同步", getLastSyncTime()) else SyncState.Idle
@@ -101,8 +111,7 @@ class CalendarRepository(private val context: Context) {
 
     data class VersionCheckResult(
         val remoteMain: String,
-        val isNewer: Boolean,
-        val configNeedsFetch: Boolean
+        val isNewer: Boolean
     )
 
     suspend fun checkAndSyncVersion(): Result<VersionCheckResult> {
@@ -130,20 +139,9 @@ class CalendarRepository(private val context: Context) {
                 val localVersion = getAppVersion()
                 Log.d(TAG, "Version check: remoteMain=$remoteMain, localVersion=$localVersion")
 
-                var configNeedsFetch = false
-                val remoteConfigVersion = root.optString("config", "")
-                val localConfigVersion = prefs.getString("config_version_hash", "")
-                val localCached = prefs.getString(KEY_CACHED_JSON, null)
-
-                // Fetch if we have no cache, OR if the remote version string changed
-                if (localCached.isNullOrEmpty() || (remoteConfigVersion.isNotEmpty() && remoteConfigVersion != localConfigVersion)) {
-                    configNeedsFetch = true
-                    prefs.edit().putString("config_version_hash", remoteConfigVersion).apply()
-                }
-
                 val isNewer = isVersionNewer(remoteMain, localVersion)
 
-                Result.success(VersionCheckResult(remoteMain, isNewer, configNeedsFetch))
+                Result.success(VersionCheckResult(remoteMain, isNewer))
             } catch (e: Exception) {
                 Log.e(TAG, "Version check error", e)
                 Result.failure(e)
@@ -167,6 +165,19 @@ class CalendarRepository(private val context: Context) {
         return CalendarConfig(curYear = 2026) // Provide empty structure when no cache exists
     }
 
+    private fun loadInitialNextConfig(): CalendarConfig? {
+        val cached = prefs.getString(KEY_CACHED_NEXT_JSON, null)
+        if (!cached.isNullOrEmpty()) {
+            try {
+                val parsed = parseConfigJson(cached)
+                if (parsed != null) return parsed
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse cached next config", e)
+            }
+        }
+        return parseConfigJson(EMBEDDED_NEXT_CONFIG_JSON)
+    }
+
     /**
      * Fetch the config from the remote URL asynchronously
      */
@@ -181,9 +192,14 @@ class CalendarRepository(private val context: Context) {
             }
 
             try {
+                val timestamp = System.currentTimeMillis() / 1000
+                val separator = if (targetUrl.contains("?")) "&" else "?"
+                val finalUrl = "$targetUrl${separator}d=$timestamp"
+
                 val request = Request.Builder()
-                    .url(targetUrl)
+                    .url(finalUrl)
                     .header("User-Agent", "CN-ShiftCal/1.0 (Android)")
+                    .header("Cache-Control", "no-cache")
                     .build()
 
                 val response = okHttpClient.newCall(request).execute()
@@ -216,11 +232,56 @@ class CalendarRepository(private val context: Context) {
 
                 _configState.value = config
                 _syncState.value = SyncState.Success("配置已同步 (${config.curYear}年)", now)
+                
+                // Also fetch next year's config in the background
+                fetchNextYearConfig()
+                
                 Result.success(config)
             } catch (e: Exception) {
                 Log.e(TAG, "Network error fetching remote config", e)
                 val errMsg = e.localizedMessage ?: "Network connection failed"
                 _syncState.value = SyncState.Error("同步失败: $errMsg (已使用本地配置)", getLastSyncTime())
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun fetchNextYearConfig(): Result<CalendarConfig> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val timestamp = System.currentTimeMillis() / 1000
+                val separator = if (NEXT_CONFIG_URL.contains("?")) "&" else "?"
+                val finalUrl = "$NEXT_CONFIG_URL${separator}d=$timestamp"
+
+                val request = Request.Builder()
+                    .url(finalUrl)
+                    .header("User-Agent", "CN-ShiftCal/1.0 (Android)")
+                    .header("Cache-Control", "no-cache")
+                    .build()
+
+                val response = okHttpClient.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    val errMsg = "HTTP ${response.code}: ${response.message}"
+                    Log.w(TAG, "Failed fetching next config: $errMsg")
+                    return@withContext Result.failure(Exception(errMsg))
+                }
+
+                val bodyString = response.body?.string()
+                if (bodyString.isNullOrBlank()) {
+                    return@withContext Result.failure(Exception("Empty body in next config"))
+                }
+
+                val config = parseConfigJson(bodyString)
+                if (config != null) {
+                    prefs.edit().putString(KEY_CACHED_NEXT_JSON, bodyString).apply()
+                    _nextYearConfigState.value = config
+                    Log.d(TAG, "Successfully updated nextYearConfig: year=${config.curYear}")
+                    Result.success(config)
+                } else {
+                    Result.failure(Exception("Failed to parse next year config"))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Network error fetching remote next config", e)
                 Result.failure(e)
             }
         }
