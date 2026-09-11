@@ -106,7 +106,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         val newVer = _remoteVersion.value ?: "0.7.12"
         val baseDownloadUrl = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", android.util.Base64.DEFAULT))
         val endDownloadUrl = String(android.util.Base64.decode("LXJlbGVhc2UuYXBr", android.util.Base64.DEFAULT))
-        val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl"
+        val timestamp = System.currentTimeMillis() / 1000
+        val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl?d=$timestamp"
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
