@@ -352,30 +352,54 @@ object TranslationHelper {
         "大寒" to "Great Cold"
     )
 
-    /**
-     * Localizes display note for calendar grid.
-     * Uses compact terms in English so text does not overflow tiny calendar cells.
-     */
-    fun getLocalizedDisplayNote(dayInfo: com.sunplace.calendar.data.model.DayInfo): String {
-        if (!isEnglish()) return dayInfo.displayNote
+    // Define priority categories
+    private val LEGAL_HOLIDAYS = setOf("元旦", "春节", "清明节", "端午节", "劳动节", "中秋节", "国庆节")
+    private val TRADITIONS_AND_TERMS = setOf("龙抬头", "中元节", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至", "小寒", "大寒")
 
-        // Check short festival name for grid cells
-        dayInfo.festivalName?.let { fest ->
-            FESTIVALS_CELL_SHORT_EN[fest]?.let { return it }
-            for ((key, value) in FESTIVALS_CELL_SHORT_EN) {
-                if (fest.contains(key) || key.contains(fest)) return value
+    /**
+     * Optimized display note based on user priority and length constraints.
+     */
+    fun getFilteredDisplayNote(dayInfo: com.sunplace.calendar.data.model.DayInfo): String {
+        val festival = dayInfo.festivalName
+        val term = dayInfo.solarTermName
+
+        // Priority List
+        val allPotential = mutableListOf<String>()
+        
+        // 1. Legal Holidays
+        if (!festival.isNullOrBlank()) {
+            festival.split("·", "·").forEach { part ->
+                if (LEGAL_HOLIDAYS.contains(part)) allPotential.add(part)
+            }
+        }
+        
+        // 2. Other Festivals
+        if (!festival.isNullOrBlank()) {
+             festival.split("·", "·").forEach { part ->
+                if (!LEGAL_HOLIDAYS.contains(part) && !TRADITIONS_AND_TERMS.contains(part)) allPotential.add(part)
+            }
+        }
+        
+        // 3. Traditions/Terms
+        if (!term.isNullOrBlank()) allPotential.add(term)
+        if (!festival.isNullOrBlank()) {
+            festival.split("·", "·").forEach { part ->
+                if (TRADITIONS_AND_TERMS.contains(part)) allPotential.add(part)
             }
         }
 
-        // Check short solar term name
-        dayInfo.solarTermName?.let { term ->
-            SOLAR_TERMS_CELL_SHORT_EN[term]?.let { return it }
+        // Apply Priority & Length Constraints
+        for (note in allPotential) {
+            if (note.length <= 4) {
+                return if (isEnglish()) translateFestival(note) ?: note else note
+            }
         }
 
-        // Standard lunar day
+        // Default: Standard lunar day
         val lunar = LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day)
         return getStandardLunarDayText(lunar.lunarMonth, lunar.lunarDay, lunar.isLeap)
     }
+
 
     /**
      * Localizes full lunar text for cards and detail views.

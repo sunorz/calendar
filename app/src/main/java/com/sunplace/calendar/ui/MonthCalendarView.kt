@@ -378,7 +378,7 @@ fun MinimalDayCell(
                     textAlign = TextAlign.Center
                 )
 
-                val subText = com.sunplace.calendar.util.TranslationHelper.getLocalizedDisplayNote(dayInfo)
+                val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
                 val subColor = if (dayInfo.isHolidayWithRest) restColor else MaterialTheme.colorScheme.onSurfaceVariant
                 val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
                 val subFontSize = when {
