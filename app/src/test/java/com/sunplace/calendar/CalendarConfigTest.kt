@@ -509,6 +509,10 @@ class CalendarConfigTest {
         assertTrue(day19E.isLocaleHoliday)
         assertTrue(day20E.isLocaleHoliday)
 
+        // Day 19 is lunar 3-3 (2026-04-19 is Lunar Year 2026, Month 3, Day 3)
+        // When enabled, festivalName contains 三月三
+        assertEquals("三月三", day19E.festivalName)
+
         // 2. When disabled (false)
         val disabledDays = LunarCalculator.getMonthDays(2026, 4, config, null, showGuangxiSanyuesan = false)
         val day17D = disabledDays.find { it.day == 17 }!!
@@ -532,5 +536,19 @@ class CalendarConfigTest {
         assertFalse("20 must NOT be explicitLocaleHoliday", day20D.isExplicitLocaleHoliday)
         assertFalse("20 must NOT be localeHoliday", day20D.isLocaleHoliday)
         assertFalse("20 must revert to work day (black)", day20D.isRestDay)
+
+        // Check Lunar 3-3 date (Day 19) when disabled:
+        // 1. festivalName should NOT contain 三月三
+        assertNull("Day 19 festivalName must be null when disabled", day19D.festivalName)
+        // 2. Grid note subtitle must NOT contain 三月三 / Sanyuesan, must show standard lunar day (初三 in CN / 3rd in EN)
+        val gridNote19 = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(day19D)
+        assertTrue("Grid note must be 初三 or 3rd, but was: $gridNote19", gridNote19 == "初三" || gridNote19 == "3rd")
+        assertFalse("Grid note must NOT contain 三月三", gridNote19.contains("三月三"))
+        assertFalse("Grid note must NOT contain Sanyuesan", gridNote19.contains("Sanyuesan"))
+        // 3. Card lunar priority data must NOT contain 三月三 or Sanyuesan
+        val cardData19 = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(day19D)
+        assertNull("Card festivalText must be null", cardData19.festivalText)
+        assertFalse("Card combinedText must NOT contain 三月三", cardData19.combinedText.contains("三月三"))
+        assertFalse("Card combinedText must NOT contain Sanyuesan", cardData19.combinedText.contains("Sanyuesan"))
     }
 }

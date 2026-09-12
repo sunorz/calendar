@@ -403,7 +403,8 @@ object LunarCalculator {
         day: Int,
         lunarMonth: Int,
         lunarDay: Int,
-        isLeap: Boolean
+        isLeap: Boolean,
+        showGuangxiSanyuesan: Boolean = true
     ): String? {
         if (isNewYearsEve(year, month, day)) {
             return "除夕"
@@ -415,7 +416,7 @@ object LunarCalculator {
             lunarMonth == 1 && lunarDay == 5 -> "破五"
             lunarMonth == 1 && lunarDay == 15 -> "元宵节"
             lunarMonth == 2 && lunarDay == 2 -> "龙抬头"
-            lunarMonth == 3 && lunarDay == 3 -> "三月三"
+            lunarMonth == 3 && lunarDay == 3 -> if (showGuangxiSanyuesan) "三月三" else null
             lunarMonth == 5 && lunarDay == 5 -> "端午节"
             lunarMonth == 7 && lunarDay == 7 -> "七夕节"
             lunarMonth == 7 && lunarDay == 15 -> "中元节"
@@ -514,7 +515,7 @@ object LunarCalculator {
             val lunarDate = getLunarDate(year, month, d)
             val standardLunarText = getStandardLunarDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
             val lunarMonthAndDayText = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
-            val defaultLunarFestival = getDefaultLunarFestival(year, month, d, lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
+            val defaultLunarFestival = getDefaultLunarFestival(year, month, d, lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap, showGuangxiSanyuesan)
             val defaultSolarTerm = getSolarTerm(year, month, d)
             val defaultSolarFestival = getDefaultSolarFestival(year, month, d, dow)
 
