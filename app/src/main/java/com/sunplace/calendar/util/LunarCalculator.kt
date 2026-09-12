@@ -479,7 +479,13 @@ object LunarCalculator {
      *    - If year == config.curYear: Apply JSON restDays and localeFestivals.
      *    - If year != config.curYear: Fall back to default weekend rest days.
      */
-    fun getMonthDays(year: Int, month: Int, mainConfig: CalendarConfig, nextConfig: CalendarConfig? = null): List<DayInfo> {
+    fun getMonthDays(
+        year: Int,
+        month: Int,
+        mainConfig: CalendarConfig,
+        nextConfig: CalendarConfig? = null,
+        showGuangxiSanyuesan: Boolean = true
+    ): List<DayInfo> {
         val daysInMonth = getDaysInMonth(year, month)
         val todayCal = getChinaCalendar()
         val todayYear = todayCal.get(Calendar.YEAR)
@@ -521,10 +527,12 @@ object LunarCalculator {
                 isCurrentYear -> {
                     // 1. 今年（主配置年份）：完全依照 mainConfig
                     isRest = mainConfig.isRestDay(month, d)
-                    isLocale = mainConfig.isLocaleHoliday(month, d)
-                    isExplicitLocale = mainConfig.isExplicitLocaleHoliday(month, d)
-                    if (isLocale) {
-                        localeName = "三月三假日"
+                    if (showGuangxiSanyuesan) {
+                        isLocale = mainConfig.isLocaleHoliday(month, d)
+                        isExplicitLocale = mainConfig.isExplicitLocaleHoliday(month, d)
+                        if (isLocale) {
+                            localeName = "三月三假日"
+                        }
                     }
                 }
                 isNextYear -> {
@@ -534,10 +542,12 @@ object LunarCalculator {
                     // B. 再根据请求到的 next 结果来重新确定休息日
                     if (nextConfig != null && nextConfig.curYear == year) {
                         isRest = nextConfig.isRestDay(month, d)
-                        isLocale = nextConfig.isLocaleHoliday(month, d)
-                        isExplicitLocale = nextConfig.isExplicitLocaleHoliday(month, d)
-                        if (isLocale) {
-                            localeName = "三月三假日"
+                        if (showGuangxiSanyuesan) {
+                            isLocale = nextConfig.isLocaleHoliday(month, d)
+                            isExplicitLocale = nextConfig.isExplicitLocaleHoliday(month, d)
+                            if (isLocale) {
+                                localeName = "三月三假日"
+                            }
                         }
                     } else {
                         // 次年尚未加载或未配置：清空所有双休规则，所有日期均作为工作日显示
@@ -599,8 +609,15 @@ object LunarCalculator {
         return result
     }
 
-    fun getDayInfoForDate(year: Int, month: Int, day: Int, mainConfig: CalendarConfig, nextConfig: CalendarConfig? = null): DayInfo {
-        val list = getMonthDays(year, month, mainConfig, nextConfig)
+    fun getDayInfoForDate(
+        year: Int,
+        month: Int,
+        day: Int,
+        mainConfig: CalendarConfig,
+        nextConfig: CalendarConfig? = null,
+        showGuangxiSanyuesan: Boolean = true
+    ): DayInfo {
+        val list = getMonthDays(year, month, mainConfig, nextConfig, showGuangxiSanyuesan)
         return list.find { it.day == day } ?: list.first()
     }
 }

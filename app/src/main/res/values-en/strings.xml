@@ -53,6 +53,9 @@
 
     <!-- Settings Dialog -->
     <string name="settings_dialog_title">Settings</string>
+    <string name="feature_section_title">Holidays</string>
+    <string name="sanyuesan_switch_title">Show Guangxi Sanyuesan</string>
+    <string name="sanyuesan_switch_desc">Display Sanyuesan green highlights and festival details</string>
     <string name="theme_section_title">Theme</string>
     <string name="elderly_mode_locked">Locked in Senior Mode</string>
     <string name="elderly_mode_theme_tip">Senior mode enforces high-contrast light theme. Exit Senior Mode to customize theme.</string>

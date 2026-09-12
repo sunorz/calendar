@@ -59,6 +59,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     val syncState: StateFlow<SyncState> = repository.syncState
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
     val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
+    val showGuangxiSanyuesan: StateFlow<Boolean> = themePreferences.showGuangxiSanyuesan
 
     private val _showSettingsDialog = MutableStateFlow(false)
     val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
@@ -144,6 +145,28 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
     }
 
+    fun setShowGuangxiSanyuesan(enabled: Boolean) {
+        themePreferences.setShowGuangxiSanyuesan(enabled)
+        TodayAppWidgetProvider.updateAllWidgets(getApplication())
+        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+        // Refresh selected day if currently selected
+        _selectedDay.value?.let { current ->
+            val updatedDay = LunarCalculator.getDayInfoForDate(
+                year = current.year,
+                month = current.month,
+                day = current.day,
+                mainConfig = config.value,
+                nextConfig = nextYearConfig.value,
+                showGuangxiSanyuesan = enabled
+            )
+            _selectedDay.value = updatedDay
+        }
+    }
+
+    fun toggleShowGuangxiSanyuesan() {
+        setShowGuangxiSanyuesan(!showGuangxiSanyuesan.value)
+    }
+
     fun openSettingsDialog() {
         _showSettingsDialog.value = true
         checkVersion()
@@ -209,6 +232,12 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
      * Helper to get days for any month index using current config
      */
     fun getDaysForMonth(year: Int, month: Int): List<DayInfo> {
-        return LunarCalculator.getMonthDays(year, month, config.value, nextYearConfig.value)
+        return LunarCalculator.getMonthDays(
+            year = year,
+            month = month,
+            mainConfig = config.value,
+            nextConfig = nextYearConfig.value,
+            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+        )
     }
 }

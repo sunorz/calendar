@@ -134,13 +134,14 @@ class TodayAppWidgetProvider : AppWidgetProvider() {
         ): RemoteViews {
             val config = repository.configState.value
             val nextConfig = repository.nextYearConfigState.value
+            val showGuangxiSanyuesan = ThemePreferences(context).showGuangxiSanyuesan.value
 
             val cal = LunarCalculator.getChinaCalendar()
             val year = cal.get(Calendar.YEAR)
             val month = cal.get(Calendar.MONTH) + 1
             val day = cal.get(Calendar.DAY_OF_MONTH)
 
-            val dayInfo = LunarCalculator.getDayInfoForDate(year, month, day, config, nextConfig)
+            val dayInfo = LunarCalculator.getDayInfoForDate(year, month, day, config, nextConfig, showGuangxiSanyuesan)
 
             val views = RemoteViews(context.packageName, R.layout.widget_today)
 

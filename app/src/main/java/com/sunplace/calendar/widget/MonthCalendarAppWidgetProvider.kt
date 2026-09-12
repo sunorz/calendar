@@ -143,12 +143,13 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
         ): RemoteViews {
             val config = repository.configState.value
             val nextConfig = repository.nextYearConfigState.value
+            val showGuangxiSanyuesan = ThemePreferences(context).showGuangxiSanyuesan.value
 
             val cal = LunarCalculator.getChinaCalendar()
             val year = cal.get(Calendar.YEAR)
             val month = cal.get(Calendar.MONTH) + 1
 
-            val daysList = LunarCalculator.getMonthDays(year, month, config, nextConfig)
+            val daysList = LunarCalculator.getMonthDays(year, month, config, nextConfig, showGuangxiSanyuesan)
             val daysInMonth = daysList.size
             val firstDayOfWeek = if (daysList.isNotEmpty()) daysList[0].dayOfWeekNumber else 1
             val startOffset = firstDayOfWeek - 1

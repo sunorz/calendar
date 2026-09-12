@@ -87,6 +87,7 @@ fun LargeScreenCalendarView(
 ) {
     val config by viewModel.config.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
+    val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
 
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
@@ -96,14 +97,15 @@ fun LargeScreenCalendarView(
     )
 
     // Today's DayInfo fallback if no date is explicitly clicked
-    val todayInfo = remember(config, nextYearConfig) {
+    val todayInfo = remember(config, nextYearConfig, showGuangxiSanyuesan) {
         val cal = LunarCalculator.getChinaCalendar()
         LunarCalculator.getDayInfoForDate(
             cal.get(Calendar.YEAR),
             cal.get(Calendar.MONTH) + 1,
             cal.get(Calendar.DAY_OF_MONTH),
             config,
-            nextYearConfig
+            nextYearConfig,
+            showGuangxiSanyuesan
         )
     }
 
@@ -359,7 +361,7 @@ fun LargeScreenCalendarView(
                         key = { index -> index }
                     ) { index ->
                         val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                        val days = remember(year, month, config, nextYearConfig) {
+                        val days = remember(year, month, config, nextYearConfig, showGuangxiSanyuesan) {
                             viewModel.getDaysForMonth(year, month)
                         }
 

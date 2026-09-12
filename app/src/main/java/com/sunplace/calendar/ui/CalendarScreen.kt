@@ -78,6 +78,7 @@ fun CalendarScreen(
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
+    val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val syncState by viewModel.syncState.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
     val updateAvailable by viewModel.updateAvailable.collectAsState()
@@ -124,12 +125,14 @@ fun CalendarScreen(
         SettingsDialog(
             currentThemeMode = themeMode,
             isElderlyMode = isElderlyMode,
+            showGuangxiSanyuesan = showGuangxiSanyuesan,
             currentVersion = viewModel.getAppVersion(),
             updateAvailable = updateAvailable,
             remoteVersion = remoteVersion,
             isDownloading = isDownloading,
             downloadProgress = downloadProgress,
             onThemeModeChange = { viewModel.setThemeMode(it) },
+            onToggleShowGuangxiSanyuesan = { viewModel.setShowGuangxiSanyuesan(it) },
             onDownloadUpdate = { viewModel.downloadAndUpdate() },
             onDismiss = { viewModel.closeSettingsDialog() }
         )
@@ -148,6 +151,7 @@ private fun StandardPhoneCalendarView(
     val config by viewModel.config.collectAsState()
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
+    val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -348,7 +352,7 @@ private fun StandardPhoneCalendarView(
                     key = { index -> index }
                 ) { index ->
                     val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                    val days = remember(year, month, config, nextYearConfig) {
+                    val days = remember(year, month, config, nextYearConfig, showGuangxiSanyuesan) {
                         viewModel.getDaysForMonth(year, month)
                     }
 

@@ -53,6 +53,9 @@
 
     <!-- Settings Dialog -->
     <string name="settings_dialog_title">应用设置</string>
+    <string name="feature_section_title">假期显示</string>
+    <string name="sanyuesan_switch_title">广西“三月三”显示</string>
+    <string name="sanyuesan_switch_desc">开启后显示三月三假期专属绿色与节日详情</string>
     <string name="theme_section_title">外观主题</string>
     <string name="elderly_mode_locked">关怀模式锁定</string>
     <string name="elderly_mode_theme_tip">老年关怀模式下已强制启用高清晰浅色模式，禁止切换深色模式。退出关怀模式后方可自由切换。</string>

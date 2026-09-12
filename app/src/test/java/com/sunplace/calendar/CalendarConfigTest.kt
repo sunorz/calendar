@@ -463,4 +463,74 @@ class CalendarConfigTest {
         assertEquals(1, config?.restDays?.get(0)?.m)
         assertEquals(2, config?.restDays?.get(1)?.m)
     }
+
+    /**
+     * Test Guangxi Sanyuesan toggle behavior:
+     * When showGuangxiSanyuesan is true (default):
+     *  - Day 17 is green (explicitLocaleHoliday)
+     *  - Day 18 is red (restDay)
+     *  - Day 19 is red (restDay)
+     *  - Day 20 is green (explicitLocaleHoliday)
+     *  - Days 17-20 show "三月三假日" in card
+     * When showGuangxiSanyuesan is false (disabled):
+     *  - Day 17 and 20 are black workdays (isExplicitLocaleHoliday = false, isLocaleHoliday = false, isRestDay = false)
+     *  - Day 18 and 19 remain standard red rest days (isRestDay = true)
+     *  - None of 17-20 show "三月三假日"
+     */
+    @Test
+    fun testGuangxiSanyuesanToggleEnabledAndDisabled() {
+        val config = CalendarConfig(
+            curYear = 2026,
+            localeFestivals = listOf(
+                com.sunplace.calendar.data.model.LocaleFestivalItem(m = 4, d = listOf(17, 20))
+            ),
+            restDays = listOf(
+                com.sunplace.calendar.data.model.RestDayMonth(m = 4, d = listOf(18, 19))
+            )
+        )
+
+        // 1. When enabled (true)
+        val enabledDays = LunarCalculator.getMonthDays(2026, 4, config, null, showGuangxiSanyuesan = true)
+        val day17E = enabledDays.find { it.day == 17 }!!
+        val day18E = enabledDays.find { it.day == 18 }!!
+        val day19E = enabledDays.find { it.day == 19 }!!
+        val day20E = enabledDays.find { it.day == 20 }!!
+
+        assertTrue("17 must be explicitLocaleHoliday", day17E.isExplicitLocaleHoliday)
+        assertFalse("18 is restDay not explicitLocaleHoliday", day18E.isExplicitLocaleHoliday)
+        assertTrue("18 is restDay", day18E.isRestDay)
+        assertFalse("19 is restDay not explicitLocaleHoliday", day19E.isExplicitLocaleHoliday)
+        assertTrue("19 is restDay", day19E.isRestDay)
+        assertTrue("20 must be explicitLocaleHoliday", day20E.isExplicitLocaleHoliday)
+
+        // Card should display "三月三假日" for all 17~20
+        assertTrue(day17E.isLocaleHoliday)
+        assertTrue(day18E.isLocaleHoliday)
+        assertTrue(day19E.isLocaleHoliday)
+        assertTrue(day20E.isLocaleHoliday)
+
+        // 2. When disabled (false)
+        val disabledDays = LunarCalculator.getMonthDays(2026, 4, config, null, showGuangxiSanyuesan = false)
+        val day17D = disabledDays.find { it.day == 17 }!!
+        val day18D = disabledDays.find { it.day == 18 }!!
+        val day19D = disabledDays.find { it.day == 19 }!!
+        val day20D = disabledDays.find { it.day == 20 }!!
+
+        // Green highlights removed completely
+        assertFalse("17 must NOT be explicitLocaleHoliday", day17D.isExplicitLocaleHoliday)
+        assertFalse("17 must NOT be localeHoliday", day17D.isLocaleHoliday)
+        assertFalse("17 must revert to work day (black)", day17D.isRestDay)
+
+        assertFalse("18 must NOT be explicitLocaleHoliday", day18D.isExplicitLocaleHoliday)
+        assertFalse("18 must NOT be localeHoliday", day18D.isLocaleHoliday)
+        assertTrue("18 must remain standard rest day (red)", day18D.isRestDay)
+
+        assertFalse("19 must NOT be explicitLocaleHoliday", day19D.isExplicitLocaleHoliday)
+        assertFalse("19 must NOT be localeHoliday", day19D.isLocaleHoliday)
+        assertTrue("19 must remain standard rest day (red)", day19D.isRestDay)
+
+        assertFalse("20 must NOT be explicitLocaleHoliday", day20D.isExplicitLocaleHoliday)
+        assertFalse("20 must NOT be localeHoliday", day20D.isLocaleHoliday)
+        assertFalse("20 must revert to work day (black)", day20D.isRestDay)
+    }
 }

@@ -19,12 +19,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Verified
@@ -36,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,12 +58,14 @@ import com.sunplace.calendar.data.model.ThemeMode
 fun SettingsDialog(
     currentThemeMode: ThemeMode,
     isElderlyMode: Boolean = false,
+    showGuangxiSanyuesan: Boolean = true,
     currentVersion: String,
     updateAvailable: Boolean,
     remoteVersion: String?,
     isDownloading: Boolean,
     downloadProgress: Float,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onToggleShowGuangxiSanyuesan: (Boolean) -> Unit,
     onDownloadUpdate: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -106,6 +111,92 @@ fun SettingsDialog(
                     .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                // Section 0: Holiday & Display Preferences / 假期显示设置
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = stringResource(R.string.feature_section_title),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { onToggleShowGuangxiSanyuesan(!showGuangxiSanyuesan) }
+                            .testTag("sanyuesan_switch_card"),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (showGuangxiSanyuesan) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Celebration,
+                                            contentDescription = null,
+                                            tint = if (showGuangxiSanyuesan) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            },
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.sanyuesan_switch_title),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.sanyuesan_switch_desc),
+                                        fontSize = 11.5.sp,
+                                        lineHeight = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Switch(
+                                checked = showGuangxiSanyuesan,
+                                onCheckedChange = { onToggleShowGuangxiSanyuesan(it) },
+                                modifier = Modifier.testTag("sanyuesan_switch")
+                            )
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
                 // Section 1: Appearance & Theme / 主题切换 (Hidden in Elderly Mode)
                 if (!isElderlyMode) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -183,7 +274,7 @@ fun SettingsDialog(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Chat,
+                                        imageVector = Icons.AutoMirrored.Filled.Chat,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
@@ -277,7 +368,7 @@ fun SettingsDialog(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Icon(
-                                        imageVector = Icons.Default.OpenInNew,
+                                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(13.dp)
