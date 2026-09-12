@@ -168,20 +168,12 @@ fun SettingsDialog(
                                     }
                                 }
 
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        text = stringResource(R.string.sanyuesan_switch_title),
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.sanyuesan_switch_desc),
-                                        fontSize = 11.5.sp,
-                                        lineHeight = 15.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                Text(
+                                    text = stringResource(R.string.sanyuesan_switch_title),
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
