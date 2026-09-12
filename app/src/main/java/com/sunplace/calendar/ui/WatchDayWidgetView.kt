@@ -345,21 +345,6 @@ private fun WatchDayCard(
                     )
                 }
 
-                if (dayInfo.isLocaleHoliday) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-                    ) {
-                        Text(
-                            text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
-                            fontSize = if (isElderlyMode) 13.sp else 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
                 if (dayInfo.isToday) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),

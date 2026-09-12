@@ -519,23 +519,6 @@ private fun LargeScreenDetailPanel(
                             color = tagTextColor
                         )
                     }
-
-                    if (dayInfo.isLocaleHoliday) {
-                        val localeTagBg = if (isElderlyMode) neutralBadgeBg else LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
-                        val localeTagText = if (isElderlyMode) neutralBadgeText else LOCALE_FESTIVAL_COLOR
-                        Surface(
-                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
-                            color = localeTagBg
-                        ) {
-                            Text(
-                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = localeTagText
-                            )
-                        }
-                    }
                 }
 
                 HorizontalDivider(

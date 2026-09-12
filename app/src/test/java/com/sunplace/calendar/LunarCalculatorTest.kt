@@ -80,27 +80,27 @@ class LunarCalculatorTest {
         val aprDays = LunarCalculator.getMonthDays(2026, 4, sampleConfig)
         val apr17 = aprDays.find { it.day == 17 }!!
         assertTrue(apr17.isLocaleHoliday)
-        assertEquals("三月三", apr17.localeHolidayName)
+        assertEquals("三月三假日", apr17.localeHolidayName)
         assertFalse(apr17.displayNote.contains("三月三"))
 
         // Calendar grid subtitle MUST NOT display 三月三
         val gridNote17 = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(apr17)
         assertFalse("Calendar grid note must NOT be 三月三", gridNote17.contains("三月三"))
 
-        // Detailed card MUST include 三月三 (or Sanyuesan Festival in English)
+        // Detailed card MUST include 三月三假日 (or Sanyuesan Festival in English)
         val cardData17 = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(apr17)
-        assertTrue("Card details must include 三月三 or Sanyuesan", cardData17.combinedText.contains("三月三") || cardData17.combinedText.contains("Sanyuesan"))
+        assertTrue("Card details must include 三月三假日 or Sanyuesan", cardData17.combinedText.contains("三月三假日") || cardData17.combinedText.contains("Sanyuesan"))
 
         val apr20 = aprDays.find { it.day == 20 }!!
         assertTrue(apr20.isLocaleHoliday)
-        assertEquals("三月三", apr20.localeHolidayName)
+        assertEquals("三月三假日", apr20.localeHolidayName)
         assertFalse(apr20.displayNote.contains("三月三"))
 
         val gridNote20 = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(apr20)
         assertFalse("Calendar grid note must NOT be 三月三", gridNote20.contains("三月三"))
 
         val cardData20 = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(apr20)
-        assertTrue("Card details must include 三月三 or Sanyuesan", cardData20.combinedText.contains("三月三") || cardData20.combinedText.contains("Sanyuesan"))
+        assertTrue("Card details must include 三月三假日 or Sanyuesan", cardData20.combinedText.contains("三月三假日") || cardData20.combinedText.contains("Sanyuesan"))
     }
 
     // ==================== Non-Hit Years (e.g. 2025, 2024, 2027) Default Rules ====================

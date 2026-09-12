@@ -524,7 +524,7 @@ object LunarCalculator {
                     isLocale = mainConfig.isLocaleHoliday(month, d)
                     isExplicitLocale = mainConfig.isExplicitLocaleHoliday(month, d)
                     if (isLocale) {
-                        localeName = "三月三"
+                        localeName = "三月三假日"
                     }
                 }
                 isNextYear -> {
@@ -537,7 +537,7 @@ object LunarCalculator {
                         isLocale = nextConfig.isLocaleHoliday(month, d)
                         isExplicitLocale = nextConfig.isExplicitLocaleHoliday(month, d)
                         if (isLocale) {
-                            localeName = "三月三"
+                            localeName = "三月三假日"
                         }
                     } else {
                         // 次年尚未加载或未配置：清空所有双休规则，所有日期均作为工作日显示

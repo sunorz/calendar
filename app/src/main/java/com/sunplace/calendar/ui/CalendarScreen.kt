@@ -520,21 +520,6 @@ private fun SelectedDayDetailPill(
                             color = neutralBadgeText
                         )
                     }
-
-                    if (dayInfo.isLocaleHoliday) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = neutralBadgeBg
-                        ) {
-                            Text(
-                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                fontSize = 21.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = neutralBadgeText
-                            )
-                        }
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -679,21 +664,6 @@ private fun SelectedDayDetailPill(
                                 fontWeight = FontWeight.Bold,
                                 color = tagTextColor
                             )
-                        }
-
-                        if (dayInfo.isLocaleHoliday) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
-                            ) {
-                                Text(
-                                    text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = LOCALE_FESTIVAL_COLOR
-                                )
-                            }
                         }
                     }
 

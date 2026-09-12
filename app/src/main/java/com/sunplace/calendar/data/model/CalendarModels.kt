@@ -108,11 +108,48 @@ data class CalendarConfig(
     }
 
     /**
+     * Checks whether all days in the [a, b] span are either explicitly in localeFestivals or restDays.
+     * If there are any workdays in between, the [a, b] contiguous festival range logic becomes invalid.
+     */
+    val isLocaleFestivalRangeContinuous: Boolean
+        get() {
+            val first = localeFestivalFirstDay ?: return false
+            val last = localeFestivalLastDay ?: return false
+            return try {
+                val year = if (curYear > 0) curYear else java.time.LocalDate.now().year
+                val startDate = java.time.LocalDate.of(year, first.first, first.second)
+                val endDate = java.time.LocalDate.of(year, last.first, last.second)
+                if (startDate.isAfter(endDate)) return false
+
+                var curr = startDate
+                while (!curr.isAfter(endDate)) {
+                    val m = curr.monthValue
+                    val d = curr.dayOfMonth
+                    val isExplicit = isExplicitLocaleHoliday(m, d)
+                    val isRest = isRestDay(m, d)
+                    // If a day is neither explicitly in localeFestivals nor a restDay, it's an intervening workday!
+                    if (!isExplicit && !isRest) {
+                        return false
+                    }
+                    curr = curr.plusDays(1)
+                }
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+    /**
      * Checks if a day is within the localeFestivals [a, b] date range (e.g. 广西三月三假期从第一天a到最后一天b).
-     * All days in range [a, b] display 三月三 in the popup card.
+     * If the span [a, b] contains intervening workdays, the contiguous range logic is disabled,
+     * falling back strictly to only explicitly configured days in localeFestivals.
      */
     fun isLocaleHoliday(month: Int, day: Int): Boolean {
-        return isInLocaleFestivalRange(month, day)
+        return if (isLocaleFestivalRangeContinuous) {
+            isInLocaleFestivalRange(month, day)
+        } else {
+            isExplicitLocaleHoliday(month, day)
+        }
     }
 }
 

@@ -52,6 +52,7 @@ object TranslationHelper {
         "元宵节" to "Lantern Festival",
         "龙抬头" to "Dragon-Head-Raising Day",
         "三月三" to "Sanyuesan Festival",
+        "三月三假日" to "Sanyuesan Festival",
         "壮族三月三" to "Sanyuesan Festival",
         "清明节" to "Tomb-Sweeping Day",
         "端午" to "Dragon Boat Festival",
@@ -292,6 +293,7 @@ object TranslationHelper {
         "元宵节" to "Lantern",
         "龙抬头" to "Dragon Head",
         "三月三" to "Sanyuesan",
+        "三月三假日" to "Sanyuesan",
         "壮族三月三" to "Sanyuesan",
         "清明节" to "Qingming",
         "端午" to "Dragon",
@@ -436,7 +438,7 @@ object TranslationHelper {
         val ordinaryLunar = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
 
         val localeText = if (dayInfo.isLocaleHoliday) {
-            translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三"
+            translateFestival(dayInfo.localeHolidayName ?: "三月三假日") ?: "三月三假日"
         } else null
 
         val festList = mutableListOf<String>()
