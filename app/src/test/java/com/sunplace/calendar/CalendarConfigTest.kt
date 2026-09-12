@@ -139,7 +139,115 @@ class CalendarConfigTest {
         assertTrue("2027-04-09 must be isLocaleHoliday", apr9!!.isLocaleHoliday)
         assertEquals("三月三", apr9.localeHolidayName)
         val note = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(apr9)
-        assertTrue("Note should be '三月三' or 'Shangsi', but was '$note'", note == "三月三" || note == "Shangsi")
+        assertFalse("Calendar grid note must NOT be '三月三' or 'Sanyuesan'", note.contains("三月三") || note.contains("Sanyuesan"))
+        val cardData = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(apr9)
+        assertTrue("Card details must include '三月三' or 'Sanyuesan Festival'", cardData.combinedText.contains("三月三") || cardData.combinedText.contains("Sanyuesan"))
+    }
+
+    @Test
+    fun testLocaleFestivalRangeFromFirstDayAToLastDayB() {
+        // Range configured with day 17 and day 20 in localeFestivals, 18 and 19 in restDays
+        val config = CalendarConfig(
+            curYear = 2026,
+            localeFestivals = listOf(
+                com.sunplace.calendar.data.model.LocaleFestivalItem(m = 4, d = listOf(17, 20))
+            ),
+            restDays = listOf(
+                com.sunplace.calendar.data.model.RestDayMonth(m = 4, d = listOf(18, 19))
+            )
+        )
+
+        assertEquals(Pair(4, 17), config.localeFestivalFirstDay)
+        assertEquals(Pair(4, 20), config.localeFestivalLastDay)
+
+        // All days from 17 to 20 should be in locale holiday range
+        for (day in 17..20) {
+            assertTrue("Day $day must be in locale range", config.isInLocaleFestivalRange(4, day))
+        }
+        // Day 16 and 21 should NOT be in range
+        assertFalse("Day 16 should not be in locale range", config.isInLocaleFestivalRange(4, 16))
+        assertFalse("Day 21 should not be in locale range", config.isInLocaleFestivalRange(4, 21))
+
+        // LunarCalculator getMonthDays verification
+        val days = LunarCalculator.getMonthDays(2026, 4, config)
+
+        // Day 17: Explicit in json localeFestivals -> Green (isExplicitLocaleHoliday=true)
+        val d17 = days.find { it.day == 17 }!!
+        assertTrue("Day 17 is explicitly locale holiday (Green)", d17.isExplicitLocaleHoliday)
+        assertTrue("Day 17 is in locale holiday range (Card shows Sanyuesan)", d17.isLocaleHoliday)
+
+        // Day 18: NOT in json localeFestivals, but is restDay -> Red (isRestDay=true, isExplicitLocaleHoliday=false)
+        val d18 = days.find { it.day == 18 }!!
+        assertFalse("Day 18 is not explicitly in localeFestivals (Not green)", d18.isExplicitLocaleHoliday)
+        assertTrue("Day 18 is restDay (Red)", d18.isRestDay)
+        assertTrue("Day 18 is in locale holiday range (Card shows Sanyuesan)", d18.isLocaleHoliday)
+
+        // Day 19: NOT in json localeFestivals, but is restDay -> Red (isRestDay=true, isExplicitLocaleHoliday=false)
+        val d19 = days.find { it.day == 19 }!!
+        assertFalse("Day 19 is not explicitly in localeFestivals (Not green)", d19.isExplicitLocaleHoliday)
+        assertTrue("Day 19 is restDay (Red)", d19.isRestDay)
+        assertTrue("Day 19 is in locale holiday range (Card shows Sanyuesan)", d19.isLocaleHoliday)
+
+        // Day 20: Explicit in json localeFestivals -> Green (isExplicitLocaleHoliday=true)
+        val d20 = days.find { it.day == 20 }!!
+        assertTrue("Day 20 is explicitly locale holiday (Green)", d20.isExplicitLocaleHoliday)
+        assertTrue("Day 20 is in locale holiday range (Card shows Sanyuesan)", d20.isLocaleHoliday)
+
+        for (d in 17..20) {
+            val dayInfo = days.find { it.day == d }!!
+            // Grid note should not be forced to 三月三
+            val note = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
+            assertFalse("Grid note must not be 三月三", note.contains("三月三"))
+
+            // Card details MUST display 三月三 regardless of workday/restday
+            val cardData = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+            assertTrue("Card details for day $d must include 三月三", cardData.combinedText.contains("三月三") || cardData.combinedText.contains("Sanyuesan"))
+        }
+    }
+
+    @Test
+    fun testLocaleFestivalCrossMonthRange() {
+        // Cross-month configuration: e.g. from March 30 (3.30) to April 2 (4.02)
+        val crossMonthConfig = CalendarConfig(
+            curYear = 2026,
+            localeFestivals = listOf(
+                com.sunplace.calendar.data.model.LocaleFestivalItem(m = 3, d = listOf(30, 31)),
+                com.sunplace.calendar.data.model.LocaleFestivalItem(m = 4, d = listOf(1, 2))
+            )
+        )
+
+        assertEquals(Pair(3, 30), crossMonthConfig.localeFestivalFirstDay)
+        assertEquals(Pair(4, 2), crossMonthConfig.localeFestivalLastDay)
+
+        // March checks: 3.29 (false), 3.30 (true), 3.31 (true)
+        assertFalse(crossMonthConfig.isInLocaleFestivalRange(3, 29))
+        assertTrue(crossMonthConfig.isInLocaleFestivalRange(3, 30))
+        assertTrue(crossMonthConfig.isInLocaleFestivalRange(3, 31))
+
+        // April checks: 4.01 (true), 4.02 (true), 4.03 (false)
+        assertTrue(crossMonthConfig.isInLocaleFestivalRange(4, 1))
+        assertTrue(crossMonthConfig.isInLocaleFestivalRange(4, 2))
+        assertFalse(crossMonthConfig.isInLocaleFestivalRange(4, 3))
+
+        // Check LunarCalculator generation for March
+        val marchDays = LunarCalculator.getMonthDays(2026, 3, crossMonthConfig)
+        val mar30 = marchDays.find { it.day == 30 }!!
+        val mar31 = marchDays.find { it.day == 31 }!!
+        assertTrue("March 30 must be locale holiday", mar30.isLocaleHoliday)
+        assertTrue("March 31 must be locale holiday", mar31.isLocaleHoliday)
+        val cardMar30 = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(mar30).combinedText
+        assertTrue("Card for March 30 includes 三月三 or Sanyuesan", cardMar30.contains("三月三") || cardMar30.contains("Sanyuesan"))
+
+        // Check LunarCalculator generation for April
+        val aprilDays = LunarCalculator.getMonthDays(2026, 4, crossMonthConfig)
+        val apr1 = aprilDays.find { it.day == 1 }!!
+        val apr2 = aprilDays.find { it.day == 2 }!!
+        val apr3 = aprilDays.find { it.day == 3 }!!
+        assertTrue("April 1 must be locale holiday", apr1.isLocaleHoliday)
+        assertTrue("April 2 must be locale holiday", apr2.isLocaleHoliday)
+        assertFalse("April 3 must NOT be locale holiday", apr3.isLocaleHoliday)
+        val cardApr1 = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(apr1).combinedText
+        assertTrue("Card for April 1 includes 三月三 or Sanyuesan", cardApr1.contains("三月三") || cardApr1.contains("Sanyuesan"))
     }
 
     /**

@@ -331,25 +331,33 @@ private fun WatchDayCard(
                 )
 
                 // High-contrast Gray background, black text badge
-                val tagText = if (dayInfo.isLocaleHoliday) {
-                    com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi"
-                } else if (dayInfo.isRestDay) {
-                    stringResource(R.string.restday_label)
-                } else {
-                    stringResource(R.string.workday_label)
-                }
-
+                val isRest = dayInfo.isRestDay
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 ) {
                     Text(
-                        text = tagText,
+                        text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
                         fontSize = if (isElderlyMode) 13.sp else 11.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
+                }
+
+                if (dayInfo.isLocaleHoliday) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+                    ) {
+                        Text(
+                            text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
+                            fontSize = if (isElderlyMode) 13.sp else 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
                 if (dayInfo.isToday) {

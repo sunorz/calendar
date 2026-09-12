@@ -46,11 +46,73 @@ data class CalendarConfig(
     }
 
     /**
-     * Checks if a day is in localeFestivals (e.g. 广西三月三).
+     * Extracts all valid date points (month, day) configured in localeFestivals.
      */
-    fun isLocaleHoliday(month: Int, day: Int): Boolean {
+    fun getValidLocaleFestivalDates(): List<Pair<Int, Int>> {
+        return localeFestivals
+            .filter { it.m in 1..12 }
+            .flatMap { item ->
+                item.d.filter { it in 1..31 }.map { day -> Pair(item.m, day) }
+            }
+            .sortedWith(compareBy({ it.first }, { it.second }))
+    }
+
+    /**
+     * First day (a) of localeFestivals (e.g. 4月17日).
+     */
+    val localeFestivalFirstDay: Pair<Int, Int>?
+        get() = getValidLocaleFestivalDates().firstOrNull()
+
+    /**
+     * Last day (b) of localeFestivals (e.g. 4月20日).
+     */
+    val localeFestivalLastDay: Pair<Int, Int>?
+        get() = getValidLocaleFestivalDates().lastOrNull()
+
+    /**
+     * Checks if a given month and day falls within the range from the first day (a) to the last day (b)
+     * of localeFestivals, inclusive [a, b].
+     * Fully compatible with cross-month spans (e.g. late March to early April: 3.30 - 4.02).
+     */
+    fun isInLocaleFestivalRange(month: Int, day: Int): Boolean {
+        val first = localeFestivalFirstDay ?: return false
+        val last = localeFestivalLastDay ?: return false
+
+        // Accurate cross-month / leap year safe calendar comparison using LocalDate
+        return try {
+            val year = if (curYear > 0) curYear else java.time.LocalDate.now().year
+            val startDate = java.time.LocalDate.of(year, first.first, first.second)
+            val endDate = java.time.LocalDate.of(year, last.first, last.second)
+            val currDate = java.time.LocalDate.of(year, month, day)
+            !currDate.isBefore(startDate) && !currDate.isAfter(endDate)
+        } catch (e: Exception) {
+            // Fallback numeric comparison if date parsing encounters out-of-range day
+            val current = month * 100 + day
+            val start = first.first * 100 + first.second
+            val end = last.first * 100 + last.second
+            if (start <= end) {
+                current in start..end
+            } else {
+                current >= start || current <= end
+            }
+        }
+    }
+
+    /**
+     * Checks if a day is explicitly configured in the localeFestivals JSON array.
+     * Only explicitly configured days receive the green day number highlight.
+     */
+    fun isExplicitLocaleHoliday(month: Int, day: Int): Boolean {
         val loc = localeFestivals.find { it.m == month }
         return loc?.d?.contains(day) ?: false
+    }
+
+    /**
+     * Checks if a day is within the localeFestivals [a, b] date range (e.g. 广西三月三假期从第一天a到最后一天b).
+     * All days in range [a, b] display 三月三 in the popup card.
+     */
+    fun isLocaleHoliday(month: Int, day: Int): Boolean {
+        return isInLocaleFestivalRange(month, day)
     }
 }
 
@@ -73,7 +135,8 @@ data class DayInfo(
     val lunarMonthAndDayText: String = "", // e.g. "三月廿二", "七月初一"
     val hasFestival: Boolean = false, // Whether the day has a solar/lunar festival or 24 solar term
     val isHolidayWithRest: Boolean = false, // Whether the day is a festival AND it is a rest day (Subtitle is Red)
-    val isLocaleHoliday: Boolean = false, // Whether the day is in localeFestivals (Subtitle is Green, Card shows "三月三")
+    val isLocaleHoliday: Boolean = false, // Whether the day is in localeFestivals range [a, b] (Popup card shows "三月三")
+    val isExplicitLocaleHoliday: Boolean = false, // Whether the day is explicitly in json localeFestivals (Day number is Green)
     val localeHolidayName: String? = null, // e.g. "三月三"
     val isToday: Boolean = false,
     val fullLunarText: String = "" // e.g. "丙午年七月十九"

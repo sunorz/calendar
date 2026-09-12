@@ -514,6 +514,7 @@ object LunarCalculator {
 
             val isRest: Boolean
             var isLocale: Boolean = false
+            var isExplicitLocale: Boolean = false
             var localeName: String? = null
 
             when {
@@ -521,6 +522,7 @@ object LunarCalculator {
                     // 1. 今年（主配置年份）：完全依照 mainConfig
                     isRest = mainConfig.isRestDay(month, d)
                     isLocale = mainConfig.isLocaleHoliday(month, d)
+                    isExplicitLocale = mainConfig.isExplicitLocaleHoliday(month, d)
                     if (isLocale) {
                         localeName = "三月三"
                     }
@@ -533,6 +535,7 @@ object LunarCalculator {
                     if (nextConfig != null && nextConfig.curYear == year) {
                         isRest = nextConfig.isRestDay(month, d)
                         isLocale = nextConfig.isLocaleHoliday(month, d)
+                        isExplicitLocale = nextConfig.isExplicitLocaleHoliday(month, d)
                         if (isLocale) {
                             localeName = "三月三"
                         }
@@ -540,12 +543,14 @@ object LunarCalculator {
                         // 次年尚未加载或未配置：清空所有双休规则，所有日期均作为工作日显示
                         isRest = false
                         isLocale = false
+                        isExplicitLocale = false
                     }
                 }
                 else -> {
                     // 3. 其他非配置年份：常规双休
                     isRest = (dow == 6 || dow == 7)
                     isLocale = false
+                    isExplicitLocale = false
                 }
             }
 
@@ -583,6 +588,7 @@ object LunarCalculator {
                 hasFestival = hasFestival,
                 isHolidayWithRest = isHolidayWithRest,
                 isLocaleHoliday = isLocale,
+                isExplicitLocaleHoliday = isExplicitLocale,
                 localeHolidayName = localeName,
                 isToday = isToday,
                 fullLunarText = fullLunar

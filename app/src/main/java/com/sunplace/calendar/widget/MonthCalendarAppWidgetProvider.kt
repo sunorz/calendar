@@ -201,7 +201,7 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                     // Highlight Today
                     if (dayInfo.isToday) {
                         when {
-                            dayInfo.isLocaleHoliday -> {
+                            dayInfo.isExplicitLocaleHoliday -> {
                                 val bgRes = when (themeMode) {
                                     ThemeMode.DARK -> R.drawable.bg_widget_today_dark_locale
                                     ThemeMode.LIGHT -> R.drawable.bg_widget_today_light_locale
@@ -253,7 +253,7 @@ class MonthCalendarAppWidgetProvider : AppWidgetProvider() {
                     } else {
                         views.setInt(viewId, "setBackgroundResource", R.drawable.bg_widget_transparent)
                         when {
-                            dayInfo.isLocaleHoliday -> {
+                            dayInfo.isExplicitLocaleHoliday -> {
                                 applyTextColor(
                                     views = views,
                                     viewId = viewId,

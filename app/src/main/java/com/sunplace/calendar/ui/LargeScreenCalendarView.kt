@@ -491,48 +491,48 @@ private fun LargeScreenDetailPanel(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (dayInfo.isLocaleHoliday) {
-                        val tagBgColor = if (isElderlyMode) neutralBadgeBg else LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
-                        val tagTextColor = if (isElderlyMode) neutralBadgeText else LOCALE_FESTIVAL_COLOR
-                        Surface(
-                            shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
-                            color = tagBgColor
-                        ) {
-                            Text(
-                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = tagTextColor
-                            )
-                        }
+                    val isRest = dayInfo.isRestDay
+                    val tagBgColor = if (isElderlyMode) {
+                        neutralBadgeBg
+                    } else if (isRest) {
+                        MaterialTheme.colorScheme.primaryContainer
                     } else {
-                        val isRest = dayInfo.isRestDay
-                        val tagBgColor = if (isElderlyMode) {
-                            neutralBadgeBg
-                        } else if (isRest) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                        }
-                        val tagTextColor = if (isElderlyMode) {
-                            neutralBadgeText
-                        } else if (isRest) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                    }
+                    val tagTextColor = if (isElderlyMode) {
+                        neutralBadgeText
+                    } else if (isRest) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
 
+                    Surface(
+                        shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
+                        color = tagBgColor
+                    ) {
+                        Text(
+                            text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = tagTextColor
+                        )
+                    }
+
+                    if (dayInfo.isLocaleHoliday) {
+                        val localeTagBg = if (isElderlyMode) neutralBadgeBg else LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
+                        val localeTagText = if (isElderlyMode) neutralBadgeText else LOCALE_FESTIVAL_COLOR
                         Surface(
                             shape = RoundedCornerShape(if (isElderlyMode) 10.dp else 6.dp),
-                            color = tagBgColor
+                            color = localeTagBg
                         ) {
                             Text(
-                                text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = tagTextColor
+                                color = localeTagText
                             )
                         }
                     }

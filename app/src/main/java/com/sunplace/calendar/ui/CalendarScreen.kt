@@ -507,27 +507,27 @@ private fun SelectedDayDetailPill(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    val isRest = dayInfo.isRestDay
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = neutralBadgeBg
+                    ) {
+                        Text(
+                            text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = neutralBadgeText
+                        )
+                    }
+
                     if (dayInfo.isLocaleHoliday) {
                         Surface(
                             shape = RoundedCornerShape(10.dp),
                             color = neutralBadgeBg
                         ) {
                             Text(
-                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                fontSize = 21.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = neutralBadgeText
-                            )
-                        }
-                    } else {
-                        val isRest = dayInfo.isRestDay
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = neutralBadgeBg
-                        ) {
-                            Text(
-                                text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                                text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                 fontSize = 21.sp,
                                 fontWeight = FontWeight.ExtraBold,
@@ -656,42 +656,42 @@ private fun SelectedDayDetailPill(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
+                        val isRest = dayInfo.isRestDay
+                        val tagBgColor = if (isRest) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        }
+                        val tagTextColor = if (isRest) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = tagBgColor
+                        ) {
+                            Text(
+                                text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = tagTextColor
+                            )
+                        }
+
                         if (dayInfo.isLocaleHoliday) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = LOCALE_FESTIVAL_COLOR.copy(alpha = 0.14f)
                             ) {
                                 Text(
-                                    text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName) ?: "Shangsi",
+                                    text = com.sunplace.calendar.util.TranslationHelper.translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = LOCALE_FESTIVAL_COLOR
-                                )
-                            }
-                        } else {
-                            val isRest = dayInfo.isRestDay
-                            val tagBgColor = if (isRest) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                            }
-                            val tagTextColor = if (isRest) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = tagBgColor
-                            ) {
-                                Text(
-                                    text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = tagTextColor
                                 )
                             }
                         }

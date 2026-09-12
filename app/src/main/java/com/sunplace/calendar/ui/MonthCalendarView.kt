@@ -242,8 +242,8 @@ fun MinimalDayCell(
     val isLightMode = !isAppDark
 
     val numColor = when {
+        dayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
         dayInfo.isRestDay -> restColor
-        dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
         else -> workColor
     }
 
@@ -380,7 +380,6 @@ fun MinimalDayCell(
 
                 val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
                 val subColor = when {
-                    dayInfo.isLocaleHoliday -> LOCALE_FESTIVAL_COLOR
                     dayInfo.isHolidayWithRest -> restColor
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
@@ -395,7 +394,7 @@ fun MinimalDayCell(
                     text = subText.ifBlank { " " },
                     color = subColor,
                     fontSize = subFontSize,
-                    fontWeight = if (dayInfo.isHolidayWithRest || dayInfo.isLocaleHoliday) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
                     softWrap = false,

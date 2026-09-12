@@ -51,7 +51,8 @@ object TranslationHelper {
         "破五" to "Po Wu (5th Day of CNY)",
         "元宵节" to "Lantern Festival",
         "龙抬头" to "Dragon-Head-Raising Day",
-        "三月三" to "Shangsi Festival (Double Third)",
+        "三月三" to "Sanyuesan Festival",
+        "壮族三月三" to "Sanyuesan Festival",
         "清明节" to "Tomb-Sweeping Day",
         "端午" to "Dragon Boat Festival",
         "端午节" to "Dragon Boat Festival",
@@ -290,7 +291,8 @@ object TranslationHelper {
         "破五" to "Po Wu",
         "元宵节" to "Lantern",
         "龙抬头" to "Dragon Head",
-        "三月三" to "Shangsi",
+        "三月三" to "Sanyuesan",
+        "壮族三月三" to "Sanyuesan",
         "清明节" to "Qingming",
         "端午" to "Dragon",
         "端午节" to "Dragon",
@@ -358,14 +360,10 @@ object TranslationHelper {
 
     /**
      * Optimized display note based on user priority and length constraints.
+     * Note: Locale festivals (e.g. 三月三) are NOT displayed on the calendar grid notes
+     * (only card details show 三月三), so standard solar terms / festivals / lunar days are used.
      */
     fun getFilteredDisplayNote(dayInfo: com.sunplace.calendar.data.model.DayInfo): String {
-        // Priority 0: Locale festival (e.g. 壮族三月三, displayed in green)
-        if (dayInfo.isLocaleHoliday && !dayInfo.localeHolidayName.isNullOrBlank()) {
-            val name = dayInfo.localeHolidayName
-            return if (isEnglish()) "Shangsi" else name
-        }
-
         val festival = dayInfo.festivalName
         val term = dayInfo.solarTermName
 
@@ -429,6 +427,7 @@ object TranslationHelper {
     /**
      * Card Lunar Priority Rule (Chinese & English):
      * Completely combines lunar date, solar term, and festivals.
+     * When day is in localeFestivals (e.g. 三月三), card details explicitly include 三月三.
      */
     fun getCardLunarPriorityData(dayInfo: com.sunplace.calendar.data.model.DayInfo): CardLunarPriorityData {
         val festival = translateFestival(dayInfo.festivalName)
@@ -436,7 +435,25 @@ object TranslationHelper {
         val lunarDate = LunarCalculator.getLunarDate(dayInfo.year, dayInfo.month, dayInfo.day)
         val ordinaryLunar = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
 
-        val hasFestival = !festival.isNullOrBlank() && !dayInfo.isLocaleHoliday
+        val localeText = if (dayInfo.isLocaleHoliday) {
+            translateFestival(dayInfo.localeHolidayName ?: "三月三") ?: "三月三"
+        } else null
+
+        val festList = mutableListOf<String>()
+        if (localeText != null) {
+            festList.add(localeText)
+        }
+        if (!festival.isNullOrBlank()) {
+            festival.split(" · ", "·").forEach { part ->
+                val trimmed = part.trim()
+                if (trimmed.isNotEmpty() && trimmed != localeText && !festList.contains(trimmed)) {
+                    festList.add(trimmed)
+                }
+            }
+        }
+
+        val hasFestival = festList.isNotEmpty()
+        val festivalText = if (hasFestival) festList.joinToString(if (isEnglish()) " · " else "·") else null
         val hasSolarTerm = !solarTerm.isNullOrBlank()
         
         val parts = mutableListOf<String>()
@@ -447,13 +464,13 @@ object TranslationHelper {
             parts.add(solarTerm!!)
         }
         if (hasFestival) {
-            parts.addAll(festival!!.split(" · ", "·").filter { it.isNotBlank() })
+            parts.addAll(festList)
         }
         val combined = parts.joinToString(if (isEnglish()) " · " else "·")
 
         return CardLunarPriorityData(
             hasFestival = hasFestival,
-            festivalText = if (hasFestival) festival else null,
+            festivalText = festivalText,
             hasSolarTerm = hasSolarTerm,
             solarTermText = if (hasSolarTerm) solarTerm else null,
             ordinaryLunarText = ordinaryLunar,
