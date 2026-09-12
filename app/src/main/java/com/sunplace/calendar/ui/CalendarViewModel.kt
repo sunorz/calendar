@@ -90,6 +90,22 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     init {
         syncAllConfigs()
         checkVersion()
+        viewModelScope.launch {
+            kotlinx.coroutines.flow.combine(config, nextYearConfig) { c, nc -> Pair(c, nc) }
+                .collect { (c, nc) ->
+                    _selectedDay.value?.let { current ->
+                        val updatedDay = LunarCalculator.getDayInfoForDate(
+                            year = current.year,
+                            month = current.month,
+                            day = current.day,
+                            mainConfig = c,
+                            nextConfig = nc,
+                            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+                        )
+                        _selectedDay.value = updatedDay
+                    }
+                }
+        }
     }
 
     fun checkVersion() {
