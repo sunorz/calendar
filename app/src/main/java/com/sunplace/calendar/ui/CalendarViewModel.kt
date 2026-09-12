@@ -14,6 +14,8 @@ import com.sunplace.calendar.data.repository.ThemePreferences
 import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
 import com.sunplace.calendar.widget.TodayAppWidgetProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -179,11 +181,23 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun syncAllConfigs() {
         viewModelScope.launch {
-            repository.fetchRemoteConfig()
-            repository.fetchNextYearConfig()
-            // Update home screen widgets
-            TodayAppWidgetProvider.updateAllWidgets(getApplication())
-            MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+            try {
+                coroutineScope {
+                    val currentDeferred = async { repository.fetchRemoteConfig() }
+                    val nextDeferred = async { repository.fetchNextYearConfig() }
+                    currentDeferred.await()
+                    nextDeferred.await()
+                }
+            } catch (t: Throwable) {
+                // Silently ignore, never expose any error
+            }
+            try {
+                // Update home screen widgets
+                TodayAppWidgetProvider.updateAllWidgets(getApplication())
+                MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+            } catch (t: Throwable) {
+                // Silently ignore
+            }
         }
     }
 

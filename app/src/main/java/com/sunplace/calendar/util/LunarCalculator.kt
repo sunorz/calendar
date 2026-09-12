@@ -494,13 +494,15 @@ object LunarCalculator {
         val isCurrentYear = (year == currentYear)
         val isNextYear = (year == nextYear || (nextConfig != null && year == nextConfig.curYear))
 
+        // Calculate day of week for day 1 once outside the loop to eliminate GC overhead
+        val firstCalDow = getChinaCalendar().apply {
+            set(year, month - 1, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.get(Calendar.DAY_OF_WEEK)
+        val firstDow = if (firstCalDow == Calendar.SUNDAY) 7 else firstCalDow - 1 // 1=Mon..7=Sun
+
         for (d in 1..daysInMonth) {
-            val cal = getChinaCalendar().apply {
-                set(year, month - 1, d, 0, 0, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val calDow = cal.get(Calendar.DAY_OF_WEEK)
-            val dow = if (calDow == Calendar.SUNDAY) 7 else calDow - 1 // 1=Mon..7=Sun
+            val dow = (firstDow + d - 2) % 7 + 1 // 1=Mon..7=Sun
 
             // 1. Lunar date & festivals calculation (built-in full library)
             val lunarDate = getLunarDate(year, month, d)
