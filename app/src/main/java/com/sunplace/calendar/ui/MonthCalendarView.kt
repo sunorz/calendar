@@ -28,8 +28,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -240,6 +246,8 @@ fun MinimalDayCell(
     val workColor = MaterialTheme.colorScheme.onSurface
     val selectionBorderColor = MaterialTheme.colorScheme.primary
     val isLightMode = !isAppDark
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
 
     val numColor = when {
         dayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
@@ -247,31 +255,141 @@ fun MinimalDayCell(
         else -> workColor
     }
 
-    // Today & Selection cell styling
-    val cellModifier = when {
-        isSelected && dayInfo.isToday -> {
-            // Selected AND Today: Strong distinct full highlight with high-contrast badge/border
-            if (isElderlyMode) {
-                Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(12.dp)
+    // In elderly mode, cells are squarish and focus purely on huge numbers
+    val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
+
+    // Standard Mode Today Keycap: Render as an elevated 3D tactile keyboard keycap pinned to the calendar
+    if (dayInfo.isToday && !isElderlyMode) {
+        val todayKeycapShape = RoundedCornerShape(8.dp)
+        val bottomLipHeight = 2.2.dp
+
+        val keycapBorderColor = if (isLightMode) Color(0xFF8690A3) else Color(0xFF6C717E)
+        val effectiveBorderColor = if (isSelected) selectionBorderColor else keycapBorderColor
+        val strokeWidth = if (isSelected) 2.dp else 1.2.dp
+
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .aspectRatio(cellAspectRatio)
+                .padding(horizontal = 1.5.dp, vertical = 1.5.dp)
+                .shadow(
+                    elevation = if (isLightMode) 4.dp else 5.dp,
+                    shape = todayKeycapShape,
+                    ambientColor = if (isLightMode) Color(0x35000000) else Color(0x70000000),
+                    spotColor = if (isLightMode) Color(0x451A2433) else Color(0xB8000000)
+                )
+                .drawBehind {
+                    val cornerPx = 8.dp.toPx()
+                    val lipPx = bottomLipHeight.toPx()
+                    val width = size.width
+                    val height = size.height
+
+                    // 1. Bottom shelf / lip (Keycap thickness & bottom extrusion)
+                    val lipColor = if (isLightMode) Color(0xFF8B94A6) else Color(0xFF141517)
+                    drawRoundRect(
+                        color = lipColor,
+                        topLeft = Offset.Zero,
+                        size = Size(width, height),
+                        cornerRadius = CornerRadius(cornerPx, cornerPx)
                     )
+
+                    // 2. Keycap Top Face (Smooth tactile keyboard tone distinct from page background)
+                    val capHeight = (height - lipPx).coerceAtLeast(0f)
+                    val capBrush = if (isLightMode) {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFE8ECF4),
+                                Color(0xFFDDE3EE)
+                            ),
+                            startY = 0f,
+                            endY = capHeight
+                        )
+                    } else {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF3D3F45),
+                                Color(0xFF303238)
+                            ),
+                            startY = 0f,
+                            endY = capHeight
+                        )
+                    }
+                    drawRoundRect(
+                        brush = capBrush,
+                        topLeft = Offset.Zero,
+                        size = Size(width, capHeight),
+                        cornerRadius = CornerRadius(cornerPx, cornerPx)
+                    )
+
+                    // 3. Full wrapping border that completely encloses the entire keycap and date
+                    val strokeWidthPx = strokeWidth.toPx()
+                    val halfStroke = strokeWidthPx / 2f
+                    drawRoundRect(
+                        color = effectiveBorderColor,
+                        topLeft = Offset(halfStroke, halfStroke),
+                        size = Size(width - strokeWidthPx, height - strokeWidthPx),
+                        cornerRadius = CornerRadius(
+                            (cornerPx - halfStroke).coerceAtLeast(0f),
+                            (cornerPx - halfStroke).coerceAtLeast(0f)
+                        ),
+                        style = Stroke(width = strokeWidthPx)
+                    )
+                }
+                .clip(todayKeycapShape)
+                .clickable { onClick() }
+                .padding(horizontal = 2.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            val todayNumColor = if (isLightMode) {
+                if (dayInfo.isRestDay) restColor else Color(0xFF1C1E22)
             } else {
-                Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(10.dp)
-                    )
+                if (dayInfo.isRestDay) restColor else Color(0xFFFFFFFF)
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = 1.dp)
+            ) {
+                Text(
+                    text = dayInfo.day.toString(),
+                    color = todayNumColor,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
+                val subColor = when {
+                    dayInfo.isHolidayWithRest -> restColor
+                    isLightMode -> Color(0xFF555E6D)
+                    else -> Color(0xFFB0B5C0)
+                }
+                val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
+                val subFontSize = when {
+                    isEn && subText.length > 7 -> 7.5.sp
+                    isEn && subText.length > 5 -> 8.sp
+                    else -> 9.sp
+                }
+
+                Text(
+                    text = subText.ifBlank { " " },
+                    color = subColor,
+                    fontSize = subFontSize,
+                    fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    softWrap = false,
+                    textAlign = TextAlign.Center
+                )
             }
         }
+        return
+    }
+
+    // Today & Selection cell styling for other cases (Elderly mode & standard non-today cells)
+    val cellModifier = when {
         isSelected -> {
-            // Selected Day: High-contrast solid primary background for elderly mode
             if (isElderlyMode) {
                 Modifier
                     .background(
@@ -292,49 +410,20 @@ fun MinimalDayCell(
             }
         }
         dayInfo.isToday -> {
-            // Today (not selected): A small red "今" dot/badge and a subtle dashed/thin border, NO solid fill!
-            if (isElderlyMode) {
-                Modifier
-                    .background(
-                        color = if (isLightMode) Color(0xFFF7F2EC) else Color(0xFF2C2723),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = Color(0xFFB8251B).copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            } else {
-                if (isLightMode) {
-                    Modifier
-                        .background(
-                            color = Color(0xFFEFE7F6),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .border(
-                            width = 1.2.dp,
-                            color = Color(0xFFD0BCFF),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                } else {
-                    Modifier
-                        .background(
-                            color = Color(0xFF3D3349),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .border(
-                            width = 1.2.dp,
-                            color = Color(0xFF6E5B88),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                }
-            }
+            // Elderly mode Today: High contrast warm background with red emphasis border
+            Modifier
+                .background(
+                    color = if (isLightMode) Color(0xFFF7F2EC) else Color(0xFF2C2723),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = Color(0xFFB8251B).copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(12.dp)
+                )
         }
         else -> Modifier
     }
-
-    // In elderly mode, cells are squarish and focus purely on huge numbers
-    val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
     // Calculate text color (when selected in elderly mode with solid background, use high-contrast onPrimary)
     val displayNumColor = if (isElderlyMode && isSelected) {
@@ -343,12 +432,14 @@ fun MinimalDayCell(
         numColor
     }
 
+    val cellClipShape = if (isElderlyMode) RoundedCornerShape(12.dp) else RoundedCornerShape(10.dp)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(cellAspectRatio)
             .then(cellModifier)
-            .clip(RoundedCornerShape(if (isElderlyMode) 12.dp else 10.dp))
+            .clip(cellClipShape)
             .clickable { onClick() }
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
