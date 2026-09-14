@@ -38,6 +38,10 @@ val DarkOnSurfaceVariant = Color(0xFF9E9A94)
 val DarkOutline = Color(0xFF3A3835)
 val DarkOutlineVariant = Color(0xFF2D2C2A)
 
+// Standard Calendar Today Highlight Background Color (Pure background, borderless)
+val TodayHighlightLight = Color(0xFFD6D9F2) // 浅色模式：明显的淡紫蓝，跟白底形成清楚反差
+val TodayHighlightDark = Color(0xFF454A63)  // 深色模式：提亮不少，跟纯黑底形成清楚层次
+
 // ==========================================
 // Elderly Care Mode Dual-Color System
 // Culturally respectful, eye-safe, high-contrast, avoiding harsh black/white blocks
