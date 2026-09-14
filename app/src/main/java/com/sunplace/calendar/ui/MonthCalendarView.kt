@@ -37,10 +37,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -250,6 +257,7 @@ fun MinimalDayCell(
     val isLightMode = !isAppDark
     val primaryColor = MaterialTheme.colorScheme.primary
     val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
+    val density = LocalDensity.current
 
     val numColor = when {
         dayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
@@ -332,8 +340,8 @@ fun MinimalDayCell(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(cellAspectRatio)
-            .then(cellModifier)
             .clip(cellClipShape)
+            .then(cellModifier)
             .clickable { onClick() }
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
@@ -343,9 +351,9 @@ fun MinimalDayCell(
         if (dayInfo.isToday && !isElderlyMode) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val centerOffset = Offset(size.width * 0.96f, size.height * 0.94f)
-                val baseStrokeWidth = 1.15.dp.toPx()
-                val step = size.width * 0.19f
-                // Draw 7 smooth concentric wood growth rings
+                val baseStrokeWidth = 1.0.dp.toPx()
+                val step = size.width * 0.18f
+                // Draw smooth concentric wood growth rings
                 for (i in 1..7) {
                     val radius = step * i
                     drawCircle(
@@ -371,40 +379,69 @@ fun MinimalDayCell(
             )
         } else {
             // Standard Mode: Day number with lunar/festival subtitle
+            val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
+            val subColor = when {
+                dayInfo.isHolidayWithRest -> restColor
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
+            val subFontSize = when {
+                isEn && subText.length > 7 -> 7.5.sp
+                isEn && subText.length > 5 -> 8.sp
+                else -> 9.sp
+            }
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = dayInfo.day.toString(),
-                    color = numColor,
-                    fontSize = 15.sp,
-                    fontWeight = if (dayInfo.isRestDay || dayInfo.isToday) FontWeight.Bold else FontWeight.SemiBold,
-                    textAlign = TextAlign.Center
-                )
-
-                val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
-                val subColor = when {
-                    dayInfo.isHolidayWithRest -> restColor
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                // Day number: for "today", a stroke layer in the same color as the
+                // today highlight background is drawn behind the filled number via
+                // native Canvas/Paint (more reliable than Text+drawStyle=Stroke for
+                // small font sizes), so the tree-ring texture is visually blocked
+                // from crossing the digits.
+                Box(contentAlignment = Alignment.Center) {
+                    if (dayInfo.isToday) {
+                        TodayTextStroke(
+                            text = dayInfo.day.toString(),
+                            fontSizeSp = 15f,
+                            strokeColor = todayBgColor,
+                            strokeWidthDp = 6f,
+                            bold = true,
+                            density = density
+                        )
+                    }
+                    Text(
+                        text = dayInfo.day.toString(),
+                        color = numColor,
+                        fontSize = 15.sp,
+                        fontWeight = if (dayInfo.isRestDay || dayInfo.isToday) FontWeight.Bold else FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
                 }
-                val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
-                val subFontSize = when {
-                    isEn && subText.length > 7 -> 7.5.sp
-                    isEn && subText.length > 5 -> 8.sp
-                    else -> 9.sp
-                }
 
-                Text(
-                    text = subText.ifBlank { " " },
-                    color = subColor,
-                    fontSize = subFontSize,
-                    fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    softWrap = false,
-                    textAlign = TextAlign.Center
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    if (dayInfo.isToday) {
+                        TodayTextStroke(
+                            text = subText.ifBlank { " " },
+                            fontSizeSp = subFontSize.value,
+                            strokeColor = todayBgColor,
+                            strokeWidthDp = 4f,
+                            bold = dayInfo.isHolidayWithRest,
+                            density = density
+                        )
+                    }
+                    Text(
+                        text = subText.ifBlank { " " },
+                        color = subColor,
+                        fontSize = subFontSize,
+                        fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        softWrap = false,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -423,5 +460,45 @@ fun getFullWeekdayResId(dayOfWeekNumber: Int): Int {
         6 -> R.string.weekday_full_sat
         7 -> R.string.weekday_full_sun
         else -> R.string.weekday_full_mon
+    }
+}
+
+/**
+ * Draws a stroke-only outline of [text] using native Android Paint, in [strokeColor].
+ * Meant to sit directly behind a normally-filled Text() of the same string/size,
+ * so a tree-ring texture (or any busy background) is visually blocked around the
+ * glyph edges. Reusable for both the day number and the lunar/festival subtitle.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.TodayTextStroke(
+    text: String,
+    fontSizeSp: Float,
+    strokeColor: Color,
+    strokeWidthDp: Float,
+    bold: Boolean,
+    density: androidx.compose.ui.unit.Density
+) {
+    val strokeColorArgb = strokeColor.toArgb()
+    val fontSizePx = with(density) { fontSizeSp.sp.toPx() }
+    val strokeWidthPx = with(density) { strokeWidthDp.dp.toPx() }
+    Canvas(modifier = Modifier.matchParentSize()) {
+        drawContext.canvas.nativeCanvas.apply {
+            val paint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = strokeWidthPx
+                strokeJoin = android.graphics.Paint.Join.ROUND
+                strokeMiter = 2f
+                color = strokeColorArgb
+                textSize = fontSizePx
+                textAlign = android.graphics.Paint.Align.CENTER
+                typeface = if (bold) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+            }
+            val bounds = android.graphics.Rect()
+            paint.getTextBounds(text, 0, text.length, bounds)
+            val cx = size.width / 2f
+            val cy = size.height / 2f + bounds.height() / 2f
+            drawText(text, cx, cy, paint)
+        }
     }
 }

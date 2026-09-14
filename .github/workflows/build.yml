@@ -23,6 +23,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
       - name: Restore debug keystore
         run: |
           if [ -f "debug.keystore.base64" ]; then
