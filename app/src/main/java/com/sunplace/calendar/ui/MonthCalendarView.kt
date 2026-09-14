@@ -473,7 +473,7 @@ fun getFullWeekdayResId(dayOfWeekNumber: Int): Int {
  * glyph edges. Reusable for both the day number and the lunar/festival subtitle.
  */
 @Composable
-private fun TodayTextStroke(
+private fun androidx.compose.foundation.layout.BoxScope.TodayTextStroke(
     text: String,
     fontSizeSp: Float,
     strokeColor: Color,
