@@ -347,27 +347,18 @@ fun MinimalDayCell(
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Topographic contour lines texture layer (organic, wavy terrain contour lines)
+        // Natural Organic Tree Rings Texture Layer (圆心在左上角，环距自然有宽有窄)
         if (dayInfo.isToday && !isElderlyMode) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val baseStrokeWidth = 0.9.dp.toPx()
-                val path = androidx.compose.ui.graphics.Path()
-                
-                for (i in 1..5) {
-                    path.reset()
-                    val startY = size.height * (i * 0.18f)
-                    path.moveTo(0f, startY)
-                    
-                    val offsetDir = if (i % 2 == 0) 1f else -1f
-                    path.cubicTo(
-                        size.width * 0.3f, startY - size.height * 0.15f * offsetDir,
-                        size.width * 0.7f, startY + size.height * 0.15f * offsetDir,
-                        size.width, startY + (i * 4f)
-                    )
-                    
-                    drawPath(
-                        path = path,
+                val centerOffset = Offset(size.width * 0.06f, size.height * 0.08f)
+                val baseStrokeWidth = 0.95.dp.toPx()
+                // Natural organic ring step proportions (宽窄交替，模拟树木生长轮)
+                val ringFactors = listOf(0.18f, 0.32f, 0.42f, 0.60f, 0.72f, 0.90f, 1.08f, 1.28f)
+                for (factor in ringFactors) {
+                    drawCircle(
                         color = todayTreeRingColor,
+                        radius = size.width * factor,
+                        center = centerOffset,
                         style = Stroke(width = baseStrokeWidth)
                     )
                 }
