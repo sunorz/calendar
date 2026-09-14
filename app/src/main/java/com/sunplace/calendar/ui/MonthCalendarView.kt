@@ -347,20 +347,27 @@ fun MinimalDayCell(
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Tree ring texture layer (Canvas concentric rings centered towards bottom-right)
-        // Only active for "Today" in standard mode across phone, tablet, and landscape screens
+        // Topographic contour lines texture layer (organic, wavy terrain contour lines)
         if (dayInfo.isToday && !isElderlyMode) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val centerOffset = Offset(size.width * 0.96f, size.height * 0.94f)
-                val baseStrokeWidth = 1.0.dp.toPx()
-                val step = size.width * 0.18f
-                // Draw smooth concentric wood growth rings
-                for (i in 1..7) {
-                    val radius = step * i
-                    drawCircle(
+                val baseStrokeWidth = 0.9.dp.toPx()
+                val path = androidx.compose.ui.graphics.Path()
+                
+                for (i in 1..5) {
+                    path.reset()
+                    val startY = size.height * (i * 0.18f)
+                    path.moveTo(0f, startY)
+                    
+                    val offsetDir = if (i % 2 == 0) 1f else -1f
+                    path.cubicTo(
+                        size.width * 0.3f, startY - size.height * 0.15f * offsetDir,
+                        size.width * 0.7f, startY + size.height * 0.15f * offsetDir,
+                        size.width, startY + (i * 4f)
+                    )
+                    
+                    drawPath(
+                        path = path,
                         color = todayTreeRingColor,
-                        radius = radius,
-                        center = centerOffset,
                         style = Stroke(width = baseStrokeWidth)
                     )
                 }
