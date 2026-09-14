@@ -347,26 +347,18 @@ fun MinimalDayCell(
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Natural Organic Nested Ring Texture (非同心环嵌套：各层圆心微移、间距自然错落)
+        // Natural Organic Concentric Tree Rings Texture Layer (同心圆，原点在左上角，环距非等距自然有宽有窄)
         if (dayInfo.isToday && !isElderlyMode) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val baseStrokeWidth = if (isLightMode) 1.2.dp.toPx() else 0.95.dp.toPx()
-                // 各层非同心嵌套环：圆心动态轻微漂移，半径宽窄错落，环与环之间保持透气间隔
-                val nestedRings = listOf(
-                    // Pair(Offset factor(x, y), radius factor)
-                    Pair(Offset(0.08f, 0.06f), 0.20f),
-                    Pair(Offset(0.04f, 0.12f), 0.36f),
-                    Pair(Offset(0.12f, 0.05f), 0.48f),
-                    Pair(Offset(0.02f, 0.16f), 0.66f),
-                    Pair(Offset(0.15f, 0.10f), 0.82f),
-                    Pair(Offset(0.06f, 0.22f), 1.02f),
-                    Pair(Offset(0.18f, 0.14f), 1.24f)
-                )
-                for ((centerFactor, radFactor) in nestedRings) {
+                val centerOffset = Offset(size.width * 0.06f, size.height * 0.08f)
+                val baseStrokeWidth = 0.9.dp.toPx()
+                // 同心圆，环距宽窄随机变化（疏密交替，模拟树木自然生长的真实年轮）
+                val ringFactors = listOf(0.16f, 0.28f, 0.38f, 0.54f, 0.68f, 0.86f, 1.02f, 1.24f)
+                for (factor in ringFactors) {
                     drawCircle(
                         color = todayTreeRingColor,
-                        radius = size.width * radFactor,
-                        center = Offset(size.width * centerFactor.x, size.height * centerFactor.y),
+                        radius = size.width * factor,
+                        center = centerOffset,
                         style = Stroke(width = baseStrokeWidth)
                     )
                 }

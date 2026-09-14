@@ -42,10 +42,10 @@ val DarkOutlineVariant = Color(0xFF2D2C2A)
 val TodayHighlightLight = Color(0xFFD6D9F2) // 浅色模式：明显的淡紫蓝，跟白底形成清楚反差
 val TodayHighlightDark = Color(0xFF454A63)  // 深色模式：提亮不少，跟纯黑底形成清楚层次
 
-// Standard Calendar Today Tree Ring Overlay Line Color (Subtle nested rings anchored in top-left)
-// 比今日高亮背景稍微深一点，但明显浅于数字与小字农历，层次恰到好处
-val TodayTreeRingLight = Color(0xFFBAC0E8) // 浅色模式：比背景淡紫蓝(D6D9F2)略深一阶，柔和且不抢文字
-val TodayTreeRingDark = Color(0xFF33384D)  // 深色模式：比背景蓝灰(454A63)略深一阶，自然深沉且不干扰亮色文字
+// Standard Calendar Today Tree Ring Overlay Line Color (Subtle concentric wood rings anchored in top-left)
+// 极淡雅木质年轮线条，仔细看才能看得出来的微妙纹理质感，绝不干扰文字
+val TodayTreeRingLight = Color(0x388C96D4) // 浅色模式：极柔和淡紫蓝暗纹（仔细看才能辨识的细腻微纹）
+val TodayTreeRingDark = Color(0x1CFFFFFF)  // 深色模式：极柔和微透白光丝暗纹（细腻隐匿于蓝灰背景中）
 
 // ==========================================
 // Elderly Care Mode Dual-Color System

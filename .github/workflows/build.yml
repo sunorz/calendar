@@ -74,17 +74,35 @@ jobs:
           mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "app/build/outputs/apk/release/${APK_NAME}"
           echo "APK_PATH=app/build/outputs/apk/release/${APK_NAME}" >> $GITHUB_ENV
 
-      - name: Upload APK
+      - name: Get Latest Release Tag (on Push)
+        if: github.event_name != 'release'
+        id: get_latest_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
+          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: ${{ env.APK_PATH }}
           
-      - name: Attach to Release
+      - name: Attach APK to Current Published Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.APK_PATH }}
           tag_name: ${{ github.event.release.tag_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach APK to Latest Existing Release (on Push)
+        if: github.event_name != 'release' && steps.get_latest_release.outputs.LATEST_TAG != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.APK_PATH }}
+          tag_name: ${{ steps.get_latest_release.outputs.LATEST_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
