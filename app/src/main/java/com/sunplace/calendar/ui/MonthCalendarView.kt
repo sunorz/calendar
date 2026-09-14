@@ -420,13 +420,16 @@ fun MinimalDayCell(
                     )
                 }
 
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth().height(16.dp)
+                ) {
                     if (dayInfo.isToday) {
                         TodayTextStroke(
                             text = subText.ifBlank { " " },
                             fontSizeSp = subFontSize.value,
                             strokeColor = todayBgColor,
-                            strokeWidthDp = 4f,
+                            strokeWidthDp = 2.4f,
                             bold = dayInfo.isHolidayWithRest,
                             density = density
                         )
@@ -470,7 +473,7 @@ fun getFullWeekdayResId(dayOfWeekNumber: Int): Int {
  * glyph edges. Reusable for both the day number and the lunar/festival subtitle.
  */
 @Composable
-private fun androidx.compose.foundation.layout.BoxScope.TodayTextStroke(
+private fun TodayTextStroke(
     text: String,
     fontSizeSp: Float,
     strokeColor: Color,
