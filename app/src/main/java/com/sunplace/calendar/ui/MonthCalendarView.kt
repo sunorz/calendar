@@ -3,6 +3,7 @@ package com.sunplace.calendar.ui
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -260,6 +262,7 @@ fun MinimalDayCell(
 
     // Standard Mode Today: Pure background color change without border (when selected, applies selection border)
     val todayBgColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayHighlightLight else com.sunplace.calendar.ui.theme.TodayHighlightDark
+    val todayTreeRingColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayTreeRingLight else com.sunplace.calendar.ui.theme.TodayTreeRingDark
 
     // Today & Selection cell styling
     val cellModifier = when {
@@ -335,6 +338,26 @@ fun MinimalDayCell(
             .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Tree ring texture layer (Canvas concentric rings centered towards bottom-right)
+        // Only active for "Today" in standard mode across phone, tablet, and landscape screens
+        if (dayInfo.isToday && !isElderlyMode) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val centerOffset = Offset(size.width * 0.96f, size.height * 0.94f)
+                val baseStrokeWidth = 1.15.dp.toPx()
+                val step = size.width * 0.19f
+                // Draw 7 smooth concentric wood growth rings
+                for (i in 1..7) {
+                    val radius = step * i
+                    drawCircle(
+                        color = todayTreeRingColor,
+                        radius = radius,
+                        center = centerOffset,
+                        style = Stroke(width = baseStrokeWidth)
+                    )
+                }
+            }
+        }
+
         if (isElderlyMode) {
             // Elderly Mode: Clear, bold, readable numbers (comfortably fitting two digits on any screen size/landscape)
             Text(
