@@ -1,4 +1,4 @@
-name: Build APK
+name: Build and Release APK
 
 on:
   workflow_dispatch:
@@ -17,31 +17,82 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 1. 如果是点击发布 Release，先尝试从已有 Release Assets 中寻找最新的 Beta 包与 sha256 直接复用（秒级完成）
+      - name: Check and Fast-Promote Beta APK for Release
+        if: github.event_name == 'release'
+        id: check_beta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release_dist
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          SAFE_REF=$(echo "$TAG_NAME" | tr '/' '-')
+          TARGET_APK="release_dist/calendar-${SAFE_REF}-release.apk"
+          TARGET_SHA="release_dist/calendar-${SAFE_REF}-release.apk.sha256"
+
+          echo "Searching for latest beta APK in previous releases..."
+          # 获取包含 calendar-beta 的最新 release asset 下载地址
+          BETA_DOWNLOAD_URL=$(gh release view --json assets --jq '.assets[] | select(.name | test("^calendar-beta.*\\.apk$")) | .url' | head -n 1 || echo "")
+
+          if [ -n "$BETA_DOWNLOAD_URL" ]; then
+            echo "Found existing Beta APK: $BETA_DOWNLOAD_URL"
+            echo "Downloading and promoting..."
+            gh release download --pattern "calendar-beta*.apk" --dir release_dist
+            
+            # 找到下载的 beta 文件并重命名为目标 release 文件名
+            DOWNLOADED_BETA=$(ls release_dist/calendar-beta*.apk | head -n 1)
+            if [ -f "$DOWNLOADED_BETA" ]; then
+              mv "$DOWNLOADED_BETA" "$TARGET_APK"
+              
+              # 计算并生成 sha256
+              cd release_dist
+              sha256sum "calendar-${SAFE_REF}-release.apk" > "calendar-${SAFE_REF}-release.apk.sha256"
+              cd ..
+              
+              echo "FOUND_BETA=true" >> $GITHUB_OUTPUT
+              echo "APK_PATH=${TARGET_APK}" >> $GITHUB_ENV
+              echo "SHA_PATH=${TARGET_SHA}" >> $GITHUB_ENV
+              echo "Fast promotion ready!"
+              exit 0
+            fi
+          fi
+          
+          echo "No Beta APK found or download failed. Falling back to full Gradle compilation..."
+          echo "FOUND_BETA=false" >> $GITHUB_OUTPUT
+
+      # 2. 只有当没有找到 Beta 包（或普通 Push/Dispatch）时，才执行耗时的 JDK/Gradle 编译构建流程
       - name: Set up JDK
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
 
       - name: Restore debug keystore
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         run: |
           if [ -f "debug.keystore.base64" ]; then
             base64 -d debug.keystore.base64 > debug.keystore
           elif [ ! -f "debug.keystore" ]; then
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
+
       - name: Grant execute permission for gradlew
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         run: chmod +x gradlew
 
       - name: Build Release APK
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         run: ./gradlew assembleRelease
 
       - name: Sign APK
+        if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
         uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
@@ -52,27 +103,39 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: "35.0.1"
-
-      - name: Set Default APK Path
-        run: |
-          echo "APK_PATH=${{ steps.sign_app.outputs.signedReleaseFile }}" >> $GITHUB_ENV
           
-      - name: Rename APK for Push/Dispatch
+      - name: Rename & Generate SHA256 for Push/Dispatch
         if: github.event_name != 'release'
         run: |
           TIMESTAMP=$(date +%s)
           APK_NAME="calendar-beta-${TIMESTAMP}.apk"
-          mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "app/build/outputs/apk/release/${APK_NAME}"
+          SHA_NAME="${APK_NAME}.sha256"
+          SIGNED_FILE="${{ steps.sign_app.outputs.signedReleaseFile }}"
+          
+          mv "$SIGNED_FILE" "app/build/outputs/apk/release/${APK_NAME}"
+          cd app/build/outputs/apk/release
+          sha256sum "${APK_NAME}" > "${SHA_NAME}"
+          cd -
+          
           echo "APK_PATH=app/build/outputs/apk/release/${APK_NAME}" >> $GITHUB_ENV
+          echo "SHA_PATH=app/build/outputs/apk/release/${SHA_NAME}" >> $GITHUB_ENV
 
-      - name: Rename APK for Release
-        if: github.event_name == 'release'
+      - name: Rename & Generate SHA256 for Release (Fallback Build)
+        if: github.event_name == 'release' && steps.check_beta.outputs.FOUND_BETA != 'true'
         run: |
           TAG_NAME="${{ github.event.release.tag_name }}"
           SAFE_REF=$(echo "$TAG_NAME" | tr '/' '-')
           APK_NAME="calendar-${SAFE_REF}-release.apk"
-          mv "${{ steps.sign_app.outputs.signedReleaseFile }}" "app/build/outputs/apk/release/${APK_NAME}"
+          SHA_NAME="${APK_NAME}.sha256"
+          SIGNED_FILE="${{ steps.sign_app.outputs.signedReleaseFile }}"
+          
+          mv "$SIGNED_FILE" "app/build/outputs/apk/release/${APK_NAME}"
+          cd app/build/outputs/apk/release
+          sha256sum "${APK_NAME}" > "${SHA_NAME}"
+          cd -
+          
           echo "APK_PATH=app/build/outputs/apk/release/${APK_NAME}" >> $GITHUB_ENV
+          echo "SHA_PATH=app/build/outputs/apk/release/${SHA_NAME}" >> $GITHUB_ENV
 
       - name: Get Latest Release Tag (on Push)
         if: github.event_name != 'release'
@@ -87,22 +150,28 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: ${{ env.APK_PATH }}
+          path: |
+            ${{ env.APK_PATH }}
+            ${{ env.SHA_PATH }}
           
-      - name: Attach APK to Current Published Release
+      - name: Attach APK and SHA256 to Current Published Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.APK_PATH }}
+          files: |
+            ${{ env.APK_PATH }}
+            ${{ env.SHA_PATH }}
           tag_name: ${{ github.event.release.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Attach APK to Latest Existing Release (on Push)
+      - name: Attach Beta APK and SHA256 to Latest Existing Release (on Push)
         if: github.event_name != 'release' && steps.get_latest_release.outputs.LATEST_TAG != ''
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.APK_PATH }}
+          files: |
+            ${{ env.APK_PATH }}
+            ${{ env.SHA_PATH }}
           tag_name: ${{ steps.get_latest_release.outputs.LATEST_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
