@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -422,18 +423,8 @@ fun MinimalDayCell(
 
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxWidth().height(16.dp)
+                    modifier = Modifier.fillMaxWidth().height(20.dp)
                 ) {
-                    if (dayInfo.isToday) {
-                        TodayTextStroke(
-                            text = subText.ifBlank { " " },
-                            fontSizeSp = subFontSize.value,
-                            strokeColor = todayBgColor,
-                            strokeWidthDp = 2.4f,
-                            bold = dayInfo.isHolidayWithRest,
-                            density = density
-                        )
-                    }
                     Text(
                         text = subText.ifBlank { " " },
                         color = subColor,
@@ -442,7 +433,24 @@ fun MinimalDayCell(
                         maxLines = 1,
                         overflow = TextOverflow.Clip,
                         softWrap = false,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        style = LocalTextStyle.current.copy(
+                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+                            lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+                                alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+                                trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.Both
+                            )
+                        ),
+                        modifier = if (dayInfo.isToday) {
+                            Modifier
+                                .background(
+                                    color = todayBgColor,
+                                    shape = RoundedCornerShape(3.dp)
+                                )
+                                .padding(horizontal = 3.dp, vertical = 0.5.dp)
+                        } else {
+                            Modifier
+                        }
                     )
                 }
             }
