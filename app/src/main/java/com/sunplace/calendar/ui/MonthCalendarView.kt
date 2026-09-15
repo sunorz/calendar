@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,12 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.drawscope.DrawStyle
@@ -47,6 +51,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -296,21 +301,13 @@ fun MinimalDayCell(
         }
         dayInfo.isToday -> {
             if (isSelected) {
-                Modifier
-                    .background(
-                        color = todayBgColor,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = selectionBorderColor,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-            } else {
-                Modifier.background(
-                    color = todayBgColor,
+                Modifier.border(
+                    width = 1.5.dp,
+                    color = selectionBorderColor,
                     shape = RoundedCornerShape(10.dp)
                 )
+            } else {
+                Modifier
             }
         }
         isSelected -> {
@@ -340,76 +337,48 @@ fun MinimalDayCell(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(cellAspectRatio)
-            .clip(cellClipShape)
-            .then(cellModifier)
-            .clickable { onClick() }
-            .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
+            .aspectRatio(cellAspectRatio),
         contentAlignment = Alignment.Center
     ) {
-        // Natural Organic Concentric Tree Rings Texture Layer (同心圆，原点在左上角，环距非等距自然有宽有窄)
-        if (dayInfo.isToday && !isElderlyMode) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val centerOffset = Offset(size.width * 0.06f, size.height * 0.08f)
-                val baseStrokeWidth = 0.9.dp.toPx()
-                // 同心圆，环距宽窄随机变化（疏密交替，模拟树木自然生长的真实年轮）
-                val ringFactors = listOf(0.16f, 0.28f, 0.38f, 0.54f, 0.68f, 0.86f, 1.02f, 1.24f)
-                for (factor in ringFactors) {
-                    drawCircle(
-                        color = todayTreeRingColor,
-                        radius = size.width * factor,
-                        center = centerOffset,
-                        style = Stroke(width = baseStrokeWidth)
-                    )
+        // Main Cell Content Layer
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(cellClipShape)
+                .then(cellModifier)
+                .clickable { onClick() }
+                .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isElderlyMode) {
+                // Elderly Mode: Clear, bold, readable numbers (comfortably fitting two digits on any screen size/landscape)
+                Text(
+                    text = dayInfo.day.toString(),
+                    color = displayNumColor,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            } else {
+                // Standard Mode: Day number with lunar/festival subtitle
+                val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
+                val subColor = when {
+                    dayInfo.isHolidayWithRest -> restColor
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
-            }
-        }
+                val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
+                val subFontSize = when {
+                    isEn && subText.length > 7 -> 7.5.sp
+                    isEn && subText.length > 5 -> 8.sp
+                    else -> 9.sp
+                }
 
-        if (isElderlyMode) {
-            // Elderly Mode: Clear, bold, readable numbers (comfortably fitting two digits on any screen size/landscape)
-            Text(
-                text = dayInfo.day.toString(),
-                color = displayNumColor,
-                fontSize = 21.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                softWrap = false
-            )
-        } else {
-            // Standard Mode: Day number with lunar/festival subtitle
-            val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
-            val subColor = when {
-                dayInfo.isHolidayWithRest -> restColor
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
-            val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
-            val subFontSize = when {
-                isEn && subText.length > 7 -> 7.5.sp
-                isEn && subText.length > 5 -> 8.sp
-                else -> 9.sp
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Day number: for "today", a stroke layer in the same color as the
-                // today highlight background is drawn behind the filled number via
-                // native Canvas/Paint (more reliable than Text+drawStyle=Stroke for
-                // small font sizes), so the tree-ring texture is visually blocked
-                // from crossing the digits.
-                Box(contentAlignment = Alignment.Center) {
-                    if (dayInfo.isToday) {
-                        TodayTextStroke(
-                            text = dayInfo.day.toString(),
-                            fontSizeSp = 15f,
-                            strokeColor = todayBgColor,
-                            strokeWidthDp = 6f,
-                            bold = true,
-                            density = density
-                        )
-                    }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = dayInfo.day.toString(),
                         color = numColor,
@@ -417,41 +386,45 @@ fun MinimalDayCell(
                         fontWeight = if (dayInfo.isRestDay || dayInfo.isToday) FontWeight.Bold else FontWeight.SemiBold,
                         textAlign = TextAlign.Center
                     )
-                }
 
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxWidth().height(20.dp)
-                ) {
-                    Text(
-                        text = subText.ifBlank { " " },
-                        color = subColor,
-                        fontSize = subFontSize,
-                        fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                        softWrap = false,
-                        textAlign = TextAlign.Center,
-                        style = LocalTextStyle.current.copy(
-                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
-                            lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
-                                alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
-                                trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.Both
-                            )
-                        ),
-                        modifier = if (dayInfo.isToday) {
-                            Modifier
-                                .background(
-                                    color = todayBgColor,
-                                    shape = RoundedCornerShape(3.dp)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxWidth().height(20.dp)
+                    ) {
+                        Text(
+                            text = subText.ifBlank { " " },
+                            color = subColor,
+                            fontSize = subFontSize,
+                            fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip,
+                            softWrap = false,
+                            textAlign = TextAlign.Center,
+                            style = LocalTextStyle.current.copy(
+                                platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+                                lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+                                    alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+                                    trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.Both
                                 )
-                                .padding(horizontal = 3.dp, vertical = 0.5.dp)
-                        } else {
-                            Modifier
-                        }
-                    )
+                            )
+                        )
+                    }
                 }
             }
+        }
+
+        // Today SVG Vector Icon (Anchored below bottom outer edge, rotated randomly 0..72 deg each app launch)
+        if (dayInfo.isToday && !isElderlyMode) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_today_pinwheel),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 12.dp)
+                    .rotate(TodayRotationHolder.angle),
+                colorFilter = ColorFilter.tint(todayTreeRingColor)
+            )
         }
     }
 }

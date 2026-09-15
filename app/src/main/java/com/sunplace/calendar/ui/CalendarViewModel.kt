@@ -32,6 +32,10 @@ data class MonthItem(
     val days: List<DayInfo>
 )
 
+object TodayRotationHolder {
+    val angle: Float = (0..72).random().toFloat()
+}
+
 class CalendarViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
