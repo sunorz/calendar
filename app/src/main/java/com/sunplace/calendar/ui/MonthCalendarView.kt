@@ -301,13 +301,21 @@ fun MinimalDayCell(
         }
         dayInfo.isToday -> {
             if (isSelected) {
-                Modifier.border(
-                    width = 1.5.dp,
-                    color = selectionBorderColor,
+                Modifier
+                    .background(
+                        color = todayBgColor,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = selectionBorderColor,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            } else {
+                Modifier.background(
+                    color = todayBgColor,
                     shape = RoundedCornerShape(10.dp)
                 )
-            } else {
-                Modifier
             }
         }
         isSelected -> {
