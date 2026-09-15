@@ -274,9 +274,23 @@ fun MinimalDayCell(
     // In elderly mode, cells are squarish and focus purely on huge numbers
     val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
-    // Standard Mode Today: Pure background color change without border (when selected, applies selection border)
-    val todayBgColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayHighlightLight else com.sunplace.calendar.ui.theme.TodayHighlightDark
-    val todayTreeRingColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayTreeRingLight else com.sunplace.calendar.ui.theme.TodayTreeRingDark
+    // Standard Mode Today: Dynamic 3-color highlight based on day type (Sanyuesan Green, Workday Yellow, Restday Red)
+    val todayBgColor = if (isLightMode) {
+        when {
+            dayInfo.isExplicitLocaleHoliday -> com.sunplace.calendar.ui.theme.TodayGreenLight
+            dayInfo.isRestDay -> com.sunplace.calendar.ui.theme.TodayRedLight
+            else -> com.sunplace.calendar.ui.theme.TodayYellowLight
+        }
+    } else {
+        when {
+            dayInfo.isExplicitLocaleHoliday -> com.sunplace.calendar.ui.theme.TodayGreenDark
+            dayInfo.isRestDay -> com.sunplace.calendar.ui.theme.TodayRedDark
+            else -> com.sunplace.calendar.ui.theme.TodayYellowDark
+        }
+    }
+    val todayTreeRingColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayFilmLight else com.sunplace.calendar.ui.theme.TodayFilmDark
+    val todayTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
+    val todaySubTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
 
     // Today & Selection cell styling
     val cellModifier = when {
@@ -396,13 +410,16 @@ fun MinimalDayCell(
                     else -> 9.sp
                 }
 
+                val cellNumColor = if (dayInfo.isToday) todayTextColor else numColor
+                val cellSubColor = if (dayInfo.isToday) todaySubTextColor else subColor
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = dayInfo.day.toString(),
-                        color = numColor,
+                        color = cellNumColor,
                         fontSize = 15.sp,
                         fontWeight = if (dayInfo.isRestDay || dayInfo.isToday) FontWeight.Bold else FontWeight.SemiBold,
                         textAlign = TextAlign.Center
@@ -414,9 +431,9 @@ fun MinimalDayCell(
                     ) {
                         Text(
                             text = subText.ifBlank { " " },
-                            color = subColor,
+                            color = cellSubColor,
                             fontSize = subFontSize,
-                            fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = if (dayInfo.isHolidayWithRest && !dayInfo.isToday) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 1,
                             overflow = TextOverflow.Clip,
                             softWrap = false,

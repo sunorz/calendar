@@ -38,13 +38,30 @@ val DarkOnSurfaceVariant = Color(0xFF9E9A94)
 val DarkOutline = Color(0xFF3A3835)
 val DarkOutlineVariant = Color(0xFF2D2C2A)
 
-// Standard Calendar Today Highlight Background Color (Soft light blue)
-val TodayHighlightLight = Color(0xFFD9E2F8) // 浅色模式：清新淡蓝色背景
-val TodayHighlightDark = Color(0xFF343E5C)  // 深色模式：沉稳蓝灰背景，层次分明
+// Standard Calendar Today Highlight Colors by Day Category
+// 浅色模式：高亮偏暗，搭配白色文字 #FFFFFF
+val TodayGreenLight = Color(0xFF1B5E20)  // 三月三假期：深暗绿
+val TodayYellowLight = Color(0xFFA17400) // 工作日：深暗柠檬金黄，确保白字清晰
+val TodayRedLight = Color(0xFFB71C1C)    // 休息日：深暗红
 
-// Standard Calendar Today Vector Pattern Overlay Tint (Film texture, visible & subtle on light blue)
-val TodayTreeRingLight = Color(0x3639538C) // 浅色模式：微透薄膜光泽，在淡蓝底上清晰可见且柔和
-val TodayTreeRingDark = Color(0x3AFFFFFF)  // 深色模式：柔光微透光泽，在深蓝底上清晰可见且柔和
+// 深色模式：高亮偏亮，搭配黑色文字 #000000
+val TodayGreenDark = Color(0xFF4ADE80)   // 三月三假期：明亮绿
+val TodayYellowDark = Color(0xFFFDE047)  // 工作日：明亮鲜艳柠檬黄，黑字清晰
+val TodayRedDark = Color(0xFFFF5959)     // 休息日：明亮红
+
+// Today Film Texture Tint
+val TodayFilmLight = Color(0x35FFFFFF)  // 浅色模式暗底：白色微透薄膜
+val TodayFilmDark = Color(0x30000000)   // 深色模式亮底：黑色微透薄膜
+
+// Backward compatible aliases
+val TodayBlueLight = TodayYellowLight
+val TodayBlueDark = TodayYellowDark
+val TodayBlackLight = TodayYellowLight
+val TodayBlackDark = TodayYellowDark
+val TodayHighlightLight = TodayYellowLight
+val TodayHighlightDark = TodayYellowDark
+val TodayTreeRingLight = TodayFilmLight
+val TodayTreeRingDark = TodayFilmDark
 
 // ==========================================
 // Elderly Care Mode Dual-Color System
