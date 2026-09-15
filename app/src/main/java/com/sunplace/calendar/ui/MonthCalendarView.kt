@@ -337,16 +337,29 @@ fun MinimalDayCell(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(cellAspectRatio),
+            .aspectRatio(cellAspectRatio)
+            .clip(cellClipShape)
+            .then(cellModifier)
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // Main Cell Content Layer
+        // Today SVG Vector Icon (Shifted left by 25dp from right border center, clipped by cell shape)
+        if (dayInfo.isToday && !isElderlyMode) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_today_pinwheel),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(70.dp)
+                    .align(Alignment.CenterEnd)
+                    .offset(x = 10.dp)
+                    .rotate(TodayRotationHolder.angle),
+                colorFilter = ColorFilter.tint(todayTreeRingColor)
+            )
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(cellClipShape)
-                .then(cellModifier)
-                .clickable { onClick() }
                 .padding(horizontal = 1.dp, vertical = if (isElderlyMode) 2.dp else 3.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -411,20 +424,6 @@ fun MinimalDayCell(
                     }
                 }
             }
-        }
-
-        // Today SVG Vector Icon (Anchored below bottom outer edge, rotated randomly 0..72 deg each app launch)
-        if (dayInfo.isToday && !isElderlyMode) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_today_pinwheel),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .align(Alignment.BottomCenter)
-                    .offset(y = 12.dp)
-                    .rotate(TodayRotationHolder.angle),
-                colorFilter = ColorFilter.tint(todayTreeRingColor)
-            )
         }
     }
 }

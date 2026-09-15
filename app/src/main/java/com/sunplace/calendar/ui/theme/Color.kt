@@ -42,9 +42,9 @@ val DarkOutlineVariant = Color(0xFF2D2C2A)
 val TodayHighlightLight = Color.Transparent
 val TodayHighlightDark = Color.Transparent
 
-// Standard Calendar Today Vector Pattern Overlay Tint (Soft & Clearly Visible Purple for Light/Dark)
-val TodayTreeRingLight = Color(0xFF8559D6) // 浅色模式：清晰柔和紫罗兰，一眼可见且温润优雅
-val TodayTreeRingDark = Color(0xFFC8B6FF)  // 深色模式：柔和淡雅光感薰衣草紫，深色底上清晰醒目不刺眼
+// Standard Calendar Today Vector Pattern Overlay Tint (Subtle translucent film texture)
+val TodayTreeRingLight = Color(0x24000000) // 浅色模式：微透灰阶塑料薄膜光泽，接近浅色底
+val TodayTreeRingDark = Color(0x28FFFFFF)  // 深色模式：微透薄膜反光白泽，接近深色底
 
 // ==========================================
 // Elderly Care Mode Dual-Color System
