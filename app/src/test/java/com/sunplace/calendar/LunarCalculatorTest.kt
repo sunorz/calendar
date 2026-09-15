@@ -264,4 +264,40 @@ class LunarCalculatorTest {
             java.util.Locale.setDefault(originalLocale)
         }
     }
+
+    @Test
+    fun testYear2026And2027LunarContinuity() {
+        // 2026-12-31 should be 丙午年十一月廿三
+        val dec31 = LunarCalculator.getLunarDate(2026, 12, 31)
+        assertEquals(2026, dec31.lunarYear)
+        assertEquals(11, dec31.lunarMonth)
+        assertEquals(23, dec31.lunarDay)
+        assertFalse(dec31.isLeap)
+
+        // 2027-01-01 must immediately follow 2026-12-31, which is 丙午年十一月廿四 (continuous!)
+        val jan1 = LunarCalculator.getLunarDate(2027, 1, 1)
+        assertEquals(2026, jan1.lunarYear)
+        assertEquals(11, jan1.lunarMonth)
+        assertEquals(24, jan1.lunarDay)
+        assertFalse(jan1.isLeap)
+
+        // 2027-01-02 -> 十一月廿五
+        val jan2 = LunarCalculator.getLunarDate(2027, 1, 2)
+        assertEquals(2026, jan2.lunarYear)
+        assertEquals(11, jan2.lunarMonth)
+        assertEquals(25, jan2.lunarDay)
+
+        // 2026 Spring festival (2026-02-17) is 2026-01-01
+        val cny2026 = LunarCalculator.getLunarDate(2026, 2, 17)
+        assertEquals(2026, cny2026.lunarYear)
+        assertEquals(1, cny2026.lunarMonth)
+        assertEquals(1, cny2026.lunarDay)
+
+        // 2027 Spring festival (2027-02-06) is 2027-01-01
+        val cny2027 = LunarCalculator.getLunarDate(2027, 2, 6)
+        assertEquals(2027, cny2027.lunarYear)
+        assertEquals(1, cny2027.lunarMonth)
+        assertEquals(1, cny2027.lunarDay)
+    }
 }
+
