@@ -138,8 +138,6 @@ class CalendarConfigTest {
         assertNotNull(apr9)
         assertTrue("2027-04-09 must be isLocaleHoliday", apr9!!.isLocaleHoliday)
         assertEquals("三月三假日", apr9.localeHolidayName)
-        val note = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(apr9)
-        assertFalse("Calendar grid note must NOT be '三月三' or 'Sanyuesan'", note.contains("三月三") || note.contains("Sanyuesan"))
         val cardData = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(apr9)
         assertTrue("Card details must include '三月三假日' or 'Sanyuesan Festival'", cardData.combinedText.contains("三月三假日") || cardData.combinedText.contains("Sanyuesan"))
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,8 +48,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -65,6 +68,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.R
 import com.sunplace.calendar.data.model.DayInfo
+import com.sunplace.calendar.data.model.TodayPattern
+import com.sunplace.calendar.util.TranslationHelper
 
 val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festivals like "三月三"
 
@@ -128,6 +133,7 @@ fun MinimalMonthSection(
     onDayClick: (DayInfo) -> Unit,
     isElderlyMode: Boolean = false,
     showWeekdayHeader: Boolean = false,
+    todayPattern: TodayPattern = TodayPattern.DEFAULT,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -231,6 +237,7 @@ fun MinimalMonthSection(
                                     dayInfo = dayInfo,
                                     isSelected = isSelected,
                                     isElderlyMode = isElderlyMode,
+                                    todayPattern = todayPattern,
                                     onClick = { onDayClick(dayInfo) }
                                 )
                             }
@@ -258,6 +265,7 @@ fun MinimalDayCell(
     isSelected: Boolean,
     onClick: () -> Unit,
     isElderlyMode: Boolean = false,
+    todayPattern: TodayPattern = TodayPattern.DEFAULT,
     modifier: Modifier = Modifier
 ) {
     val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
@@ -278,7 +286,7 @@ fun MinimalDayCell(
     // In elderly mode, cells are squarish and focus purely on huge numbers
     val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
-    // Standard Mode Today: Dynamic 3-color highlight with skeuomorphic realistic gradient (unified with dark mode palette)
+    // Standard Mode Today: Dynamic 3-color highlight
     val todayBrush = remember(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
         when {
             dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
@@ -302,7 +310,7 @@ fun MinimalDayCell(
 
     val todayTreeRingColor = Color.White.copy(alpha = 0.55f)
     val todayTextColor = Color(0xFF000000)
-    val todaySubTextColor = Color(0xFF000000)
+    val todaySubTextColor = todayTextColor
 
     // Today & Selection cell styling
     val cellModifier = when {
@@ -374,7 +382,7 @@ fun MinimalDayCell(
 
     val cellClipShape = if (isElderlyMode) RoundedCornerShape(12.dp) else RoundedCornerShape(10.dp)
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(cellAspectRatio)
@@ -385,44 +393,48 @@ fun MinimalDayCell(
     ) {
         val holeOffset = 5.dp
         val holeSize = 6.dp
-        val svgSize = 85.dp
 
-        // Co-centered Anchor: Hole is the exact center of rotation for the SVG
         if (dayInfo.isToday && !isElderlyMode) {
+            // 图案自适应大小：与卡片尺寸相协调，既有水印的大气感，又确保主体花纹饱满呈现
+            val patternSize = maxOf(maxWidth, maxHeight) * 1.12f
+
+            // 计算纹样的几何中心坐标（落在卡片内部核心区间）
+            val centerXDp = maxWidth * TodayPomegranateHolder.normCenterX
+            val centerYDp = maxHeight * TodayPomegranateHolder.normCenterY
+
+            // 图层 1: 今日祥纹图案（使用 graphicsLayer 像素级精确居中与 0~180° 旋转，边缘由卡片 clip 自然裁剪）
+            Image(
+                painter = painterResource(id = todayPattern.drawableRes),
+                contentDescription = todayPattern.getDisplayName(TranslationHelper.isEnglish()),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(patternSize)
+                    .graphicsLayer {
+                        translationX = (centerXDp - (patternSize / 2)).toPx()
+                        translationY = (centerYDp - (patternSize / 2)).toPx()
+                        rotationZ = TodayPatternHolder.angle
+                        transformOrigin = TransformOrigin.Center
+                    },
+                colorFilter = ColorFilter.tint(todayTreeRingColor)
+            )
+
+            // 图层 2: 卡片圆孔（位于左上角，若有重叠则置于石榴花图层之上）
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = holeOffset, top = holeOffset)
-                    .size(holeSize),
-                contentAlignment = Alignment.Center
-            ) {
-                // Layer 1: SVG Vector Icon (Unbounded, mathematically centered at the hole's center)
-                Image(
-                    painter = painterResource(id = R.drawable.ic_today_pinwheel),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .wrapContentSize(align = Alignment.Center, unbounded = true)
-                        .requiredSize(svgSize)
-                        .rotate(TodayRotationHolder.angle),
-                    colorFilter = ColorFilter.tint(todayTreeRingColor)
-                )
-
-                // Layer 2: Card punch hole on top of SVG
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.background)
-                        .border(
-                            width = 0.7.dp,
-                            color = Color.Black.copy(alpha = 0.28f),
-                            shape = CircleShape
-                        )
-                )
-            }
+                    .size(holeSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background)
+                    .border(
+                        width = 0.7.dp,
+                        color = Color.Black.copy(alpha = 0.28f),
+                        shape = CircleShape
+                    )
+            )
         }
 
-        // Layer 3 (above hole and SVG): Day number & subtitles
+        // 图层 3 (最顶层): 日期数字与农历信息
         Box(
             modifier = Modifier
                 .fillMaxSize()

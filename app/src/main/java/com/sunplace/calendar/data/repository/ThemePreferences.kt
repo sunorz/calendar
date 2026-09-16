@@ -2,6 +2,7 @@ package com.sunplace.calendar.data.repository
 
 import android.content.Context
 import com.sunplace.calendar.data.model.ThemeMode
+import com.sunplace.calendar.data.model.TodayPattern
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,7 @@ class ThemePreferences(context: Context) {
         private const val KEY_THEME_MODE = "key_theme_mode"
         private const val KEY_ELDERLY_MODE = "key_elderly_mode"
         private const val KEY_SHOW_GUANGXI_SANYUESAN = "key_show_guangxi_sanyuesan"
+        private const val KEY_TODAY_PATTERN = "key_today_pattern"
     }
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -25,6 +27,14 @@ class ThemePreferences(context: Context) {
 
     private val _showGuangxiSanyuesan = MutableStateFlow(loadSavedShowGuangxiSanyuesan())
     val showGuangxiSanyuesan: StateFlow<Boolean> = _showGuangxiSanyuesan.asStateFlow()
+
+    private val _todayPattern = MutableStateFlow(loadSavedTodayPattern())
+    val todayPattern: StateFlow<TodayPattern> = _todayPattern.asStateFlow()
+
+    private fun loadSavedTodayPattern(): TodayPattern {
+        val id = prefs.getString(KEY_TODAY_PATTERN, TodayPattern.DEFAULT.id)
+        return TodayPattern.fromId(id)
+    }
 
     private fun loadSavedTheme(): ThemeMode {
         val name = prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
@@ -64,5 +74,10 @@ class ThemePreferences(context: Context) {
 
     fun toggleShowGuangxiSanyuesan() {
         setShowGuangxiSanyuesan(!_showGuangxiSanyuesan.value)
+    }
+
+    fun setTodayPattern(pattern: TodayPattern) {
+        prefs.edit().putString(KEY_TODAY_PATTERN, pattern.id).apply()
+        _todayPattern.value = pattern
     }
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.sunplace.calendar.data.model.CalendarConfig
 import com.sunplace.calendar.data.model.DayInfo
 import com.sunplace.calendar.data.model.ThemeMode
+import com.sunplace.calendar.data.model.TodayPattern
 import com.sunplace.calendar.data.repository.CalendarRepository
 import com.sunplace.calendar.data.repository.SyncState
 import com.sunplace.calendar.data.repository.ThemePreferences
@@ -32,8 +33,42 @@ data class MonthItem(
     val days: List<DayInfo>
 )
 
+object TodayPatternHolder {
+    var angle: Float = kotlin.random.Random.nextFloat() * 180f
+        private set
+
+    // Normalized center position within card: [0.22f .. 0.78f]
+    // Ensures the pattern's center floats dynamically across the card without getting pushed too far out,
+    // so the main body of the pattern is always beautifully visible and naturally clipped at edges.
+    var normCenterX: Float = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+        private set
+
+    var normCenterY: Float = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+        private set
+
+    fun randomize() {
+        angle = kotlin.random.Random.nextFloat() * 180f
+        normCenterX = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+        normCenterY = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+    }
+}
+
+object TodayPomegranateHolder {
+    val angle: Float
+        get() = TodayPatternHolder.angle
+
+    val normCenterX: Float
+        get() = TodayPatternHolder.normCenterX
+
+    val normCenterY: Float
+        get() = TodayPatternHolder.normCenterY
+
+    fun randomize() = TodayPatternHolder.randomize()
+}
+
 object TodayRotationHolder {
-    val angle: Float = (0..72).random().toFloat()
+    val angle: Float
+        get() = TodayPatternHolder.angle
 }
 
 class CalendarViewModel(application: Application) : AndroidViewModel(application) {
@@ -64,6 +99,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     val themeMode: StateFlow<ThemeMode> = themePreferences.themeMode
     val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
     val showGuangxiSanyuesan: StateFlow<Boolean> = themePreferences.showGuangxiSanyuesan
+    val todayPattern: StateFlow<TodayPattern> = themePreferences.todayPattern
 
     private val _showSettingsDialog = MutableStateFlow(false)
     val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
@@ -92,6 +128,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
 
     init {
+        TodayPomegranateHolder.randomize()
         syncAllConfigs()
         checkVersion()
         viewModelScope.launch {
@@ -185,6 +222,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun toggleShowGuangxiSanyuesan() {
         setShowGuangxiSanyuesan(!showGuangxiSanyuesan.value)
+    }
+
+    fun setTodayPattern(pattern: TodayPattern) {
+        themePreferences.setTodayPattern(pattern)
     }
 
     fun openSettingsDialog() {

@@ -56,6 +56,17 @@
     <string name="feature_section_title">假期显示</string>
     <string name="sanyuesan_switch_title">广西节假日</string>
     <string name="theme_section_title">外观主题</string>
+    <string name="pattern_section_title">卡片纹样</string>
+    <string name="pattern_select_title">卡片纹样</string>
+    <string name="pattern_dialog_title">卡片纹样</string>
+    <string name="pattern_current_using">当前使用：%1$s</string>
+    <string name="pattern_cat_all">全部</string>
+    <string name="pattern_cat_four">4瓣</string>
+    <string name="pattern_cat_five">5瓣</string>
+    <string name="pattern_cat_six">6瓣</string>
+    <string name="pattern_cat_eight">8瓣</string>
+    <string name="pattern_btn_random">随机挑选</string>
+    <string name="pattern_btn_reset">恢复默认</string>
     <string name="elderly_mode_locked">关怀模式锁定</string>
     <string name="elderly_mode_theme_tip">老年关怀模式下已强制启用高清晰浅色模式，禁止切换深色模式。退出关怀模式后方可自由切换。</string>
     <string name="theme_system">跟随系统</string>
@@ -71,6 +82,7 @@
     <string name="download_now">立即下载</string>
     <string name="downloading">下载中...</string>
     <string name="dialog_done">完成</string>
+    <string name="btn_back">返回</string>
 
     <!-- Watch / Small Screen / Widget -->
     <string name="widget_month_format">%1$d月</string>

@@ -61,6 +61,17 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="pattern_section_title">Card Pattern</string>
+    <string name="pattern_select_title">Card Pattern</string>
+    <string name="pattern_dialog_title">Card Patterns</string>
+    <string name="pattern_current_using">Current: %1$s</string>
+    <string name="pattern_cat_all">All</string>
+    <string name="pattern_cat_four">4-Petal</string>
+    <string name="pattern_cat_five">5-Petal</string>
+    <string name="pattern_cat_six">6-Petal</string>
+    <string name="pattern_cat_eight">8-Petal</string>
+    <string name="pattern_btn_random">Random</string>
+    <string name="pattern_btn_reset">Reset</string>
     <string name="about_section_title">About</string>
     <string name="announcement_label">Notice</string>
     <string name="announcement_content">花好月圆</string>
@@ -71,6 +82,7 @@
     <string name="download_now">Download</string>
     <string name="downloading">Downloading…</string>
     <string name="dialog_done">Done</string>
+    <string name="btn_back">Back</string>
 
     <!-- Watch / Small Screen / Widget -->
     <string name="widget_month_format">%1$s</string>

@@ -3,7 +3,9 @@ package com.sunplace.calendar.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -85,6 +87,7 @@ fun CalendarScreen(
     val remoteVersion by viewModel.remoteVersion.collectAsState()
     val isDownloading by viewModel.isDownloading.collectAsState()
     val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val todayPattern by viewModel.todayPattern.collectAsState()
 
     // Responsive Breakpoint Container:
     // 1. < 360dp: Smartwatch (Wear OS) / Micro Outer-screen (Day-by-Day Widget with swipe & fast date picker)
@@ -120,12 +123,17 @@ fun CalendarScreen(
         }
     }
 
-    // Common Settings & Theme Dialog
-    if (showSettingsDialog) {
-        SettingsDialog(
+    // Full Screen Secondary Menu: SettingsScreen
+    AnimatedVisibility(
+        visible = showSettingsDialog,
+        enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+        exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+    ) {
+        SettingsScreen(
             currentThemeMode = themeMode,
             isElderlyMode = isElderlyMode,
             showGuangxiSanyuesan = showGuangxiSanyuesan,
+            currentTodayPattern = todayPattern,
             currentVersion = viewModel.getAppVersion(),
             updateAvailable = updateAvailable,
             remoteVersion = remoteVersion,
@@ -133,8 +141,9 @@ fun CalendarScreen(
             downloadProgress = downloadProgress,
             onThemeModeChange = { viewModel.setThemeMode(it) },
             onToggleShowGuangxiSanyuesan = { viewModel.setShowGuangxiSanyuesan(it) },
+            onTodayPatternChange = { viewModel.setTodayPattern(it) },
             onDownloadUpdate = { viewModel.downloadAndUpdate() },
-            onDismiss = { viewModel.closeSettingsDialog() }
+            onNavigateBack = { viewModel.closeSettingsDialog() }
         )
     }
 }
@@ -153,6 +162,7 @@ private fun StandardPhoneCalendarView(
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
+    val todayPattern by viewModel.todayPattern.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState(
@@ -362,6 +372,7 @@ private fun StandardPhoneCalendarView(
                         days = days,
                         selectedDay = selectedDay,
                         isElderlyMode = isElderlyMode,
+                        todayPattern = todayPattern,
                         onDayClick = { day ->
                             val nextSelected = if (selectedDay == day) null else day
                             viewModel.selectDay(nextSelected)

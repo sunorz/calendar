@@ -89,6 +89,7 @@ fun LargeScreenCalendarView(
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
+    val todayPattern by viewModel.todayPattern.collectAsState()
 
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -377,6 +378,7 @@ fun LargeScreenCalendarView(
                                 selectedDay = selectedDay,
                                 isElderlyMode = isElderlyMode,
                                 showWeekdayHeader = true, // Each month column in grid has its own self-contained week header
+                                todayPattern = todayPattern,
                                 onDayClick = { day ->
                                     val nextSelected = if (selectedDay == day) null else day
                                     viewModel.selectDay(nextSelected)

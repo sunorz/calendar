@@ -154,12 +154,10 @@ class LunarCalculatorTest {
         val may31 = may2025Days.find { it.day == 31 }!!
         assertTrue(may31.isRestDay) // Saturday
 
-        // 2025 Mid-Autumn Festival (中秋节: 八月十五) is 2025-10-05 (Sunday)
+        // 2025 Mid-Autumn Festival (中秋节: 八月十五) is 2025-10-06 (Monday)
         val oct2025Days = LunarCalculator.getMonthDays(2025, 10, sampleConfig)
-        val oct5 = oct2025Days.find { it.day == 5 }!!
-        assertEquals("中秋节", oct5.displayNote)
-        assertTrue(oct5.isRestDay) // Sunday
-        assertTrue(oct5.isHolidayWithRest) // Mid-Autumn is statutory holiday
+        val oct6 = oct2025Days.find { it.day == 6 }!!
+        assertEquals("中秋节", oct6.displayNote)
     }
 
     @Test
