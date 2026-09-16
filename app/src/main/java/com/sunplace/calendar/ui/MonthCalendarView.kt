@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
@@ -316,7 +318,7 @@ fun MinimalDayCell(
         )
     }
 
-    val todayTreeRingColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayFilmLight else com.sunplace.calendar.ui.theme.TodayFilmDark
+    val todayTreeRingColor = if (isLightMode) Color.Black.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.55f)
     val todayTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
     val todaySubTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
 
@@ -399,35 +401,46 @@ fun MinimalDayCell(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // Today SVG Vector Icon (Shifted left by 25dp from right border center, clipped by cell shape)
-        if (dayInfo.isToday && !isElderlyMode) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_today_pinwheel),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(70.dp)
-                    .align(Alignment.CenterEnd)
-                    .offset(x = 10.dp)
-                    .rotate(TodayRotationHolder.angle),
-                colorFilter = ColorFilter.tint(todayTreeRingColor)
-            )
+        val holeOffset = 5.dp
+        val holeSize = 6.dp
+        val svgSize = 85.dp
 
-            // Card punch hole in top-left corner (styled with background color and bevel rim like a stamped tag hole)
+        // Co-centered Anchor: Hole is the exact center of rotation for the SVG
+        if (dayInfo.isToday && !isElderlyMode) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 5.dp, top = 5.dp)
-                    .size(5.5.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.background)
-                    .border(
-                        width = 0.6.dp,
-                        color = if (isLightMode) Color.Black.copy(alpha = 0.28f) else Color.Black.copy(alpha = 0.22f),
-                        shape = CircleShape
-                    )
-            )
+                    .padding(start = holeOffset, top = holeOffset)
+                    .size(holeSize),
+                contentAlignment = Alignment.Center
+            ) {
+                // Layer 1: SVG Vector Icon (Unbounded, mathematically centered at the hole's center)
+                Image(
+                    painter = painterResource(id = R.drawable.ic_today_pinwheel),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .wrapContentSize(align = Alignment.Center, unbounded = true)
+                        .requiredSize(svgSize)
+                        .rotate(TodayRotationHolder.angle),
+                    colorFilter = ColorFilter.tint(todayTreeRingColor)
+                )
+
+                // Layer 2: Card punch hole on top of SVG
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background)
+                        .border(
+                            width = 0.7.dp,
+                            color = if (isLightMode) Color.Black.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.28f),
+                            shape = CircleShape
+                        )
+                )
+            }
         }
 
+        // Layer 3 (above hole and SVG): Day number & subtitles
         Box(
             modifier = Modifier
                 .fillMaxSize()
