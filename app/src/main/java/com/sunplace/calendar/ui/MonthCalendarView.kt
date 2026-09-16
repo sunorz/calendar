@@ -30,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -274,20 +276,46 @@ fun MinimalDayCell(
     // In elderly mode, cells are squarish and focus purely on huge numbers
     val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
-    // Standard Mode Today: Dynamic 3-color highlight based on day type (Sanyuesan Green, Workday Yellow, Restday Red)
-    val todayBgColor = if (isLightMode) {
-        when {
-            dayInfo.isExplicitLocaleHoliday -> com.sunplace.calendar.ui.theme.TodayGreenLight
-            dayInfo.isRestDay -> com.sunplace.calendar.ui.theme.TodayRedLight
-            else -> com.sunplace.calendar.ui.theme.TodayYellowLight
-        }
-    } else {
-        when {
-            dayInfo.isExplicitLocaleHoliday -> com.sunplace.calendar.ui.theme.TodayGreenDark
-            dayInfo.isRestDay -> com.sunplace.calendar.ui.theme.TodayRedDark
-            else -> com.sunplace.calendar.ui.theme.TodayYellowDark
+    // Standard Mode Today: Dynamic 3-color highlight with skeuomorphic realistic gradient
+    val todayBrush = remember(isLightMode, dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
+        if (isLightMode) {
+            when {
+                dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFF2E7D32), Color(0xFF16521B))
+                )
+                dayInfo.isRestDay -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFFC62828), Color(0xFF8E1111))
+                )
+                else -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFFB8860B), Color(0xFF7D5900))
+                )
+            }
+        } else {
+            when {
+                dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFF6EE7B7), Color(0xFF22C55E))
+                )
+                dayInfo.isRestDay -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFF8585), Color(0xFFE53935))
+                )
+                else -> Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFEF08A), Color(0xFFEAB308))
+                )
+            }
         }
     }
+
+    // Subtle edge rim light giving the card physical thickness
+    val todayBevelBorder = remember(isLightMode) {
+        Brush.verticalGradient(
+            colors = if (isLightMode) {
+                listOf(Color.White.copy(alpha = 0.40f), Color.Black.copy(alpha = 0.25f))
+            } else {
+                listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
+            }
+        )
+    }
+
     val todayTreeRingColor = if (isLightMode) com.sunplace.calendar.ui.theme.TodayFilmLight else com.sunplace.calendar.ui.theme.TodayFilmDark
     val todayTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
     val todaySubTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
@@ -317,7 +345,7 @@ fun MinimalDayCell(
             if (isSelected) {
                 Modifier
                     .background(
-                        color = todayBgColor,
+                        brush = todayBrush,
                         shape = RoundedCornerShape(10.dp)
                     )
                     .border(
@@ -326,10 +354,16 @@ fun MinimalDayCell(
                         shape = RoundedCornerShape(10.dp)
                     )
             } else {
-                Modifier.background(
-                    color = todayBgColor,
-                    shape = RoundedCornerShape(10.dp)
-                )
+                Modifier
+                    .background(
+                        brush = todayBrush,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(
+                        width = 0.8.dp,
+                        brush = todayBevelBorder,
+                        shape = RoundedCornerShape(10.dp)
+                    )
             }
         }
         isSelected -> {
@@ -377,6 +411,21 @@ fun MinimalDayCell(
                     .rotate(TodayRotationHolder.angle),
                 colorFilter = ColorFilter.tint(todayTreeRingColor)
             )
+
+            // Card punch hole in top-left corner (styled with background color and bevel rim like a stamped tag hole)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 5.dp, top = 5.dp)
+                    .size(5.5.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background)
+                    .border(
+                        width = 0.6.dp,
+                        color = if (isLightMode) Color.Black.copy(alpha = 0.28f) else Color.Black.copy(alpha = 0.22f),
+                        shape = CircleShape
+                    )
+            )
         }
 
         Box(
@@ -397,12 +446,13 @@ fun MinimalDayCell(
                     softWrap = false
                 )
             } else if (dayInfo.isToday) {
-                // Standard Mode - Today: No lunar/festival subtitle, single 40sp normal weight day number
+                // Standard Mode - Today: No lunar/festival subtitle, cursive handwritten day number
                 Text(
                     text = dayInfo.day.toString(),
                     color = todayTextColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
+                    fontSize = 24.sp,
+                    fontFamily = FontFamily.Cursive,
+                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,
