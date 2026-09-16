@@ -454,16 +454,16 @@ fun MinimalDayCell(
                     softWrap = false
                 )
             } else if (dayInfo.isToday) {
-                // Standard Mode - Today: No lunar/festival subtitle, Playfair Display handwritten day number
-                val playfairDisplayFontFamily = FontFamily(
-                    androidx.compose.ui.text.font.Font(R.font.playfair_display, FontWeight.Black)
+                // Standard Mode - Today: No lunar/festival subtitle, Abril Fatface handwritten day number
+                val abrilFatfaceFontFamily = FontFamily(
+                    androidx.compose.ui.text.font.Font(R.font.abril_fatface, FontWeight.Normal)
                 )
                 Text(
                     text = dayInfo.day.toString(),
                     color = todayTextColor,
                     fontSize = 24.sp,
-                    fontFamily = playfairDisplayFontFamily,
-                    fontWeight = FontWeight.Black,
+                    fontFamily = abrilFatfaceFontFamily,
+                    fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,

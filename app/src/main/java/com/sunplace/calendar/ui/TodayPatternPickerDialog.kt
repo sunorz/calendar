@@ -78,8 +78,8 @@ fun TodayPatternPickerDialog(
             else -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
         }
     }
-    val PlayfairDisplayFontFamily = FontFamily(
-        androidx.compose.ui.text.font.Font(R.font.playfair_display, FontWeight.Black)
+    val AbrilFatfaceFontFamily = FontFamily(
+        androidx.compose.ui.text.font.Font(R.font.abril_fatface, FontWeight.Normal)
     )
     val todayTreeRingColor = Color.White.copy(alpha = 0.55f)
     val todayTextColor = Color(0xFF000000)
@@ -212,13 +212,13 @@ fun TodayPatternPickerDialog(
                             )
                     )
 
-                    // Standard Mode - Today: No lunar/festival subtitle, cursive handwritten day number
+                    // Standard Mode - Today: No lunar/festival subtitle, Abril Fatface handwritten day number
                     Text(
                         text = dayOfMonthString,
                         color = todayTextColor,
                         fontSize = (cardSize.value * 0.48f).sp,
-                        fontFamily = PlayfairDisplayFontFamily,
-                        fontWeight = FontWeight.Black,
+                        fontFamily = AbrilFatfaceFontFamily,
+                        fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         softWrap = false,
