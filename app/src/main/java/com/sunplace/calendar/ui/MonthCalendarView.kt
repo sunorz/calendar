@@ -278,49 +278,31 @@ fun MinimalDayCell(
     // In elderly mode, cells are squarish and focus purely on huge numbers
     val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
-    // Standard Mode Today: Dynamic 3-color highlight with skeuomorphic realistic gradient
-    val todayBrush = remember(isLightMode, dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
-        if (isLightMode) {
-            when {
-                dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFF2E7D32), Color(0xFF16521B))
-                )
-                dayInfo.isRestDay -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFFC62828), Color(0xFF8E1111))
-                )
-                else -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFFB8860B), Color(0xFF7D5900))
-                )
-            }
-        } else {
-            when {
-                dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFF6EE7B7), Color(0xFF22C55E))
-                )
-                dayInfo.isRestDay -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFF8585), Color(0xFFE53935))
-                )
-                else -> Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFEF08A), Color(0xFFEAB308))
-                )
-            }
+    // Standard Mode Today: Dynamic 3-color highlight with skeuomorphic realistic gradient (unified with dark mode palette)
+    val todayBrush = remember(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
+        when {
+            dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
+                colors = listOf(Color(0xFF6EE7B7), Color(0xFF22C55E))
+            )
+            dayInfo.isRestDay -> Brush.verticalGradient(
+                colors = listOf(Color(0xFFFF8585), Color(0xFFE53935))
+            )
+            else -> Brush.verticalGradient(
+                colors = listOf(Color(0xFFFEF08A), Color(0xFFEAB308))
+            )
         }
     }
 
     // Subtle edge rim light giving the card physical thickness
-    val todayBevelBorder = remember(isLightMode) {
+    val todayBevelBorder = remember {
         Brush.verticalGradient(
-            colors = if (isLightMode) {
-                listOf(Color.White.copy(alpha = 0.40f), Color.Black.copy(alpha = 0.25f))
-            } else {
-                listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
-            }
+            colors = listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
         )
     }
 
-    val todayTreeRingColor = if (isLightMode) Color.Black.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.55f)
-    val todayTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
-    val todaySubTextColor = if (isLightMode) Color(0xFFFFFFFF) else Color(0xFF000000)
+    val todayTreeRingColor = Color.White.copy(alpha = 0.55f)
+    val todayTextColor = Color(0xFF000000)
+    val todaySubTextColor = Color(0xFF000000)
 
     // Today & Selection cell styling
     val cellModifier = when {
@@ -433,7 +415,7 @@ fun MinimalDayCell(
                         .background(MaterialTheme.colorScheme.background)
                         .border(
                             width = 0.7.dp,
-                            color = if (isLightMode) Color.Black.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.28f),
+                            color = Color.Black.copy(alpha = 0.28f),
                             shape = CircleShape
                         )
                 )
