@@ -390,8 +390,8 @@ fun MinimalDayCell(
                 Text(
                     text = dayInfo.day.toString(),
                     color = displayNumColor,
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = if (dayInfo.isToday) 23.sp else 21.sp,
+                    fontWeight = if (dayInfo.isToday) FontWeight.ExtraBold else FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false
@@ -405,13 +405,16 @@ fun MinimalDayCell(
                 }
                 val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
                 val subFontSize = when {
-                    isEn && subText.length > 7 -> 7.5.sp
-                    isEn && subText.length > 5 -> 8.sp
-                    else -> 9.sp
+                    isEn && subText.length > 7 -> if (dayInfo.isToday) 8.5.sp else 7.5.sp
+                    isEn && subText.length > 5 -> if (dayInfo.isToday) 9.sp else 8.sp
+                    else -> if (dayInfo.isToday) 10.sp else 9.sp
                 }
 
                 val cellNumColor = if (dayInfo.isToday) todayTextColor else numColor
                 val cellSubColor = if (dayInfo.isToday) todaySubTextColor else subColor
+                val dayFontSize = if (dayInfo.isToday) 17.5.sp else 15.sp
+                val dayFontWeight = if (dayInfo.isToday) FontWeight.Black else if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold
+                val subFontWeight = if (dayInfo.isToday) FontWeight.Bold else if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -420,8 +423,8 @@ fun MinimalDayCell(
                     Text(
                         text = dayInfo.day.toString(),
                         color = cellNumColor,
-                        fontSize = 15.sp,
-                        fontWeight = if (dayInfo.isRestDay || dayInfo.isToday) FontWeight.Bold else FontWeight.SemiBold,
+                        fontSize = dayFontSize,
+                        fontWeight = dayFontWeight,
                         textAlign = TextAlign.Center
                     )
 
@@ -433,7 +436,7 @@ fun MinimalDayCell(
                             text = subText.ifBlank { " " },
                             color = cellSubColor,
                             fontSize = subFontSize,
-                            fontWeight = if (dayInfo.isHolidayWithRest && !dayInfo.isToday) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = subFontWeight,
                             maxLines = 1,
                             overflow = TextOverflow.Clip,
                             softWrap = false,
