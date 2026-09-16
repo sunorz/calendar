@@ -21,11 +21,12 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.data.model.TodayPattern
-import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.util.TranslationHelper
 import java.util.Calendar
 import kotlin.math.abs
@@ -42,19 +43,6 @@ fun TodayPatternPickerDialog(
     
     val now = remember { Calendar.getInstance() }
     val dayOfMonth = now.get(Calendar.DAY_OF_MONTH)
-    
-    val lunarDate = remember(now) {
-        LunarCalculator.getLunarDate(
-            now.get(Calendar.YEAR),
-            now.get(Calendar.MONTH) + 1,
-            now.get(Calendar.DAY_OF_MONTH)
-        )
-    }
-    
-    // Use TranslationHelper's standard lunar format for consistency
-    val lunarText = remember(lunarDate) {
-        TranslationHelper.getStandardLunarDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
-    }
     
     var colorModeIndex by remember { mutableIntStateOf(0) }
     
@@ -164,9 +152,9 @@ fun TodayPatternPickerDialog(
                     modifier = Modifier
                         .width(200.dp)
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(brush = todayBrush, shape = RoundedCornerShape(12.dp))
-                        .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(12.dp)),
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(brush = todayBrush, shape = RoundedCornerShape(16.dp))
+                        .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     val cardSize = maxWidth
@@ -190,7 +178,7 @@ fun TodayPatternPickerDialog(
                     )
 
                     // hole
-                    val holeOffset = cardSize.value * 0.04f
+                    val holeOffset = cardSize.value * 0.08f
                     val holeSize = cardSize.value * 0.12f
                     Box(
                         modifier = Modifier
@@ -200,33 +188,26 @@ fun TodayPatternPickerDialog(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.background)
                             .border(
-                                width = cardSize / 250,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                width = 1.dp,
+                                color = Color.Black.copy(alpha = 0.28f),
                                 shape = CircleShape
                             )
                     )
 
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = dayOfMonth.toString(),
-                            fontSize = (cardSize.value * 0.32f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = todayTextColor,
-                            lineHeight = (cardSize.value * 0.32f).sp,
-                            letterSpacing = (-1.5).sp
+                    // Standard Mode - Today: No lunar/festival subtitle, cursive handwritten day number
+                    Text(
+                        text = dayOfMonth.toString(),
+                        color = todayTextColor,
+                        fontSize = (cardSize.value * 0.48f).sp,
+                        fontFamily = FontFamily.Cursive,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false,
+                        style = LocalTextStyle.current.copy(
+                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
                         )
-                        Text(
-                            text = lunarText,
-                            fontSize = (cardSize.value * 0.07f).sp,
-                            fontWeight = FontWeight.Medium,
-                            color = todayTextColor,
-                            modifier = Modifier.offset(y = (-4).dp)
-                        )
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
