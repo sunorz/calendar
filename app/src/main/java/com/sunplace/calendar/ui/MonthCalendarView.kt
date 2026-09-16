@@ -396,8 +396,22 @@ fun MinimalDayCell(
                     maxLines = 1,
                     softWrap = false
                 )
+            } else if (dayInfo.isToday) {
+                // Standard Mode - Today: No lunar/festival subtitle, single 40sp normal weight day number
+                Text(
+                    text = dayInfo.day.toString(),
+                    color = todayTextColor,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                    style = LocalTextStyle.current.copy(
+                        platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
+                    )
+                )
             } else {
-                // Standard Mode: Day number with lunar/festival subtitle
+                // Standard Mode - Other days: Day number with lunar/festival subtitle
                 val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
                 val subColor = when {
                     dayInfo.isHolidayWithRest -> restColor
@@ -405,16 +419,10 @@ fun MinimalDayCell(
                 }
                 val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
                 val subFontSize = when {
-                    isEn && subText.length > 7 -> if (dayInfo.isToday) 8.5.sp else 7.5.sp
-                    isEn && subText.length > 5 -> if (dayInfo.isToday) 9.sp else 8.sp
-                    else -> if (dayInfo.isToday) 10.sp else 9.sp
+                    isEn && subText.length > 7 -> 7.5.sp
+                    isEn && subText.length > 5 -> 8.sp
+                    else -> 9.sp
                 }
-
-                val cellNumColor = if (dayInfo.isToday) todayTextColor else numColor
-                val cellSubColor = if (dayInfo.isToday) todaySubTextColor else subColor
-                val dayFontSize = if (dayInfo.isToday) 17.5.sp else 15.sp
-                val dayFontWeight = if (dayInfo.isToday) FontWeight.Black else if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold
-                val subFontWeight = if (dayInfo.isToday) FontWeight.Bold else if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -422,9 +430,9 @@ fun MinimalDayCell(
                 ) {
                     Text(
                         text = dayInfo.day.toString(),
-                        color = cellNumColor,
-                        fontSize = dayFontSize,
-                        fontWeight = dayFontWeight,
+                        color = numColor,
+                        fontSize = 15.sp,
+                        fontWeight = if (dayInfo.isRestDay) FontWeight.Bold else FontWeight.SemiBold,
                         textAlign = TextAlign.Center
                     )
 
@@ -434,9 +442,9 @@ fun MinimalDayCell(
                     ) {
                         Text(
                             text = subText.ifBlank { " " },
-                            color = cellSubColor,
+                            color = subColor,
                             fontSize = subFontSize,
-                            fontWeight = subFontWeight,
+                            fontWeight = if (dayInfo.isHolidayWithRest) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 1,
                             overflow = TextOverflow.Clip,
                             softWrap = false,
