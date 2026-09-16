@@ -80,25 +80,6 @@ import com.sunplace.calendar.R
 import com.sunplace.calendar.data.model.ThemeMode
 import com.sunplace.calendar.data.model.TodayPattern
 import com.sunplace.calendar.util.TranslationHelper
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.TransformOrigin
-import kotlin.math.abs
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.key.*
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.focusable
-import android.view.KeyEvent
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 
 /**
  * Full Screen Secondary Menu / Settings Screen (全屏二级设置菜单)
@@ -668,11 +649,6 @@ fun SettingsScreen(
         }
     }
 }
-
-/**
- * 40 Traditional Chinese Auspicious Patterns Picker Dialog
- */
-
 
 /**
  * Backward compatibility alias forwarding to SettingsScreen

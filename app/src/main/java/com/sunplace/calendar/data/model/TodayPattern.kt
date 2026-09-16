@@ -67,6 +67,7 @@ enum class TodayPattern(
             category == "8瓣" -> {
                 val cleanPinyin = pinyin
                     .replace("Baban ", "")
+                    .replace("Babao ", "")
                     .replace("Bafang ", "")
                     .replace("Bajiao ", "")
                     .replace("Bamian ", "")
