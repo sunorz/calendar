@@ -60,6 +60,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -453,13 +454,16 @@ fun MinimalDayCell(
                     softWrap = false
                 )
             } else if (dayInfo.isToday) {
-                // Standard Mode - Today: No lunar/festival subtitle, cursive handwritten day number
+                // Standard Mode - Today: No lunar/festival subtitle, Playfair Display handwritten day number
+                val playfairDisplayFontFamily = FontFamily(
+                    androidx.compose.ui.text.font.Font(R.font.playfair_display, FontWeight.Black)
+                )
                 Text(
                     text = dayInfo.day.toString(),
                     color = todayTextColor,
                     fontSize = 24.sp,
-                    fontFamily = FontFamily.Cursive,
-                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = playfairDisplayFontFamily,
+                    fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,
