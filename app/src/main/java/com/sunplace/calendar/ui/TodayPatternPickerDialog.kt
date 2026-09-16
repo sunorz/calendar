@@ -119,14 +119,17 @@ fun TodayPatternPickerDialog(
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.wrapContentSize(),
+            modifier = Modifier
+                .widthIn(min = 280.dp, max = 320.dp)
+                .wrapContentHeight(),
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(32.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 28.dp)
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragEnd = {
@@ -148,19 +151,19 @@ fun TodayPatternPickerDialog(
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Fixed 200.dp x 200.dp Card
                 BoxWithConstraints(
                     modifier = Modifier
-                        .width(200.dp)
-                        .aspectRatio(1f)
+                        .size(200.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(brush = todayBrush, shape = RoundedCornerShape(16.dp))
                         .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    val cardSize = maxWidth
+                    val cardSize = 200.dp
                     val patternSize = cardSize * 1.12f
                     val centerXDp = cardSize * TodayPomegranateHolder.normCenterX
-                    val centerYDp = maxHeight * TodayPomegranateHolder.normCenterY
+                    val centerYDp = cardSize * TodayPomegranateHolder.normCenterY
 
                     Image(
                         painter = painterResource(id = currentPreviewPattern.drawableRes),
@@ -210,24 +213,35 @@ fun TodayPatternPickerDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                Text(
-                    text = currentPreviewPattern.getDisplayName(isEnglish),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Pattern Name with fixed minimum height to prevent layout jumps on wrap
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = currentPreviewPattern.getDisplayName(isEnglish),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
                     text = if (isEnglish) "Swipe to change pattern & color" else "滑动切换图案与配色",
                     fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
                     text = if (isEnglish) "Confirm" else "确定",
