@@ -59,7 +59,23 @@ enum class TodayPattern(
     BAYEFANHUA("bayefanhua", "八叶繁花", "Baye Fanhua", "8瓣", R.drawable.ic_pattern_bayefanhua);
 
     fun getDisplayName(isEnglish: Boolean): String {
-        return if (isEnglish) pinyin else title
+        if (!isEnglish) return title
+        return when {
+            pinyin.endsWith(" Wuban") -> "${pinyin.removeSuffix(" Wuban")} (5 Petals)"
+            pinyin.endsWith(" Siban") -> "${pinyin.removeSuffix(" Siban")} (4 Petals)"
+            pinyin.endsWith(" Liuban") -> "${pinyin.removeSuffix(" Liuban")} (6 Petals)"
+            category == "8瓣" -> {
+                val cleanPinyin = pinyin
+                    .replace("Baban ", "")
+                    .replace("Bafang ", "")
+                    .replace("Bajiao ", "")
+                    .replace("Bamian ", "")
+                    .replace("Baxiang ", "")
+                    .replace("Baye ", "")
+                "$cleanPinyin (8 Petals)"
+            }
+            else -> "$pinyin (${category.replace("瓣", " Petals")})"
+        }
     }
 
     companion object {

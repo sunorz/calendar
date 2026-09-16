@@ -40,15 +40,20 @@ fun TodayPatternPickerDialog(
     val isEnglish = TranslationHelper.isEnglish()
     val allPatterns = remember { TodayPattern.entries.toList() }
     
-    val cal = remember { LunarCalculator.getChinaCalendar() }
-    val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+    val now = remember { Calendar.getInstance() }
+    val dayOfMonth = now.get(Calendar.DAY_OF_MONTH)
     
-    // Using TranslationHelper to get lunar date display
-    val lunarMonth = cal.get(Calendar.MONTH) + 1
-    val lunarDay = cal.get(Calendar.DAY_OF_MONTH)
-    // Simplified lunar day text
-    val lunarText = remember(cal) {
-        TranslationHelper.getLunarMonthAndDayText(lunarMonth, lunarDay, false)
+    val lunarDate = remember(now) {
+        LunarCalculator.getLunarDate(
+            now.get(Calendar.YEAR),
+            now.get(Calendar.MONTH) + 1,
+            now.get(Calendar.DAY_OF_MONTH)
+        )
+    }
+    
+    // Use TranslationHelper's standard lunar format for consistency
+    val lunarText = remember(lunarDate) {
+        TranslationHelper.getStandardLunarDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
     }
     
     var colorModeIndex by remember { mutableIntStateOf(0) }
@@ -161,11 +166,7 @@ fun TodayPatternPickerDialog(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(brush = todayBrush, shape = RoundedCornerShape(12.dp))
-                        .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(12.dp))
-                        .clickable {
-                            onSelectPattern(currentPreviewPattern)
-                            onDismiss()
-                        },
+                        .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     val cardSize = maxWidth
@@ -189,13 +190,13 @@ fun TodayPatternPickerDialog(
                     )
 
                     // hole
-                    val holeOffset = cardSize / 25
-                    val holeSize = cardSize / 25
+                    val holeOffset = cardSize.value * 0.04f
+                    val holeSize = cardSize.value * 0.12f
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(start = holeOffset, top = holeOffset)
-                            .size(holeSize)
+                            .padding(start = holeOffset.dp, top = holeOffset.dp)
+                            .size(holeSize.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.background)
                             .border(
@@ -228,7 +229,7 @@ fun TodayPatternPickerDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     text = currentPreviewPattern.getDisplayName(isEnglish),
@@ -237,12 +238,28 @@ fun TodayPatternPickerDialog(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 
                 Text(
-                    text = if (isEnglish) "Swipe to change, Click to select" else "滑动切换图案和配色，点击卡片确定",
+                    text = if (isEnglish) "Swipe to change pattern & color" else "滑动切换图案与配色",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = if (isEnglish) "Confirm" else "确定",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            onSelectPattern(currentPreviewPattern)
+                            onDismiss()
+                        }
+                        .padding(horizontal = 24.dp, vertical = 10.dp)
                 )
             }
         }
