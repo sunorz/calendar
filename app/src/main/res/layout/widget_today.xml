@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="@drawable/bg_widget_card"
     android:gravity="center"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <!-- Chinese Layout Container -->
     <LinearLayout
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="6dp">
+            android:layout_marginTop="4dp">
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -64,7 +64,7 @@
                     android:layout_height="wrap_content"
                     android:text="1"
                     android:textColor="@color/widget_text_primary"
-                    android:textSize="58sp"
+                    android:textSize="68sp"
                     android:textStyle="bold"
                     android:includeFontPadding="false" />
                 <TextView
@@ -73,7 +73,7 @@
                     android:layout_height="wrap_content"
                     android:text="1"
                     android:textColor="@color/widget_text_red"
-                    android:textSize="58sp"
+                    android:textSize="68sp"
                     android:textStyle="bold"
                     android:includeFontPadding="false"
                     android:visibility="gone" />
@@ -135,7 +135,7 @@
                 android:layout_height="wrap_content"
                 android:text="1"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="48sp"
+                android:textSize="60sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false" />
             <TextView
@@ -144,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:text="1"
                 android:textColor="@color/widget_text_red"
-                android:textSize="48sp"
+                android:textSize="60sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:visibility="gone" />
