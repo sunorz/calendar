@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 如果是点击发布 Release，先尝试从上一版 Release 中寻找 Beta APK 直接复用（秒级完成）
-      - name: Check and Fast-Promote Beta APK for Release
+      # 1. 如果是点击发布 Release，全面搜寻最新生成的 Beta APK（包括从已有 Releases 和 GitHub Actions Artifacts）
+      - name: Check and Fast-Promote Latest Beta APK for Release
         if: github.event_name == 'release'
         id: check_beta
         env:
@@ -29,32 +29,36 @@ jobs:
           SAFE_REF=$(echo "$CURRENT_TAG" | tr '/' '-')
           TARGET_APK="release_dist/calendar-${SAFE_REF}-release.apk"
 
-          echo "Current creating release tag: $CURRENT_TAG"
-          echo "Finding previous releases (excluding current tag $CURRENT_TAG)..."
+          echo "Current release tag: $CURRENT_TAG"
+          echo "Searching for the latest Beta APK across Releases and Workflow Artifacts..."
 
-          # 列出所有已发布的 release tag，排除掉当前刚刚新建的 tag，取上一版的 tag
-          PREV_TAG=$(gh release list --limit 10 --json tagName --jq "[.[] | select(.tagName != \"$CURRENT_TAG\")] | .[0].tagName // empty")
-
-          if [ -n "$PREV_TAG" ]; then
-            echo "Found previous release tag: $PREV_TAG"
-            echo "Checking if $PREV_TAG contains a Beta APK..."
-            
-            # 从上一版 release 中下载最新的 calendar-beta-*.apk
-            if gh release download "$PREV_TAG" --pattern "calendar-beta*.apk" --dir release_dist 2>/dev/null; then
-              DOWNLOADED_BETA=$(ls release_dist/calendar-beta*.apk 2>/dev/null | head -n 1 || echo "")
-              if [ -n "$DOWNLOADED_BETA" ] && [ -f "$DOWNLOADED_BETA" ]; then
-                echo "Successfully downloaded Beta APK from previous release ($PREV_TAG): $DOWNLOADED_BETA"
-                mv "$DOWNLOADED_BETA" "$TARGET_APK"
-                
-                echo "FOUND_BETA=true" >> $GITHUB_OUTPUT
-                echo "APK_PATH=${TARGET_APK}" >> $GITHUB_ENV
-                echo "Fast promotion ready!"
-                exit 0
-              fi
+          # 1. 尝试从历史 Releases 中下载所有 calendar-beta*.apk
+          RELEASES=$(gh release list --limit 20 --json tagName --jq '.[].tagName' 2>/dev/null || echo "")
+          for TAG in $RELEASES; do
+            if [ "$TAG" != "$CURRENT_TAG" ]; then
+              gh release download "$TAG" --pattern "calendar-beta*.apk" --dir release_dist 2>/dev/null || true
             fi
+          done
+
+          # 2. 尝试从最近成功的 Workflow Runs 中检索最新的 app-release Artifacts
+          RUN_IDS=$(gh run list --status success --limit 10 --json databaseId --jq '.[].databaseId' 2>/dev/null || echo "")
+          for R_ID in $RUN_IDS; do
+            gh run download "$R_ID" --name app-release --dir "release_dist/run_${R_ID}" 2>/dev/null || true
+          done
+
+          # 3. 收集所有找到的 Beta APK，按时间戳/版本升序后取最后一个（最新）
+          LATEST_BETA=$(find release_dist -type f -name "calendar-beta*.apk" | sort -V | tail -n 1)
+
+          if [ -n "$LATEST_BETA" ] && [ -f "$LATEST_BETA" ]; then
+            echo "Found latest Beta APK: $LATEST_BETA"
+            cp "$LATEST_BETA" "$TARGET_APK"
+            echo "FOUND_BETA=true" >> $GITHUB_OUTPUT
+            echo "APK_PATH=${TARGET_APK}" >> $GITHUB_ENV
+            echo "Successfully promoted latest Beta APK to release!"
+            exit 0
           fi
-          
-          echo "No Beta APK found in previous release or download failed. Falling back to full Gradle compilation..."
+
+          echo "No Beta APK found across releases or artifacts. Falling back to full Gradle compilation..."
           echo "FOUND_BETA=false" >> $GITHUB_OUTPUT
 
       # 2. 只有当没有找到 Beta 包（或普通 Push/Dispatch）时，才执行耗时的 JDK/Gradle 编译构建流程
