@@ -64,24 +64,23 @@ fun TodayPatternPickerDialog(
             0 -> Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
             1 -> Brush.verticalGradient(listOf(Color(0xFFFF8585), Color(0xFFE53935)))
             2 -> Brush.verticalGradient(listOf(Color(0xFF6EE7B7), Color(0xFF22C55E)))
-            3 -> Brush.verticalGradient(listOf(Color(0xFFFFCC33), Color(0xFFFFCC33)))
             else -> Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
         }
     }
     
-    val todayBevelBorder = remember(colorModeIndex) {
-        when (colorModeIndex) {
-            0 -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-            1 -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-            2 -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-            3 -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-            else -> Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-        }
+    val todayBevelBorder = remember {
+        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
     }
     val AbrilFatfaceFontFamily = FontFamily(
         androidx.compose.ui.text.font.Font(R.font.abril_fatface, FontWeight.Normal)
     )
-    val todayTreeRingColor = Color.White.copy(alpha = 0.55f)
+    val todayTreeRingColor = remember(colorModeIndex) {
+        if (colorModeIndex == 0) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.White.copy(alpha = 0.55f)
+        }
+    }
     val todayTextColor = Color(0xFF000000)
 
     val focusRequester = remember { FocusRequester() }
@@ -102,11 +101,11 @@ fun TodayPatternPickerDialog(
     }
 
     fun nextColor() {
-        colorModeIndex = (colorModeIndex + 1) % 4
+        colorModeIndex = (colorModeIndex + 1) % 3
     }
 
     fun prevColor() {
-        colorModeIndex = if (colorModeIndex - 1 < 0) 3 else colorModeIndex - 1
+        colorModeIndex = if (colorModeIndex - 1 < 0) 2 else colorModeIndex - 1
     }
 
     AlertDialog(

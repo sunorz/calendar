@@ -309,7 +309,13 @@ fun MinimalDayCell(
         )
     }
 
-    val todayTreeRingColor = Color.White.copy(alpha = 0.55f)
+    val todayTreeRingColor = remember(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
+        if (!dayInfo.isExplicitLocaleHoliday && !dayInfo.isRestDay) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.White.copy(alpha = 0.55f)
+        }
+    }
     val todayTextColor = Color(0xFF000000)
     val todaySubTextColor = todayTextColor
 
