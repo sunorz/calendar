@@ -203,10 +203,10 @@ fun TodayPatternPickerDialog(
                             .padding(start = holeOffset.dp, top = holeOffset.dp)
                             .size(holeSize.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
+                            .background(MaterialTheme.colorScheme.background)
                             .border(
-                                width = 0.8.dp,
-                                brush = todayBevelBorder,
+                                width = 0.7.dp,
+                                color = Color.Black.copy(alpha = 0.28f),
                                 shape = CircleShape
                             )
                     )
