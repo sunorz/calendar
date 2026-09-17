@@ -205,8 +205,8 @@ fun TodayPatternPickerDialog(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.background)
                             .border(
-                                width = 0.7.dp,
-                                color = Color.Black.copy(alpha = 0.28f),
+                                width = 0.8.dp,
+                                brush = todayBevelBorder,
                                 shape = CircleShape
                             )
                     )
