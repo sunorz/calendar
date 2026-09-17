@@ -3,6 +3,8 @@ package com.sunplace.calendar.ui
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sunplace.calendar.data.model.CalendarConfig
@@ -15,6 +17,7 @@ import com.sunplace.calendar.data.repository.ThemePreferences
 import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
 import com.sunplace.calendar.widget.TodayAppWidgetProvider
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +27,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Calendar
 
 data class MonthItem(
@@ -161,18 +169,92 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun downloadAndUpdate() {
-        val newVer = _remoteVersion.value ?: "0.7.12"
+        if (_isDownloading.value) return
+        val newVer = _remoteVersion.value ?: return
         val baseDownloadUrl = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", android.util.Base64.DEFAULT))
         val endDownloadUrl = String(android.util.Base64.decode("LXJlbGVhc2UuYXBr", android.util.Base64.DEFAULT))
         val timestamp = System.currentTimeMillis() / 1000
         val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl?d=$timestamp"
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        viewModelScope.launch {
+            _isDownloading.value = true
+            _downloadProgress.value = 0f
+            val context = getApplication<Application>()
+            val downloadedFile = withContext(Dispatchers.IO) {
+                try {
+                    val url = URL(downloadUrl)
+                    val connection = (url.openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 15000
+                        readTimeout = 30000
+                        instanceFollowRedirects = true
+                        requestMethod = "GET"
+                    }
+                    connection.connect()
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                        return@withContext null
+                    }
+                    val fileLength = connection.contentLength
+                    val targetDir = context.externalCacheDir ?: context.cacheDir
+                    // 清理旧安装包，保持私有缓存干净不残留
+                    targetDir.listFiles { _, name -> name.startsWith("update_") && name.endsWith(".apk") }
+                        ?.forEach { it.delete() }
+                    val file = File(targetDir, "update_v${newVer}.apk")
+
+                    connection.inputStream.use { input ->
+                        FileOutputStream(file).use { output ->
+                            val buffer = ByteArray(8192)
+                            var total: Long = 0
+                            var count: Int
+                            while (input.read(buffer).also { count = it } != -1) {
+                                total += count
+                                if (fileLength > 0) {
+                                    _downloadProgress.value = total.toFloat() / fileLength
+                                }
+                                output.write(buffer, 0, count)
+                            }
+                            output.flush()
+                        }
+                    }
+                    file
+                } catch (e: Exception) {
+                    null
+                }
             }
-            getApplication<Application>().startActivity(intent)
-        } catch (e: Exception) {
-            // fallback
+
+            _isDownloading.value = false
+            if (downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0) {
+                installApk(context, downloadedFile)
+            } else {
+                // Fallback to browser if network direct download fails
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (_: Exception) { }
+            }
+        }
+    }
+
+    private fun installApk(context: Application, apkFile: File) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        apkFile
+                    )
+                } else {
+                    Uri.fromFile(apkFile)
+                }
+                setDataAndType(uri, "application/vnd.android.package-archive")
+            }
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            // Fallback
         }
     }
 
