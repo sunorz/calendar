@@ -594,36 +594,17 @@ fun SettingsScreen(
                                         if (isDownloading) {
                                             LinearProgressIndicator(
                                                 progress = { downloadProgress },
-                                                modifier = Modifier.width(48.dp).height(4.dp).clip(RoundedCornerShape(2.dp))
+                                                modifier = Modifier.width(36.dp).height(4.dp).clip(RoundedCornerShape(2.dp))
                                             )
                                         } else {
-                                            Surface(
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = MaterialTheme.colorScheme.primaryContainer,
-                                                border = androidx.compose.foundation.BorderStroke(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                                                )
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(12.dp)
-                                                    )
-                                                    Text(
-                                                        text = "v$remoteVersion 升级",
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = MaterialTheme.colorScheme.primary
-                                                    )
-                                                }
-                                            }
+                                            Icon(
+                                                imageVector = Icons.Default.SystemUpdate,
+                                                contentDescription = "升级",
+                                                tint = androidx.compose.ui.graphics.Color(0xFF22C55E),
+                                                modifier = Modifier
+                                                    .size(18.dp)
+                                                    .clickable { onDownloadUpdate() }
+                                            )
                                         }
                                     }
                                 }
