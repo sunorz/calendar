@@ -406,8 +406,8 @@ fun MinimalDayCell(
             val patternSize = maxOf(maxWidth, maxHeight) * 1.12f
 
             // 计算纹样的几何中心坐标（落在卡片内部核心区间）
-            val centerXDp = maxWidth * TodayPomegranateHolder.normCenterX
-            val centerYDp = maxHeight * TodayPomegranateHolder.normCenterY
+            val centerXDp = maxWidth * TodayPatternHolder.normCenterX
+            val centerYDp = maxHeight * TodayPatternHolder.normCenterY
 
             // 图层 1: 今日祥纹图案（使用 graphicsLayer 像素级精确居中与 0~180° 旋转，边缘由卡片 clip 自然裁剪）
             Image(

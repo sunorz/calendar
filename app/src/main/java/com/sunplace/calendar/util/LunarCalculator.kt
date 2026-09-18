@@ -475,11 +475,7 @@ object LunarCalculator {
 
         val result = ArrayList<DayInfo>(daysInMonth)
         
-        val currentYear = mainConfig.curYear
-        val nextYear = if (nextConfig != null) nextConfig.curYear else (currentYear + 1)
-
-        val isCurrentYear = (year == currentYear)
-        val isNextYear = (year == nextYear || (nextConfig != null && year == nextConfig.curYear))
+        val yearConfig = mainConfig.getYearConfig(year) ?: nextConfig?.getYearConfig(year)
 
         // Calculate day of week for day 1 once outside the loop to eliminate GC overhead
         val firstCalDow = getChinaCalendar().apply {
@@ -504,45 +500,21 @@ object LunarCalculator {
             var isExplicitLocale: Boolean = false
             var localeName: String? = null
 
-            when {
-                isCurrentYear -> {
-                    // 1. 今年（主配置年份）：完全依照 mainConfig
-                    isRest = mainConfig.isRestDay(month, d)
-                    if (showGuangxiSanyuesan) {
-                        isLocale = mainConfig.isLocaleHoliday(month, d)
-                        isExplicitLocale = mainConfig.isExplicitLocaleHoliday(month, d)
-                        if (isLocale) {
-                            localeName = "三月三假日"
-                        }
+            if (yearConfig != null) {
+                // 1. 命中年份：完全依照配置（restDays 为休息日红字，其余为工作日黑字）
+                isRest = yearConfig.isRestDay(month, d)
+                if (showGuangxiSanyuesan) {
+                    isLocale = yearConfig.isLocaleHoliday(month, d)
+                    isExplicitLocale = yearConfig.isExplicitLocaleHoliday(month, d)
+                    if (isLocale) {
+                        localeName = "三月三假日"
                     }
                 }
-                isNextYear -> {
-                    // 2. 明年（命中 next 的 curYear，即今年+1）：
-                    // 通用业务规则：
-                    // A. 首先清空明年的所有双休规则（所有日期全部还原成工作日，默认全黑）
-                    // B. 再根据请求到的 next 结果来重新确定休息日
-                    if (nextConfig != null && nextConfig.curYear == year) {
-                        isRest = nextConfig.isRestDay(month, d)
-                        if (showGuangxiSanyuesan) {
-                            isLocale = nextConfig.isLocaleHoliday(month, d)
-                            isExplicitLocale = nextConfig.isExplicitLocaleHoliday(month, d)
-                            if (isLocale) {
-                                localeName = "三月三假日"
-                            }
-                        }
-                    } else {
-                        // 次年尚未加载或未配置：清空所有双休规则，所有日期均作为工作日显示
-                        isRest = false
-                        isLocale = false
-                        isExplicitLocale = false
-                    }
-                }
-                else -> {
-                    // 3. 其他非配置年份：常规双休
-                    isRest = (dow == 6 || dow == 7)
-                    isLocale = false
-                    isExplicitLocale = false
-                }
+            } else {
+                // 2. 未命中年份：保持周六和周日红色（休息日），其他日期黑色（工作日）
+                isRest = (dow == 6 || dow == 7)
+                isLocale = false
+                isExplicitLocale = false
             }
 
             val festivalParts = mutableListOf<String>()

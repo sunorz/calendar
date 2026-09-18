@@ -176,8 +176,8 @@ fun TodayPatternPickerDialog(
                 ) {
                     val cardSize = 200.dp
                     val patternSize = cardSize * 1.12f
-                    val centerXDp = cardSize * TodayPomegranateHolder.normCenterX
-                    val centerYDp = cardSize * TodayPomegranateHolder.normCenterY
+                    val centerXDp = cardSize * TodayPatternHolder.normCenterX
+                    val centerYDp = cardSize * TodayPatternHolder.normCenterY
 
                     Image(
                         painter = painterResource(id = currentPreviewPattern.drawableRes),

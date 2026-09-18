@@ -46,24 +46,27 @@ class CalendarConfigTest {
 
     /**
      * User requirement verification:
-     * For May 2027 (next year):
-     * 1. Next config has restDays for month 5: [1, 2, 3]
-     * 2. All weekends in 2027 must be cleared from default rest rules (turned into work days/black).
-     * 3. Only 1~3 are rest days (red), 4~31 are all work days (black), including weekends (8, 9, 15, 16, 22, 23, 29, 30).
+     * 1. Configured year (e.g. 2027 in config):
+     *    Next config has restDays for month 5: [1, 2, 3]
+     *    Only 1~3 are rest days (red), 4~31 are all work days (black), including regular weekends (8, 9, 15, 16, etc).
      */
     @Test
     fun testMay2027RestDaysOnly1To3And4To31AllBlack() {
-        val mainConfig = CalendarConfig(curYear = 2026)
-        val nextConfig = CalendarConfig(
-            curYear = 2027,
-            restDays = listOf(
-                RestDayMonth(m = 1, d = listOf(1)),
-                RestDayMonth(m = 5, d = listOf(1, 2, 3)),
-                RestDayMonth(m = 10, d = listOf(1, 2, 3, 4, 5, 6, 7))
+        val mainConfig = CalendarConfig(
+            curYear = 2026,
+            yearlyConfigs = mapOf(
+                2027 to com.sunplace.calendar.data.model.YearConfig(
+                    year = 2027,
+                    restDays = listOf(
+                        RestDayMonth(m = 1, d = listOf(1)),
+                        RestDayMonth(m = 5, d = listOf(1, 2, 3)),
+                        RestDayMonth(m = 10, d = listOf(1, 2, 3, 4, 5, 6, 7))
+                    )
+                )
             )
         )
 
-        val days = LunarCalculator.getMonthDays(2027, 5, mainConfig, nextConfig)
+        val days = LunarCalculator.getMonthDays(2027, 5, mainConfig)
         assertEquals(31, days.size)
 
         // Days 1, 2, 3 must be rest days (isRestDay = true, red)
@@ -82,10 +85,6 @@ class CalendarConfigTest {
         }
 
         // Specifically assert the weekends in May 2027:
-        // 2027-05-08 (Saturday), 2027-05-09 (Sunday)
-        // 2027-05-15 (Saturday), 2027-05-16 (Sunday)
-        // 2027-05-22 (Saturday), 2027-05-23 (Sunday)
-        // 2027-05-29 (Saturday), 2027-05-30 (Sunday)
         val weekendDays = listOf(8, 9, 15, 16, 22, 23, 29, 30)
         for (w in weekendDays) {
             val dayInfo = days[w - 1]
@@ -94,20 +93,91 @@ class CalendarConfigTest {
     }
 
     /**
-     * Test when nextConfig is not yet loaded for 2027 (currentYear + 1):
-     * All weekends should still be reset to work days (all black).
+     * User requirement verification:
+     * Unconfigured year (未命中年份):
+     * "未命中年份，保持周六和周日红色，其他日期黑色"
+     * Weekends (Saturday=6, Sunday=7) must be Rest days (Red).
+     * Weekdays (Monday..Friday) must be Work days (Black).
      */
     @Test
-    fun testMay2027WithoutNextConfigDefaultsAllWorkDays() {
+    fun testUnconfiguredYearDefaultsWeekendsRedAndWeekdaysBlack() {
         val mainConfig = CalendarConfig(curYear = 2026)
-        val days = LunarCalculator.getMonthDays(2027, 5, mainConfig, nextConfig = null)
+        // 2028 is unconfigured in mainConfig
+        val daysMay2028 = LunarCalculator.getMonthDays(2028, 5, mainConfig)
+        assertEquals(31, daysMay2028.size)
 
-        for (dayInfo in days) {
-            assertFalse(
-                "In next year without config, all days must be cleared to work days, but day ${dayInfo.day} was rest",
-                dayInfo.isRestDay
-            )
+        for (dayInfo in daysMay2028) {
+            val isWeekend = (dayInfo.dayOfWeekNumber == 6 || dayInfo.dayOfWeekNumber == 7)
+            if (isWeekend) {
+                assertTrue("Unconfigured year weekend (day ${dayInfo.day}) must be RED (rest day)", dayInfo.isRestDay)
+            } else {
+                assertFalse("Unconfigured year weekday (day ${dayInfo.day}) must be BLACK (work day)", dayInfo.isRestDay)
+            }
         }
+    }
+
+    /**
+     * Test single-file multi-year JSON format (android-app.json):
+     * e.g. {"localeFestivals": {"26": [...], "27": [...]}, "restDays": {"26": [...], "27": [...]}}
+     */
+    @Test
+    fun testSingleFileMultiYearJsonParsing() {
+        val multiYearJson = """
+        {
+            "localeFestivals": {
+                "26": [{"m": 4, "d": [17, 20]}],
+                "27": [{"m": 4, "d": [16, 19]}]
+            },
+            "restDays": {
+                "26": [
+                    {"m": 1, "d": [1, 2, 3]},
+                    {"m": 5, "d": [1, 2, 3, 4, 5]}
+                ],
+                "27": [
+                    {"m": 1, "d": [1]},
+                    {"m": 5, "d": [1, 2, 3]}
+                ]
+            }
+        }
+        """.trimIndent()
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val repository = CalendarRepository(context)
+        val config = repository.parseConfigJson(multiYearJson)
+
+        assertNotNull(config)
+        assertTrue(config!!.hasYearConfig(2026))
+        assertTrue(config.hasYearConfig(2027))
+        assertFalse(config.hasYearConfig(2028))
+
+        // 2026 config verification
+        val cfg2026 = config.getYearConfig(2026)
+        assertNotNull(cfg2026)
+        assertTrue(cfg2026!!.isRestDay(5, 1))
+        assertTrue(cfg2026.isRestDay(5, 5))
+        assertFalse(cfg2026.isRestDay(5, 6))
+
+        // 2027 config verification
+        val cfg2027 = config.getYearConfig(2027)
+        assertNotNull(cfg2027)
+        assertTrue(cfg2027!!.isRestDay(5, 1))
+        assertTrue(cfg2027.isRestDay(5, 3))
+        assertFalse(cfg2027.isRestDay(5, 4))
+        assertTrue(cfg2027.isExplicitLocaleHoliday(4, 16))
+        assertTrue(cfg2027.isExplicitLocaleHoliday(4, 19))
+
+        // In 2027 calendar rendering:
+        val days2027May = LunarCalculator.getMonthDays(2027, 5, config)
+        assertTrue("2027-05-01 is rest", days2027May[0].isRestDay)
+        assertTrue("2027-05-03 is rest", days2027May[2].isRestDay)
+        assertFalse("2027-05-04 is workday", days2027May[3].isRestDay)
+
+        // In 2028 unconfigured calendar rendering:
+        val days2028May = LunarCalculator.getMonthDays(2028, 5, config)
+        val may6_2028 = days2028May.find { it.day == 6 }!! // Saturday in 2028-05
+        val may5_2028 = days2028May.find { it.day == 5 }!! // Friday in 2028-05
+        assertTrue("2028 Saturday must be Red (rest)", may6_2028.isRestDay)
+        assertFalse("2028 Friday must be Black (workday)", may5_2028.isRestDay)
     }
 
     /**
@@ -332,7 +402,6 @@ class CalendarConfigTest {
         val jsonWithMonth14AndDay32 = """
         {
             "curYear": 2026,
-            "startWeek": 4,
             "restDays": [
                 {"m": 14, "d": [1, 2, 3]},
                 {"m": 5, "d": [1, 2, 32, 99, 3]}
@@ -340,16 +409,6 @@ class CalendarConfigTest {
             "localeFestivals": [
                 {"m": 14, "d": [17, 20]},
                 {"m": 4, "d": [17, 32, 18]}
-            ],
-            "Festivals": [
-                {"date": "14-5", "name": "无效14月节"},
-                {"date": "5-32", "name": "无效32日节"},
-                {"date": "5-1", "name": "劳动节", "tag": 1}
-            ],
-            "lunarFestivals": [
-                {"date": "14-1", "name": "无效14月农历节"},
-                {"date": "1-35", "name": "无效35日农历节"},
-                {"date": "1-29", "name": "除夕", "tag": 0}
             ]
         }
         """.trimIndent()
@@ -373,16 +432,6 @@ class CalendarConfigTest {
         assertEquals(listOf(17, 18), aprLocale?.d)
         assertFalse("Day 32 must be ignored", aprLocale?.d?.contains(32) == true)
         assertNull("Month 14 must be ignored", config?.localeFestivals?.find { it.m == 14 })
-
-        // 3. Festivals: 14-5 and 5-32 must be silently ignored, only 5-1 remains
-        assertEquals(1, config?.festivals?.size)
-        assertEquals("5-1", config?.festivals?.get(0)?.date)
-        assertEquals("劳动节", config?.festivals?.get(0)?.name)
-
-        // 4. lunarFestivals: 14-1 and 1-35 must be silently ignored, only 1-29 remains
-        assertEquals(1, config?.lunarFestivals?.size)
-        assertEquals("1-29", config?.lunarFestivals?.get(0)?.date)
-        assertEquals("除夕", config?.lunarFestivals?.get(0)?.name)
     }
 
     /**
@@ -422,7 +471,6 @@ class CalendarConfigTest {
         assertNotNull("Main config must not be null even without network/cache", mainConfig)
         assertEquals(2026, mainConfig.curYear)
         assertTrue("Embedded 2026 config must have restDays", mainConfig.restDays.isNotEmpty())
-        assertTrue("Embedded 2026 config must have festivals", mainConfig.festivals.isNotEmpty())
 
         assertNotNull("Next config must not be null even without network/cache", nextConfig)
         assertEquals(2027, nextConfig?.curYear)
@@ -441,8 +489,6 @@ class CalendarConfigTest {
         val dirtyJson = """
         {
             "curYear": 2026,
-            "startWeek": 4,
-            "monthsLimit": [31, 28, 31],
             "restDays": [
                 {"m": 1, "d": [1, 2, 3]},
                 "corrupted_element",

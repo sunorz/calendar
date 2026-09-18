@@ -45,9 +45,6 @@ object TodayPatternHolder {
     var angle: Float = kotlin.random.Random.nextFloat() * 180f
         private set
 
-    // Normalized center position within card: [0.22f .. 0.78f]
-    // Ensures the pattern's center floats dynamically across the card without getting pushed too far out,
-    // so the main body of the pattern is always beautifully visible and naturally clipped at edges.
     var normCenterX: Float = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
         private set
 
@@ -59,24 +56,6 @@ object TodayPatternHolder {
         normCenterX = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
         normCenterY = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
     }
-}
-
-object TodayPomegranateHolder {
-    val angle: Float
-        get() = TodayPatternHolder.angle
-
-    val normCenterX: Float
-        get() = TodayPatternHolder.normCenterX
-
-    val normCenterY: Float
-        get() = TodayPatternHolder.normCenterY
-
-    fun randomize() = TodayPatternHolder.randomize()
-}
-
-object TodayRotationHolder {
-    val angle: Float
-        get() = TodayPatternHolder.angle
 }
 
 class CalendarViewModel(application: Application) : AndroidViewModel(application) {
@@ -136,7 +115,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
 
     init {
-        TodayPomegranateHolder.randomize()
+        TodayPatternHolder.randomize()
         syncAllConfigs()
         checkVersion()
         viewModelScope.launch {

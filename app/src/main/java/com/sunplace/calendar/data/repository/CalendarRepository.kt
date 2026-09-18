@@ -3,9 +3,9 @@ package com.sunplace.calendar.data.repository
 import android.content.Context
 import android.util.Log
 import com.sunplace.calendar.data.model.CalendarConfig
-import com.sunplace.calendar.data.model.FestivalItem
 import com.sunplace.calendar.data.model.LocaleFestivalItem
 import com.sunplace.calendar.data.model.RestDayMonth
+import com.sunplace.calendar.data.model.YearConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +29,7 @@ class CalendarRepository(private val context: Context) {
 
     companion object {
         val DEFAULT_CONFIG_URL: String
-            get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9jb25maWcuanNvbg==", android.util.Base64.DEFAULT))
+            get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9hbmRyb2lkLWFwcC5qc29u", android.util.Base64.DEFAULT))
 
         val NEXT_CONFIG_URL: String
             get() = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hc3NldHMvanMvY2Fscy9jb25maWctbmV4dC5qc29u", android.util.Base64.DEFAULT))
@@ -45,11 +45,9 @@ class CalendarRepository(private val context: Context) {
         private const val KEY_APP_VERSION = "app_version_override"
         private const val TAG = "CalendarRepository"
 
-        // Embedded initial fallback for current year (2026) so it is instantly available offline or before first network call
-        private const val EMBEDDED_CONFIG_JSON = """{"curYear":2026,"startWeek":4,"monthsLimit":[31,28,31,30,31,30,31,31,30,31,30,31],"lunarStart":[0,13],"lunarMonth":[11,12,1,2,3,4,5,6,7,8,9,10,11],"lunarMonthLimit":[30,29,30,29,30,29,29,30,29,29,30,30,30],"lunarFestivals":[{"date":"0-17","name":"小寒","tag":0},{"date":"1-2","name":"大寒","tag":0},{"date":"1-8","name":"腊八节","tag":0},{"date":"1-17","name":"立春","tag":0},{"date":"1-23","name":"北方小年","tag":0},{"date":"1-24","name":"南方小年","tag":0},{"date":"1-29","name":"除夕","tag":0},{"date":"2-2","name":"雨水","tag":0},{"date":"2-15","name":"元宵节","tag":0},{"date":"3-2","name":"龙抬头","tag":0},{"date":"3-18","name":"清明节","tag":1},{"date":"4-4","name":"谷雨","tag":0},{"date":"4-19","name":"立夏","tag":0},{"date":"5-5","name":"小满","tag":0},{"date":"5-20","name":"芒种","tag":0},{"date":"6-5","name":"端午节","tag":1},{"date":"6-7","name":"夏至","tag":0},{"date":"6-23","name":"小暑","tag":0},{"date":"7-10","name":"大暑","tag":0},{"date":"7-25","name":"立秋","tag":0},{"date":"8-7","name":"七夕节","tag":0},{"date":"8-11","name":"处暑","tag":0},{"date":"8-15","name":"中元节","tag":0},{"date":"8-26","name":"白露","tag":0},{"date":"9-13","name":"秋分","tag":0},{"date":"9-15","name":"中秋节","tag":1},{"date":"9-28","name":"寒露","tag":0},{"date":"10-9","name":"重阳节","tag":0},{"date":"10-14","name":"霜降","tag":0},{"date":"10-29","name":"立冬","tag":0},{"date":"11-14","name":"小雪","tag":0},{"date":"11-29","name":"大雪","tag":0},{"date":"12-14","name":"冬至","tag":0}],"Festivals":[{"date":"1-10","name":"警察节","tag":0},{"date":"2-14","name":"情人节","tag":0},{"date":"3-5","name":"学雷锋日","tag":0},{"date":"3-8","name":"妇女节","tag":0},{"date":"3-12","name":"植树节","tag":0},{"date":"3-15","name":"消费者日","tag":0},{"date":"4-1","name":"愚人节","tag":0},{"date":"4-20","name":"复活节","tag":0},{"date":"5-1","name":"劳动节","tag":1},{"date":"5-4","name":"青年节","tag":0},{"date":"5-10","name":"母亲节","tag":0},{"date":"6-1","name":"儿童节","tag":0},{"date":"6-16","name":"父亲节","tag":0},{"date":"7-1","name":"建党节","tag":0},{"date":"8-1","name":"建军节","tag":0},{"date":"9-10","name":"教师节","tag":0},{"date":"10-1","name":"国庆节","tag":1},{"date":"10-31","name":"万圣夜","tag":0},{"date":"11-1","name":"万圣节","tag":0},{"date":"11-11","name":"购物节","tag":0},{"date":"11-26","name":"感恩节","tag":0},{"date":"12-1","name":"艾滋病日","tag":0},{"date":"12-20","name":"澳门回归","tag":0},{"date":"12-24","name":"平安夜","tag":0},{"date":"12-25","name":"圣诞节","tag":0}],"localeFestivals":[{"m":4,"d":[17,20]}],"restDays":[{"m":1,"d":[1,2,3,10,11,17,18,24,25,31]},{"m":2,"d":[1,7,8,15,16,17,18,19,20,21,22,23]},{"m":3,"d":[1,7,8,14,15,21,22,28,29]},{"m":4,"d":[4,5,6,11,12,18,19,25,26]},{"m":5,"d":[1,2,3,4,5,10,16,17,23,24,30,31]},{"m":6,"d":[6,7,13,14,19,20,21,27,28]},{"m":7,"d":[4,5,11,12,18,19,25,26]},{"m":8,"d":[1,2,8,9,15,16,22,23,29,30]},{"m":9,"d":[5,6,12,13,19,25,26,27]},{"m":10,"d":[1,2,3,4,5,6,7,11,17,18,24,25,31]},{"m":11,"d":[1,7,8,14,15,21,22,28,29]},{"m":12,"d":[5,6,12,13,19,20,26,27]}]}"""
+        private const val EMBEDDED_CONFIG_JSON = """{"curYear":2026,"localeFestivals":{"26":[{"m":4,"d":[17,20]}],"27":[{"m":4,"d":[16,19]}]},"restDays":{"26":[{"m":1,"d":[1,2,3,10,11,17,18,24,25,31]},{"m":2,"d":[1,7,8,15,16,17,18,19,20,21,22,23]},{"m":3,"d":[1,7,8,14,15,21,22,28,29]},{"m":4,"d":[4,5,6,11,12,18,19,25,26]},{"m":5,"d":[1,2,3,4,5,10,16,17,23,24,30,31]},{"m":6,"d":[6,7,13,14,19,20,21,27,28]},{"m":7,"d":[4,5,11,12,18,19,25,26]},{"m":8,"d":[1,2,8,9,15,16,22,23,29,30]},{"m":9,"d":[5,6,12,13,19,25,26,27]},{"m":10,"d":[1,2,3,4,5,6,7,11,17,18,24,25,31]},{"m":11,"d":[1,7,8,14,15,21,22,28,29]},{"m":12,"d":[5,6,12,13,19,20,26,27]}],"27":[{"m":1,"d":[1,2,3]},{"m":2,"d":[6,7,8,9,10,11]},{"m":3,"d":[]},{"m":4,"d":[]},{"m":5,"d":[1,2,3,4,5]},{"m":6,"d":[]},{"m":7,"d":[]},{"m":8,"d":[]},{"m":9,"d":[]},{"m":10,"d":[1,2,3,4,5,6,7]},{"m":11,"d":[]},{"m":12,"d":[]}]}}"""
 
-        // Embedded initial fallback for next year (2027) so it is instantly available offline or before first network call
-        private const val EMBEDDED_NEXT_CONFIG_JSON = """{"curYear":2027,"startWeek":5,"monthsLimit":[31,28,31,30,31,30,31,31,30,31,30,31],"lunarStart":[0,24],"lunarMonth":[11,12,1,2,3,4,5,6,7,8,9,10,11],"lunarMonthLimit":[30,29,30,29,30,29,29,30,29,29,30,30,30],"lunarFestivals":[{"date":"0-28","name":"小寒","tag":0},{"date":"1-2","name":"大寒","tag":0},{"date":"1-8","name":"腊八节","tag":0},{"date":"1-17","name":"立春","tag":0},{"date":"1-23","name":"北方小年","tag":0},{"date":"1-24","name":"南方小年","tag":0},{"date":"1-29","name":"除夕","tag":0},{"date":"2-2","name":"雨水","tag":0},{"date":"2-15","name":"元宵节","tag":0},{"date":"3-2","name":"龙抬头","tag":0},{"date":"3-18","name":"清明节","tag":1},{"date":"4-4","name":"谷雨","tag":0},{"date":"4-19","name":"立夏","tag":0},{"date":"5-5","name":"小满","tag":0},{"date":"5-20","name":"芒种","tag":0},{"date":"6-5","name":"端午节","tag":1},{"date":"6-7","name":"夏至","tag":0},{"date":"6-23","name":"小暑","tag":0},{"date":"7-10","name":"大暑","tag":0},{"date":"7-25","name":"立秋","tag":0},{"date":"8-7","name":"七夕节","tag":0},{"date":"8-11","name":"处暑","tag":0},{"date":"8-15","name":"中元节","tag":0},{"date":"8-26","name":"白露","tag":0},{"date":"9-13","name":"秋分","tag":0},{"date":"9-15","name":"中秋节","tag":1},{"date":"9-28","name":"寒露","tag":0},{"date":"10-9","name":"重阳节","tag":0},{"date":"10-14","name":"霜降","tag":0},{"date":"10-29","name":"立冬","tag":0},{"date":"11-14","name":"小雪","tag":0},{"date":"11-29","name":"大雪","tag":0},{"date":"12-14","name":"冬至","tag":0}],"Festivals":[{"date":"1-10","name":"警察节","tag":0},{"date":"2-14","name":"情人节","tag":0},{"date":"3-5","name":"学雷锋日","tag":0},{"date":"3-8","name":"妇女节","tag":0},{"date":"3-12","name":"植树节","tag":0},{"date":"3-15","name":"消费者日","tag":0},{"date":"4-1","name":"愚人节","tag":0},{"date":"4-20","name":"复活节","tag":0},{"date":"5-1","name":"劳动节","tag":1},{"date":"5-4","name":"青年节","tag":0},{"date":"5-10","name":"母亲节","tag":0},{"date":"6-1","name":"儿童节","tag":0},{"date":"6-16","name":"父亲节","tag":0},{"date":"7-1","name":"建党节","tag":0},{"date":"8-1","name":"建军节","tag":0},{"date":"9-10","name":"教师节","tag":0},{"date":"10-1","name":"国庆节","tag":1},{"date":"10-31","name":"万圣夜","tag":0},{"date":"11-1","name":"万圣节","tag":0},{"date":"11-11","name":"购物节","tag":0},{"date":"11-26","name":"感恩节","tag":0},{"date":"12-1","name":"艾滋病日","tag":0},{"date":"12-20","name":"澳门回归","tag":0},{"date":"12-24","name":"平安夜","tag":0},{"date":"12-25","name":"圣诞节","tag":0}],"localeFestivals":[{"m":4,"d":[9]}],"restDays":[{"m":1,"d":[1]},{"m":2,"d":[6]},{"m":3,"d":[]},{"m":4,"d":[5]},{"m":5,"d":[1,2,3]},{"m":6,"d":[]},{"m":7,"d":[]},{"m":8,"d":[]},{"m":9,"d":[15]},{"m":10,"d":[1,2,3,4,5,6,7]},{"m":11,"d":[]},{"m":12,"d":[]}]}"""
+        private const val EMBEDDED_NEXT_CONFIG_JSON = """{"curYear":2027,"localeFestivals":[{"m":4,"d":[16,19]}],"restDays":[{"m":1,"d":[1,2,3]},{"m":2,"d":[6,7,8,9,10,11]},{"m":3,"d":[]},{"m":4,"d":[]},{"m":5,"d":[1,2,3,4,5]},{"m":6,"d":[]},{"m":7,"d":[]},{"m":8,"d":[]},{"m":9,"d":[]},{"m":10,"d":[1,2,3,4,5,6,7]},{"m":11,"d":[]},{"m":12,"d":[]}]}"""
     }
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -235,7 +233,17 @@ class CalendarRepository(private val context: Context) {
                     .apply()
 
                 _configState.value = config
-                _syncState.value = SyncState.Success("配置已同步 (${config.curYear}年)", now)
+                val nextYear = config.curYear + 1
+                val nextYearConfig = config.getYearConfig(nextYear)
+                if (nextYearConfig != null) {
+                    _nextYearConfigState.value = CalendarConfig(
+                        curYear = nextYear,
+                        restDays = nextYearConfig.restDays,
+                        localeFestivals = nextYearConfig.localeFestivals,
+                        yearlyConfigs = config.yearlyConfigs
+                    )
+                }
+                _syncState.value = SyncState.Success("配置已同步", now)
                 
                 Result.success(config)
             } catch (e: Exception) {
@@ -306,16 +314,12 @@ class CalendarRepository(private val context: Context) {
     }
 
     /**
-     * Parses the custom config.json structure into CalendarConfig with robust fault tolerance.
-     * Automatically filters and silently ignores out-of-range dates (e.g. month > 12 like month 14,
-     * day > 31 like day 32, or malformed items), without throwing errors or showing errors to the user.
+     * Parses android-app.json or config.json structure into CalendarConfig with robust fault tolerance.
      */
     fun parseConfigJson(jsonStr: String?): CalendarConfig? {
         if (jsonStr.isNullOrBlank()) return null
         val trimmed = jsonStr.trim()
-        // Defensive check: must start and end with curly braces (prevent HTML/error responses from throwing unexpected crashes)
         if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-            Log.w(TAG, "parseConfigJson: Content is not a valid JSON object, silently ignoring. Length=${trimmed.length}")
             return null
         }
 
@@ -323,167 +327,115 @@ class CalendarRepository(private val context: Context) {
             val root = JSONObject(trimmed)
             var curYear = root.optInt("curYear", 0)
             if (curYear < 1900 || curYear > 2100) {
-                // Silently fallback to 2026 without throwing errors
                 curYear = 2026
             }
-            val startWeek = root.optInt("startWeek", 4)
 
-            // monthsLimit
-            val monthsLimit = mutableListOf<Int>()
-            val monthsArray = root.optJSONArray("monthsLimit")
-            if (monthsArray != null) {
-                for (i in 0 until monthsArray.length()) {
-                    val limit = monthsArray.optInt(i, 0)
-                    if (limit in 28..31 && monthsLimit.size < 12) {
-                        monthsLimit.add(limit)
-                    }
-                }
+            val yearlyConfigs = mutableMapOf<Int, YearConfig>()
+            val yearlyRestDays = mutableMapOf<Int, MutableList<RestDayMonth>>()
+            val yearlyLocaleFestivals = mutableMapOf<Int, MutableList<LocaleFestivalItem>>()
+
+            fun parseYearKey(key: String): Int? {
+                val num = key.trim().toIntOrNull() ?: return null
+                return if (num in 0..99) 2000 + num else if (num in 1900..2100) num else null
             }
 
-            // lunarStart
-            val lunarStart = mutableListOf<Int>()
-            val lunarStartArray = root.optJSONArray("lunarStart")
-            if (lunarStartArray != null) {
-                for (i in 0 until lunarStartArray.length()) {
-                    lunarStart.add(lunarStartArray.optInt(i, 0))
-                }
-            }
-
-            // lunarMonth
-            val lunarMonth = mutableListOf<Int>()
-            val lunarMonthArray = root.optJSONArray("lunarMonth")
-            if (lunarMonthArray != null) {
-                for (i in 0 until lunarMonthArray.length()) {
-                    val m = lunarMonthArray.optInt(i, 0)
-                    if (m in 1..12) lunarMonth.add(m)
-                }
-            }
-
-            // lunarMonthLimit
-            val lunarMonthLimit = mutableListOf<Int>()
-            val lunarMonthLimitArray = root.optJSONArray("lunarMonthLimit")
-            if (lunarMonthLimitArray != null) {
-                for (i in 0 until lunarMonthLimitArray.length()) {
-                    val limit = lunarMonthLimitArray.optInt(i, 0)
-                    if (limit in 28..31) lunarMonthLimit.add(limit)
-                }
-            }
-
-            // lunarFestivals (silently ignores month > 12 or day > 31)
-            val lunarFestivals = mutableListOf<FestivalItem>()
-            val lunarFestivalsArray = root.optJSONArray("lunarFestivals")
-            if (lunarFestivalsArray != null) {
-                for (i in 0 until lunarFestivalsArray.length()) {
-                    val obj = lunarFestivalsArray.optJSONObject(i) ?: continue
-                    val name = obj.optString("name", "").trim()
-                    val date = obj.optString("date", "").trim()
-                    if (name.isNotBlank() && date.isNotBlank()) {
-                        val parts = date.split("-")
-                        if (parts.size == 2) {
-                            val m = parts[0].toIntOrNull()
-                            val d = parts[1].toIntOrNull()
-                            // Silently ignore invalid lunar month (0..12) or invalid day (1..31)
-                            if (m != null && m in 0..12 && d != null && d in 1..31) {
-                                lunarFestivals.add(
-                                    FestivalItem(
-                                        date = "$m-$d",
-                                        name = name,
-                                        tag = obj.optInt("tag", 0)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Festivals (Solar: silently ignores month > 12 like month 14, or day > 31 like day 32)
-            val festivals = mutableListOf<FestivalItem>()
-            val festivalsArray = root.optJSONArray("Festivals")
-            if (festivalsArray != null) {
-                for (i in 0 until festivalsArray.length()) {
-                    val obj = festivalsArray.optJSONObject(i) ?: continue
-                    val name = obj.optString("name", "").trim()
-                    val date = obj.optString("date", "").trim()
-                    if (name.isNotBlank() && date.isNotBlank()) {
-                        val parts = date.split("-")
-                        if (parts.size == 2) {
-                            val m = parts[0].toIntOrNull()
-                            val d = parts[1].toIntOrNull()
-                            // Silently ignore out-of-bounds solar month (1..12) or day (1..31)
-                            if (m != null && m in 1..12 && d != null && d in 1..31) {
-                                festivals.add(
-                                    FestivalItem(
-                                        date = "$m-$d",
-                                        name = name,
-                                        tag = obj.optInt("tag", 0)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // localeFestivals (silently ignores month > 12 like month 14, or day > 31 like day 32)
-            val localeFestivals = mutableListOf<LocaleFestivalItem>()
-            val localeFestivalsArray = root.optJSONArray("localeFestivals")
-            if (localeFestivalsArray != null) {
-                for (i in 0 until localeFestivalsArray.length()) {
-                    val obj = localeFestivalsArray.optJSONObject(i) ?: continue
+            fun parseRestDaysArray(arr: JSONArray?): List<RestDayMonth> {
+                if (arr == null) return emptyList()
+                val list = mutableListOf<RestDayMonth>()
+                for (i in 0 until arr.length()) {
+                    val obj = arr.optJSONObject(i) ?: continue
                     val m = obj.optInt("m", 0)
-                    // If month is not 1..12 (e.g. month 14), silently ignore and skip
                     if (m !in 1..12) continue
                     val dList = mutableListOf<Int>()
                     val dArr = obj.optJSONArray("d")
                     if (dArr != null) {
                         for (k in 0 until dArr.length()) {
                             val day = dArr.optInt(k, 0)
-                            // If day is not 1..31 (e.g. day 32), silently ignore and skip
                             if (day in 1..31) dList.add(day)
                         }
                     }
                     if (dList.isNotEmpty()) {
-                        localeFestivals.add(LocaleFestivalItem(m, dList))
+                        list.add(RestDayMonth(m, dList))
                     }
                 }
+                return list
             }
 
-            // restDays (silently ignores month > 12 like month 14, or day > 31 like day 32)
-            val restDays = mutableListOf<RestDayMonth>()
-            val restDaysArray = root.optJSONArray("restDays")
-            if (restDaysArray != null) {
-                for (i in 0 until restDaysArray.length()) {
-                    val obj = restDaysArray.optJSONObject(i) ?: continue
+            fun parseLocaleFestivalsArray(arr: JSONArray?): List<LocaleFestivalItem> {
+                if (arr == null) return emptyList()
+                val list = mutableListOf<LocaleFestivalItem>()
+                for (i in 0 until arr.length()) {
+                    val obj = arr.optJSONObject(i) ?: continue
                     val m = obj.optInt("m", 0)
-                    // If month is not 1..12 (e.g. month 14), silently ignore and skip
                     if (m !in 1..12) continue
                     val dList = mutableListOf<Int>()
                     val dArr = obj.optJSONArray("d")
                     if (dArr != null) {
                         for (k in 0 until dArr.length()) {
                             val day = dArr.optInt(k, 0)
-                            // If day is not 1..31 (e.g. day 32), silently ignore and skip
                             if (day in 1..31) dList.add(day)
                         }
                     }
                     if (dList.isNotEmpty()) {
-                        restDays.add(RestDayMonth(m, dList))
+                        list.add(LocaleFestivalItem(m, dList))
                     }
                 }
+                return list
             }
+
+            val restDaysJsonObj = root.optJSONObject("restDays")
+            val restDaysJsonArr = root.optJSONArray("restDays")
+            val defaultRestDays = mutableListOf<RestDayMonth>()
+
+            if (restDaysJsonObj != null) {
+                val keys = restDaysJsonObj.keys()
+                while (keys.hasNext()) {
+                    val k = keys.next()
+                    val y = parseYearKey(k) ?: continue
+                    val arr = restDaysJsonObj.optJSONArray(k)
+                    val rList = parseRestDaysArray(arr)
+                    yearlyRestDays.getOrPut(y) { mutableListOf() }.addAll(rList)
+                }
+            } else if (restDaysJsonArr != null) {
+                defaultRestDays.addAll(parseRestDaysArray(restDaysJsonArr))
+                yearlyRestDays.getOrPut(curYear) { mutableListOf() }.addAll(defaultRestDays)
+            }
+
+            val localeFestivalsJsonObj = root.optJSONObject("localeFestivals")
+            val localeFestivalsJsonArr = root.optJSONArray("localeFestivals")
+            val defaultLocaleFestivals = mutableListOf<LocaleFestivalItem>()
+
+            if (localeFestivalsJsonObj != null) {
+                val keys = localeFestivalsJsonObj.keys()
+                while (keys.hasNext()) {
+                    val k = keys.next()
+                    val y = parseYearKey(k) ?: continue
+                    val arr = localeFestivalsJsonObj.optJSONArray(k)
+                    val lList = parseLocaleFestivalsArray(arr)
+                    yearlyLocaleFestivals.getOrPut(y) { mutableListOf() }.addAll(lList)
+                }
+            } else if (localeFestivalsJsonArr != null) {
+                defaultLocaleFestivals.addAll(parseLocaleFestivalsArray(localeFestivalsJsonArr))
+                yearlyLocaleFestivals.getOrPut(curYear) { mutableListOf() }.addAll(defaultLocaleFestivals)
+            }
+
+            val allYears = (yearlyRestDays.keys + yearlyLocaleFestivals.keys).toSet()
+            for (y in allYears) {
+                yearlyConfigs[y] = YearConfig(
+                    year = y,
+                    restDays = yearlyRestDays[y] ?: emptyList(),
+                    localeFestivals = yearlyLocaleFestivals[y] ?: emptyList()
+                )
+            }
+
+            val curYearRestDays = yearlyConfigs[curYear]?.restDays ?: defaultRestDays
+            val curYearLocaleFestivals = yearlyConfigs[curYear]?.localeFestivals ?: defaultLocaleFestivals
 
             CalendarConfig(
                 curYear = curYear,
-                startWeek = startWeek,
-                monthsLimit = if (monthsLimit.isNotEmpty()) monthsLimit else listOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31),
-                lunarStart = if (lunarStart.isNotEmpty()) lunarStart else listOf(0, 13),
-                lunarMonth = if (lunarMonth.isNotEmpty()) lunarMonth else listOf(11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-                lunarMonthLimit = if (lunarMonthLimit.isNotEmpty()) lunarMonthLimit else listOf(30, 29, 30, 29, 30, 29, 29, 30, 29, 29, 30, 30, 30),
-                lunarFestivals = lunarFestivals,
-                festivals = festivals,
-                localeFestivals = localeFestivals,
-                restDays = restDays
+                localeFestivals = curYearLocaleFestivals,
+                restDays = curYearRestDays,
+                yearlyConfigs = yearlyConfigs
             )
         } catch (e: Exception) {
             Log.w(TAG, "parseConfigJson caught exception, silently returning null", e)

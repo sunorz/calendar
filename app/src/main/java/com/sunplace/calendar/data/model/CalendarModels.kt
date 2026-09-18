@@ -1,11 +1,5 @@
 package com.sunplace.calendar.data.model
 
-data class FestivalItem(
-    val date: String, // "M-D" or "lunarMonth-lunarDay"
-    val name: String,
-    val tag: Int = 0 // 1 means highlight
-)
-
 data class LocaleFestivalItem(
     val m: Int,
     val d: List<Int>
@@ -16,38 +10,20 @@ data class RestDayMonth(
     val d: List<Int>
 )
 
-data class CalendarConfig(
-    val curYear: Int = 2026,
-    val startWeek: Int = 4,
-    val monthsLimit: List<Int> = listOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31),
-    val lunarStart: List<Int> = listOf(0, 13),
-    val lunarMonth: List<Int> = listOf(11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-    val lunarMonthLimit: List<Int> = listOf(30, 29, 30, 29, 30, 29, 29, 30, 29, 29, 30, 30, 30),
-    val lunarFestivals: List<FestivalItem> = emptyList(),
-    val festivals: List<FestivalItem> = emptyList(),
-    val localeFestivals: List<LocaleFestivalItem> = emptyList(),
-    val restDays: List<RestDayMonth> = emptyList()
+data class YearConfig(
+    val year: Int,
+    val restDays: List<RestDayMonth> = emptyList(),
+    val localeFestivals: List<LocaleFestivalItem> = emptyList()
 ) {
-    /**
-     * Checks if a given month (1-12) and day (1-31) is a rest day (休息日).
-     * If true -> Rest day (Red number)
-     * If false -> Work day (Normal text color)
-     */
     fun isRestDay(month: Int, day: Int): Boolean {
         val monthRest = restDays.find { it.m == month }
         return monthRest?.d?.contains(day) ?: false
     }
 
-    /**
-     * Checks if a given month (1-12) and day is a workday (工作日).
-     */
     fun isWorkDay(month: Int, day: Int): Boolean {
         return !isRestDay(month, day)
     }
 
-    /**
-     * Extracts all valid date points (month, day) configured in localeFestivals.
-     */
     fun getValidLocaleFestivalDates(): List<Pair<Int, Int>> {
         return localeFestivals
             .filter { it.m in 1..12 }
@@ -57,36 +33,22 @@ data class CalendarConfig(
             .sortedWith(compareBy({ it.first }, { it.second }))
     }
 
-    /**
-     * First day (a) of localeFestivals (e.g. 4月17日).
-     */
     val localeFestivalFirstDay: Pair<Int, Int>?
         get() = getValidLocaleFestivalDates().firstOrNull()
 
-    /**
-     * Last day (b) of localeFestivals (e.g. 4月20日).
-     */
     val localeFestivalLastDay: Pair<Int, Int>?
         get() = getValidLocaleFestivalDates().lastOrNull()
 
-    /**
-     * Checks if a given month and day falls within the range from the first day (a) to the last day (b)
-     * of localeFestivals, inclusive [a, b].
-     * Fully compatible with cross-month spans (e.g. late March to early April: 3.30 - 4.02).
-     */
     fun isInLocaleFestivalRange(month: Int, day: Int): Boolean {
         val first = localeFestivalFirstDay ?: return false
         val last = localeFestivalLastDay ?: return false
 
-        // Accurate cross-month / leap year safe calendar comparison using LocalDate
         return try {
-            val year = if (curYear > 0) curYear else java.time.LocalDate.now().year
             val startDate = java.time.LocalDate.of(year, first.first, first.second)
             val endDate = java.time.LocalDate.of(year, last.first, last.second)
             val currDate = java.time.LocalDate.of(year, month, day)
             !currDate.isBefore(startDate) && !currDate.isAfter(endDate)
         } catch (e: Exception) {
-            // Fallback numeric comparison if date parsing encounters out-of-range day
             val current = month * 100 + day
             val start = first.first * 100 + first.second
             val end = last.first * 100 + last.second
@@ -98,36 +60,25 @@ data class CalendarConfig(
         }
     }
 
-    /**
-     * Checks if a day is explicitly configured in the localeFestivals JSON array.
-     * Only explicitly configured days receive the green day number highlight.
-     */
     fun isExplicitLocaleHoliday(month: Int, day: Int): Boolean {
         val loc = localeFestivals.find { it.m == month }
         return loc?.d?.contains(day) ?: false
     }
 
-    /**
-     * Checks whether all days in the [a, b] span are either explicitly in localeFestivals or restDays.
-     * If there are any workdays in between, the [a, b] contiguous festival range logic becomes invalid.
-     */
     val isLocaleFestivalRangeContinuous: Boolean
         get() {
             val first = localeFestivalFirstDay ?: return false
             val last = localeFestivalLastDay ?: return false
             return try {
-                val year = if (curYear > 0) curYear else java.time.LocalDate.now().year
                 val startDate = java.time.LocalDate.of(year, first.first, first.second)
                 val endDate = java.time.LocalDate.of(year, last.first, last.second)
                 if (startDate.isAfter(endDate)) return false
-
                 var curr = startDate
                 while (!curr.isAfter(endDate)) {
                     val m = curr.monthValue
                     val d = curr.dayOfMonth
                     val isExplicit = isExplicitLocaleHoliday(m, d)
                     val isRest = isRestDay(m, d)
-                    // If a day is neither explicitly in localeFestivals nor a restDay, it's an intervening workday!
                     if (!isExplicit && !isRest) {
                         return false
                     }
@@ -139,17 +90,69 @@ data class CalendarConfig(
             }
         }
 
-    /**
-     * Checks if a day is within the localeFestivals [a, b] date range (e.g. 广西三月三假期从第一天a到最后一天b).
-     * If the span [a, b] contains intervening workdays, the contiguous range logic is disabled,
-     * falling back strictly to only explicitly configured days in localeFestivals.
-     */
     fun isLocaleHoliday(month: Int, day: Int): Boolean {
         return if (isLocaleFestivalRangeContinuous) {
             isInLocaleFestivalRange(month, day)
         } else {
             isExplicitLocaleHoliday(month, day)
         }
+    }
+}
+
+data class CalendarConfig(
+    val curYear: Int = 2026,
+    val localeFestivals: List<LocaleFestivalItem> = emptyList(),
+    val restDays: List<RestDayMonth> = emptyList(),
+    val yearlyConfigs: Map<Int, YearConfig> = emptyMap()
+) {
+    fun hasYearConfig(year: Int): Boolean {
+        return yearlyConfigs.containsKey(year) || (curYear == year && restDays.isNotEmpty())
+    }
+
+    fun getYearConfig(year: Int): YearConfig? {
+        if (yearlyConfigs.containsKey(year)) {
+            return yearlyConfigs[year]
+        }
+        if (curYear == year && (restDays.isNotEmpty() || localeFestivals.isNotEmpty())) {
+            return YearConfig(
+                year = curYear,
+                restDays = restDays,
+                localeFestivals = localeFestivals
+            )
+        }
+        return null
+    }
+
+    fun isRestDay(month: Int, day: Int): Boolean {
+        val yCfg = getYearConfig(curYear)
+        return yCfg?.isRestDay(month, day) ?: (restDays.find { it.m == month }?.d?.contains(day) ?: false)
+    }
+
+    fun isWorkDay(month: Int, day: Int): Boolean {
+        return !isRestDay(month, day)
+    }
+
+    fun isExplicitLocaleHoliday(month: Int, day: Int): Boolean {
+        val yCfg = getYearConfig(curYear)
+        return yCfg?.isExplicitLocaleHoliday(month, day) ?: (localeFestivals.find { it.m == month }?.d?.contains(day) ?: false)
+    }
+
+    val localeFestivalFirstDay: Pair<Int, Int>?
+        get() = getYearConfig(curYear)?.localeFestivalFirstDay
+
+    val localeFestivalLastDay: Pair<Int, Int>?
+        get() = getYearConfig(curYear)?.localeFestivalLastDay
+
+    fun isInLocaleFestivalRange(month: Int, day: Int): Boolean {
+        return getYearConfig(curYear)?.isInLocaleFestivalRange(month, day) ?: false
+    }
+
+    val isLocaleFestivalRangeContinuous: Boolean
+        get() = getYearConfig(curYear)?.isLocaleFestivalRangeContinuous ?: false
+
+    fun isLocaleHoliday(month: Int, day: Int): Boolean {
+        val yCfg = getYearConfig(curYear)
+        return yCfg?.isLocaleHoliday(month, day) ?: false
     }
 }
 

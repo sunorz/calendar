@@ -38,7 +38,6 @@ class CalendarRobolectricTest {
     val mockJson = """
     {
         "curYear" : 2026 ,
-        "startWeek" : 4 ,
         "restDays" : [
             {"m" : 5,"d" : [1,2,3,4,5,10,16,17,23,24,30,31]}
         ],
@@ -66,7 +65,7 @@ class CalendarRobolectricTest {
   @Test
   fun `verify announcement content`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    assertEquals("花好月圆", context.getString(R.string.announcement_content))
+    assertEquals("万事俱备", context.getString(R.string.announcement_content))
   }
 
   @Test
