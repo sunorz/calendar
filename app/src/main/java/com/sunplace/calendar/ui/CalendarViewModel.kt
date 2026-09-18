@@ -200,6 +200,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                 }
             }
 
+            _downloadProgress.value = 1f
             _isDownloading.value = false
             if (downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0) {
                 installApk(context, downloadedFile)

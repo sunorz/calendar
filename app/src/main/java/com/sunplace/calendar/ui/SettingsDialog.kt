@@ -3,6 +3,11 @@ package com.sunplace.calendar.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,7 +57,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -61,6 +65,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -592,9 +597,10 @@ fun SettingsScreen(
 
                                     if (updateAvailable && remoteVersion != null) {
                                         if (isDownloading) {
-                                            LinearProgressIndicator(
-                                                progress = { downloadProgress },
-                                                modifier = Modifier.width(36.dp).height(4.dp).clip(RoundedCornerShape(2.dp))
+                                            DownloadPieProgress(
+                                                actualProgress = downloadProgress,
+                                                color = androidx.compose.ui.graphics.Color(0xFF22C55E),
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         } else {
                                             Icon(
@@ -714,3 +720,54 @@ private fun ThemeOptionChip(
         }
     }
 }
+
+/**
+ * Custom Download Pie Progress indicator.
+ * Smoothly animates and tracks the download progress using Material standard
+ * asymmetric cubic-bezier velocity curve (0.4, 0.0, 0.2, 1.0).
+ * Reaches 100% and installs immediately without artificial waiting.
+ */
+@Composable
+private fun DownloadPieProgress(
+    actualProgress: Float = 0f,
+    color: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color(0xFF22C55E),
+    modifier: Modifier = Modifier
+) {
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+    val animatedProgress = remember { Animatable(0f) }
+
+    // Material standard asymmetric cubic-bezier easing
+    val standardCubicBezier = remember {
+        CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)
+    }
+
+    // Follow real download progress smoothly and dynamically
+    LaunchedEffect(actualProgress) {
+        val target = actualProgress.coerceIn(0f, 1f)
+        val duration = if (target >= 1f) 200 else 250
+        animatedProgress.animateTo(
+            targetValue = target,
+            animationSpec = tween(
+                durationMillis = duration,
+                easing = standardCubicBezier
+            )
+        )
+    }
+
+    Canvas(modifier = modifier) {
+        // Track background circle
+        drawCircle(color = trackColor)
+
+        // Pie sweep segment starting from 12 o'clock (-90 degrees)
+        val sweepAngle = 360f * animatedProgress.value.coerceIn(0f, 1f)
+        if (sweepAngle > 0f) {
+            drawArc(
+                color = color,
+                startAngle = -90f,
+                sweepAngle = sweepAngle,
+                useCenter = true
+            )
+        }
+    }
+}
+
