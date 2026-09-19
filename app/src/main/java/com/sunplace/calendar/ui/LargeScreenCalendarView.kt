@@ -1,6 +1,8 @@
 package com.sunplace.calendar.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,8 +59,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -108,6 +115,12 @@ fun LargeScreenCalendarView(
             nextYearConfig,
             showGuangxiSanyuesan
         )
+    }
+
+    val todayTextColor = when {
+        todayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
+        todayInfo.isRestDay -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     val displayDay = selectedDay ?: todayInfo
@@ -238,13 +251,13 @@ fun LargeScreenCalendarView(
                                         }
                                     }
                                     .testTag("large_screen_jump_today_top_button"),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(20.dp)
                             ) {
                                 if (isElderlyMode) {
                                     Text(
                                         text = stringResource(R.string.elderly_btn_today),
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = todayTextColor,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
@@ -258,15 +271,15 @@ fun LargeScreenCalendarView(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Today,
+                                        Image(
+                                            painter = painterResource(id = todayPattern.drawableRes),
                                             contentDescription = stringResource(R.string.today_btn),
-                                            tint = MaterialTheme.colorScheme.primary,
+                                            colorFilter = ColorFilter.tint(todayTextColor),
                                             modifier = Modifier.size(14.dp)
                                         )
                                         Text(
                                             text = stringResource(R.string.today_btn_short),
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = todayTextColor,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold
                                         )

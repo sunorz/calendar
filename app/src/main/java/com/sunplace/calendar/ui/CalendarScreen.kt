@@ -7,7 +7,9 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,8 +57,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -178,6 +184,15 @@ private fun StandardPhoneCalendarView(
         }
     }
 
+    val todayDayInfo = remember(config, nextYearConfig, showGuangxiSanyuesan) {
+        viewModel.getTodayDayInfo()
+    }
+    val todayTextColor = when {
+        todayDayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
+        todayDayInfo.isRestDay -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -204,7 +219,7 @@ private fun StandardPhoneCalendarView(
                         )
                     },
                     navigationIcon = {
-                        // "今日" Jump button (Pure clear text for elderly mode, icon+text for standard mode)
+                        // "今日" Jump button (Flat style, background matching settings button, text matching today's color)
                         Surface(
                             modifier = Modifier
                                 .padding(start = if (isElderlyMode) 6.dp else 12.dp)
@@ -216,13 +231,13 @@ private fun StandardPhoneCalendarView(
                                     }
                                 }
                                 .testTag("jump_today_button"),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = if (isElderlyMode) 0.18f else 0.12f),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
                             shape = RoundedCornerShape(24.dp)
                         ) {
                             if (isElderlyMode) {
                                 Text(
                                     text = stringResource(R.string.elderly_btn_today),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = todayTextColor,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
@@ -236,15 +251,15 @@ private fun StandardPhoneCalendarView(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Today,
+                                    Image(
+                                        painter = painterResource(id = todayPattern.drawableRes),
                                         contentDescription = stringResource(R.string.today_btn),
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        colorFilter = ColorFilter.tint(todayTextColor),
                                         modifier = Modifier.size(15.dp)
                                     )
                                     Text(
                                         text = stringResource(R.string.today_btn_short),
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = todayTextColor,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
