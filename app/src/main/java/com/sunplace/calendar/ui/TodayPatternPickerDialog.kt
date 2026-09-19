@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.data.model.TodayPattern
+import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.util.TranslationHelper
 import com.sunplace.calendar.R
 import java.util.Calendar
@@ -40,6 +41,7 @@ import kotlin.math.abs
 @Composable
 fun TodayPatternPickerDialog(
     selectedPattern: TodayPattern,
+    initialColorModeIndex: Int = 0,
     onSelectPattern: (TodayPattern) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -47,11 +49,15 @@ fun TodayPatternPickerDialog(
     val allPatterns = remember { TodayPattern.entries.toList() }
     val uriHandler = LocalUriHandler.current
     
-    val now = remember { Calendar.getInstance(TimeZone.getTimeZone("Asia/Shanghai")) }
+    val now = LunarCalculator.getChinaCalendar()
     val dayOfMonth = now.get(Calendar.DAY_OF_MONTH)
     val dayOfMonthString = dayOfMonth.toString()
     
-    var colorModeIndex by remember { mutableIntStateOf(0) }
+    var colorModeIndex by remember { mutableIntStateOf(initialColorModeIndex) }
+
+    LaunchedEffect(initialColorModeIndex) {
+        colorModeIndex = initialColorModeIndex
+    }
     
     var currentPatternIndex by remember { 
         mutableIntStateOf(allPatterns.indexOf(selectedPattern).takeIf { it >= 0 } ?: 0) 

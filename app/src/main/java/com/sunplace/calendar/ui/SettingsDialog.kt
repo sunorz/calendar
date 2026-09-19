@@ -73,6 +73,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -103,6 +105,7 @@ fun SettingsScreen(
     remoteVersion: String?,
     isDownloading: Boolean,
     downloadProgress: Float,
+    initialColorModeIndex: Int = 0,
     onThemeModeChange: (ThemeMode) -> Unit,
     onToggleShowGuangxiSanyuesan: (Boolean) -> Unit,
     onTodayPatternChange: (TodayPattern) -> Unit = {},
@@ -114,6 +117,14 @@ fun SettingsScreen(
     val isEnglish = TranslationHelper.isEnglish()
     var showPatternPicker by remember { mutableStateOf(false) }
 
+    val todayBrush = remember(initialColorModeIndex) {
+        when (initialColorModeIndex) {
+            1 -> Brush.verticalGradient(listOf(Color(0xFFFF8585), Color(0xFFE53935)))
+            2 -> Brush.verticalGradient(listOf(Color(0xFF6EE7B7), Color(0xFF22C55E)))
+            else -> Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
+        }
+    }
+
     // Handle Android system back press to return to calendar
     BackHandler(enabled = true) {
         onNavigateBack()
@@ -122,6 +133,7 @@ fun SettingsScreen(
     if (showPatternPicker) {
         TodayPatternPickerDialog(
             selectedPattern = currentTodayPattern,
+            initialColorModeIndex = initialColorModeIndex,
             onSelectPattern = { newPattern ->
                 onTodayPatternChange(newPattern)
                 showPatternPicker = false
@@ -352,14 +364,14 @@ fun SettingsScreen(
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        modifier = Modifier.size(42.dp)
+                                        color = Color.Transparent,
+                                        modifier = Modifier.size(42.dp).background(todayBrush, RoundedCornerShape(12.dp))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Image(
                                                 painter = painterResource(id = currentTodayPattern.drawableRes),
                                                 contentDescription = currentTodayPattern.getDisplayName(isEnglish),
-                                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                                                colorFilter = ColorFilter.tint(Color(0xFF000000)),
                                                 modifier = Modifier.size(26.dp)
                                             )
                                         }
@@ -637,6 +649,7 @@ fun SettingsDialog(
     remoteVersion: String?,
     isDownloading: Boolean,
     downloadProgress: Float,
+    initialColorModeIndex: Int = 0,
     onThemeModeChange: (ThemeMode) -> Unit,
     onToggleShowGuangxiSanyuesan: (Boolean) -> Unit,
     onTodayPatternChange: (TodayPattern) -> Unit = {},
@@ -653,6 +666,7 @@ fun SettingsDialog(
         remoteVersion = remoteVersion,
         isDownloading = isDownloading,
         downloadProgress = downloadProgress,
+        initialColorModeIndex = initialColorModeIndex,
         onThemeModeChange = onThemeModeChange,
         onToggleShowGuangxiSanyuesan = onToggleShowGuangxiSanyuesan,
         onTodayPatternChange = onTodayPatternChange,

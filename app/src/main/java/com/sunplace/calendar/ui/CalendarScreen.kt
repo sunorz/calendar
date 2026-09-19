@@ -139,6 +139,7 @@ fun CalendarScreen(
             remoteVersion = remoteVersion,
             isDownloading = isDownloading,
             downloadProgress = downloadProgress,
+            initialColorModeIndex = viewModel.getTodayColorModeIndex(),
             onThemeModeChange = { viewModel.setThemeMode(it) },
             onToggleShowGuangxiSanyuesan = { viewModel.setShowGuangxiSanyuesan(it) },
             onTodayPatternChange = { viewModel.setTodayPattern(it) },

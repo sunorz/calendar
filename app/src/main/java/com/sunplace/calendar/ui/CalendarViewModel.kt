@@ -351,6 +351,30 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         syncAllConfigs()
     }
 
+    fun getTodayDayInfo(): DayInfo {
+        val cal = LunarCalculator.getChinaCalendar()
+        val y = cal.get(Calendar.YEAR)
+        val m = cal.get(Calendar.MONTH) + 1
+        val d = cal.get(Calendar.DAY_OF_MONTH)
+        return LunarCalculator.getDayInfoForDate(
+            year = y,
+            month = m,
+            day = d,
+            mainConfig = config.value,
+            nextConfig = nextYearConfig.value,
+            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+        )
+    }
+
+    fun getTodayColorModeIndex(): Int {
+        val todayInfo = getTodayDayInfo()
+        return when {
+            todayInfo.isExplicitLocaleHoliday -> 2
+            todayInfo.isRestDay -> 1
+            else -> 0
+        }
+    }
+
     /**
      * Helper to get days for any month index using current config
      */
