@@ -125,6 +125,20 @@ fun SettingsScreen(
         }
     }
 
+    val todayTreeRingColor = remember(initialColorModeIndex) {
+        if (initialColorModeIndex == 0) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.White.copy(alpha = 0.55f)
+        }
+    }
+
+    val todayBevelBorder = remember {
+        Brush.verticalGradient(
+            colors = listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
+        )
+    }
+
     // Handle Android system back press to return to calendar
     BackHandler(enabled = true) {
         onNavigateBack()
@@ -362,19 +376,24 @@ fun SettingsScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                                 ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = Color.Transparent,
-                                        modifier = Modifier.size(42.dp).background(todayBrush, RoundedCornerShape(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(brush = todayBrush, shape = RoundedCornerShape(12.dp))
+                                            .border(
+                                                width = 0.8.dp,
+                                                brush = todayBevelBorder,
+                                                shape = RoundedCornerShape(12.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Image(
-                                                painter = painterResource(id = currentTodayPattern.drawableRes),
-                                                contentDescription = currentTodayPattern.getDisplayName(isEnglish),
-                                                colorFilter = ColorFilter.tint(Color(0xFF000000)),
-                                                modifier = Modifier.size(26.dp)
-                                            )
-                                        }
+                                        Image(
+                                            painter = painterResource(id = currentTodayPattern.drawableRes),
+                                            contentDescription = currentTodayPattern.getDisplayName(isEnglish),
+                                            colorFilter = ColorFilter.tint(todayTreeRingColor),
+                                            modifier = Modifier.size(26.dp)
+                                        )
                                     }
 
                                     Text(
