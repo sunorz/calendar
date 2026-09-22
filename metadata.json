@@ -1,6 +1,6 @@
 {
   "name": "调休日历",
-  "description": "Dynamic date icon calendar app with workday and rest day indicators based on online config.",
+  "description": "Clean and responsive China calendar focused on holiday shift arrangements (调休), statutory rest days, compensatory workdays, lunar dates, solar terms, online shift config sync, and desktop widgets.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
