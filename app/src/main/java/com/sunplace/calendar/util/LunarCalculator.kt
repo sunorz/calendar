@@ -1,6 +1,7 @@
 package com.sunplace.calendar.util
 
 import com.sunplace.calendar.data.model.CalendarConfig
+import com.sunplace.calendar.data.model.CalendarDate
 import com.sunplace.calendar.data.model.DayInfo
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -465,13 +466,14 @@ object LunarCalculator {
         month: Int,
         mainConfig: CalendarConfig,
         nextConfig: CalendarConfig? = null,
-        showGuangxiSanyuesan: Boolean = true
+        showGuangxiSanyuesan: Boolean = true,
+        todayDate: CalendarDate? = null
     ): List<DayInfo> {
         val daysInMonth = getDaysInMonth(year, month)
-        val todayCal = getChinaCalendar()
-        val todayYear = todayCal.get(Calendar.YEAR)
-        val todayMonth = todayCal.get(Calendar.MONTH) + 1
-        val todayDay = todayCal.get(Calendar.DAY_OF_MONTH)
+        val todayCal = if (todayDate == null) getChinaCalendar() else null
+        val todayYear = todayDate?.year ?: todayCal!!.get(Calendar.YEAR)
+        val todayMonth = todayDate?.month ?: (todayCal!!.get(Calendar.MONTH) + 1)
+        val todayDay = todayDate?.day ?: todayCal!!.get(Calendar.DAY_OF_MONTH)
 
         val result = ArrayList<DayInfo>(daysInMonth)
         
@@ -568,9 +570,10 @@ object LunarCalculator {
         day: Int,
         mainConfig: CalendarConfig,
         nextConfig: CalendarConfig? = null,
-        showGuangxiSanyuesan: Boolean = true
+        showGuangxiSanyuesan: Boolean = true,
+        todayDate: CalendarDate? = null
     ): DayInfo {
-        val list = getMonthDays(year, month, mainConfig, nextConfig, showGuangxiSanyuesan)
+        val list = getMonthDays(year, month, mainConfig, nextConfig, showGuangxiSanyuesan, todayDate)
         return list.find { it.day == day } ?: list.first()
     }
 }

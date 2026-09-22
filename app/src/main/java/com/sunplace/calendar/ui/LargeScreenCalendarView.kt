@@ -97,6 +97,7 @@ fun LargeScreenCalendarView(
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
+    val currentTodayDate by viewModel.todayDate.collectAsState()
 
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -105,16 +106,8 @@ fun LargeScreenCalendarView(
     )
 
     // Today's DayInfo fallback if no date is explicitly clicked
-    val todayInfo = remember(config, nextYearConfig, showGuangxiSanyuesan) {
-        val cal = LunarCalculator.getChinaCalendar()
-        LunarCalculator.getDayInfoForDate(
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH) + 1,
-            cal.get(Calendar.DAY_OF_MONTH),
-            config,
-            nextYearConfig,
-            showGuangxiSanyuesan
-        )
+    val todayInfo = remember(currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
+        viewModel.getTodayDayInfo()
     }
 
     val todayTextColor = when {
@@ -161,12 +154,11 @@ fun LargeScreenCalendarView(
         }
 
         // Helper to compute optimal vertical scroll offset so Today is comfortably visible and not cut off
-        val computeTodayScrollOffset = remember(columnCount, isElderlyMode, totalHeight) {
+        val computeTodayScrollOffset = remember(currentTodayDate, columnCount, isElderlyMode, totalHeight) {
             {
-                val cal = LunarCalculator.getChinaCalendar()
-                val todayDay = cal.get(Calendar.DAY_OF_MONTH)
-                val todayYear = cal.get(Calendar.YEAR)
-                val todayMonth = cal.get(Calendar.MONTH) + 1
+                val todayDay = currentTodayDate.day
+                val todayYear = currentTodayDate.year
+                val todayMonth = currentTodayDate.month
                 val days = viewModel.getDaysForMonth(todayYear, todayMonth)
                 val firstDayOfWeek = days.firstOrNull()?.dayOfWeekNumber ?: 1
                 val leadingEmpty = firstDayOfWeek - 1
@@ -242,6 +234,7 @@ fun LargeScreenCalendarView(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
                                     .clickable {
+                                        viewModel.checkAndRefreshDate()
                                         viewModel.selectToday()
                                         coroutineScope.launch {
                                             gridState.animateScrollToItem(
@@ -375,7 +368,7 @@ fun LargeScreenCalendarView(
                         key = { index -> index }
                     ) { index ->
                         val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                        val days = remember(year, month, config, nextYearConfig, showGuangxiSanyuesan) {
+                        val days = remember(year, month, currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
                             viewModel.getDaysForMonth(year, month)
                         }
 
@@ -422,6 +415,7 @@ fun LargeScreenCalendarView(
                 dayInfo = displayDay,
                 isElderlyMode = isElderlyMode,
                 onJumpToday = {
+                    viewModel.checkAndRefreshDate()
                     viewModel.selectToday()
                     coroutineScope.launch {
                         gridState.animateScrollToItem(

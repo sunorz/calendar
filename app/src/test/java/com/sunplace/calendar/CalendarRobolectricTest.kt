@@ -3,6 +3,7 @@ package com.sunplace.calendar
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.sunplace.calendar.data.repository.CalendarRepository
+import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.util.LunarCalculator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,7 +66,7 @@ class CalendarRobolectricTest {
   @Test
   fun `verify announcement content`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    assertEquals("万事俱备", context.getString(R.string.announcement_content))
+    assertEquals("终局之战", context.getString(R.string.announcement_content))
   }
 
   @Test
@@ -92,10 +93,42 @@ class CalendarRobolectricTest {
   }
 
   @Test
-  fun `verify app version name is 1 1 4`() {
+  fun `verify app version name is 1 1 5`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val repository = CalendarRepository(context)
-    assertEquals("1.1.4", repository.getAppVersion())
+    assertEquals("1.1.5", repository.getAppVersion())
+  }
+
+  @Test
+  fun `verify reactive todayDate updates isToday correctly`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val repository = CalendarRepository(context)
+    val config = repository.configState.value
+
+    val testDateDay22 = com.sunplace.calendar.data.model.CalendarDate(2026, 9, 22)
+    val days22 = LunarCalculator.getMonthDays(2026, 9, config, todayDate = testDateDay22)
+    val day22 = days22.find { it.day == 22 }
+    val day23 = days22.find { it.day == 23 }
+    assertTrue(day22?.isToday == true)
+    assertTrue(day23?.isToday == false)
+
+    // Next day simulation
+    val testDateDay23 = com.sunplace.calendar.data.model.CalendarDate(2026, 9, 23)
+    val days23 = LunarCalculator.getMonthDays(2026, 9, config, todayDate = testDateDay23)
+    val day22After = days23.find { it.day == 22 }
+    val day23After = days23.find { it.day == 23 }
+    assertTrue(day22After?.isToday == false)
+    assertTrue(day23After?.isToday == true)
+  }
+
+  @Test
+  fun `verify CalendarViewModel todayDate state and checkAndRefreshDate`() {
+    val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+    val viewModel = CalendarViewModel(app)
+    assertNotNull(viewModel.todayDate.value)
+    val todayInfo = viewModel.getTodayDayInfo()
+    assertTrue(todayInfo.isToday)
+    assertEquals(viewModel.todayDate.value.day, todayInfo.day)
   }
 }
 

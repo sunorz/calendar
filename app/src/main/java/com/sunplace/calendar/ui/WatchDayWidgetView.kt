@@ -40,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -80,18 +81,19 @@ fun WatchDayWidgetView(
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
+    val currentTodayDate by viewModel.todayDate.collectAsState()
 
     // Current selected date state in Watch mode (defaults to current real date in UTC+8)
-    var currentYear by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.YEAR)) }
-    var currentMonth by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.MONTH) + 1) }
-    var currentDay by remember { mutableIntStateOf(LunarCalculator.getChinaCalendar().get(Calendar.DAY_OF_MONTH)) }
+    var currentYear by remember { mutableIntStateOf(currentTodayDate.year) }
+    var currentMonth by remember { mutableIntStateOf(currentTodayDate.month) }
+    var currentDay by remember { mutableIntStateOf(currentTodayDate.day) }
 
     // Dialog state for cross-date quick picker
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
     // Compute DayInfo for current date
-    val dayInfo = remember(currentYear, currentMonth, currentDay, config, nextYearConfig, showGuangxiSanyuesan) {
-        LunarCalculator.getDayInfoForDate(currentYear, currentMonth, currentDay, config, nextYearConfig, showGuangxiSanyuesan)
+    val dayInfo = remember(currentYear, currentMonth, currentDay, currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
+        LunarCalculator.getDayInfoForDate(currentYear, currentMonth, currentDay, config, nextYearConfig, showGuangxiSanyuesan, currentTodayDate)
     }
 
     // Helper functions to step days
@@ -108,10 +110,10 @@ fun WatchDayWidgetView(
     }
 
     fun jumpToToday() {
-        val cal = LunarCalculator.getChinaCalendar()
-        currentYear = cal.get(Calendar.YEAR)
-        currentMonth = cal.get(Calendar.MONTH) + 1
-        currentDay = cal.get(Calendar.DAY_OF_MONTH)
+        viewModel.checkAndRefreshDate()
+        currentYear = currentTodayDate.year
+        currentMonth = currentTodayDate.month
+        currentDay = currentTodayDate.day
     }
 
     // Accumulate drag delta for gesture threshold

@@ -202,3 +202,23 @@ data class DayInfo(
         }
 }
 
+/**
+ * Lightweight date representation for reactive day updates.
+ */
+data class CalendarDate(
+    val year: Int,
+    val month: Int,
+    val day: Int
+) {
+    companion object {
+        fun today(): CalendarDate {
+            val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Shanghai"))
+            return CalendarDate(
+                year = cal.get(java.util.Calendar.YEAR),
+                month = cal.get(java.util.Calendar.MONTH) + 1,
+                day = cal.get(java.util.Calendar.DAY_OF_MONTH)
+            )
+        }
+    }
+}
+

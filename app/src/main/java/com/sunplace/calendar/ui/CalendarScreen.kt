@@ -170,6 +170,7 @@ private fun StandardPhoneCalendarView(
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
+    val currentTodayDate by viewModel.todayDate.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState(
@@ -184,7 +185,7 @@ private fun StandardPhoneCalendarView(
         }
     }
 
-    val todayDayInfo = remember(config, nextYearConfig, showGuangxiSanyuesan) {
+    val todayDayInfo = remember(currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
         viewModel.getTodayDayInfo()
     }
     val todayTextColor = when {
@@ -225,6 +226,7 @@ private fun StandardPhoneCalendarView(
                                 .padding(start = if (isElderlyMode) 6.dp else 12.dp)
                                 .clip(RoundedCornerShape(24.dp))
                                 .clickable {
+                                    viewModel.checkAndRefreshDate()
                                     coroutineScope.launch {
                                         listState.animateScrollToItem(viewModel.todayMonthIndex)
                                         viewModel.selectToday()
@@ -378,7 +380,7 @@ private fun StandardPhoneCalendarView(
                     key = { index -> index }
                 ) { index ->
                     val (year, month) = CalendarViewModel.getYearMonthFromIndex(index)
-                    val days = remember(year, month, config, nextYearConfig, showGuangxiSanyuesan) {
+                    val days = remember(year, month, currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
                         viewModel.getDaysForMonth(year, month)
                     }
 

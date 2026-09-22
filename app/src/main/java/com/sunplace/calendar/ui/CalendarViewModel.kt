@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sunplace.calendar.data.model.CalendarConfig
+import com.sunplace.calendar.data.model.CalendarDate
 import com.sunplace.calendar.data.model.DayInfo
 import com.sunplace.calendar.data.model.ThemeMode
 import com.sunplace.calendar.data.model.TodayPattern
@@ -106,12 +107,13 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val _isDownloading = MutableStateFlow(false)
     val isDownloading: StateFlow<Boolean> = _isDownloading.asStateFlow()
 
+    private val _todayDate = MutableStateFlow(CalendarDate.today())
+    val todayDate: StateFlow<CalendarDate> = _todayDate.asStateFlow()
+
     val todayMonthIndex: Int
         get() {
-            val cal = LunarCalculator.getChinaCalendar()
-            val y = cal.get(Calendar.YEAR)
-            val m = cal.get(Calendar.MONTH) + 1
-            return getMonthIndex(y, m)
+            val d = _todayDate.value
+            return getMonthIndex(d.year, d.month)
         }
 
     init {
@@ -128,7 +130,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                             day = current.day,
                             mainConfig = c,
                             nextConfig = nc,
-                            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+                            showGuangxiSanyuesan = showGuangxiSanyuesan.value,
+                            todayDate = _todayDate.value
                         )
                         _selectedDay.value = updatedDay
                     }
@@ -276,7 +279,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                 day = current.day,
                 mainConfig = config.value,
                 nextConfig = nextYearConfig.value,
-                showGuangxiSanyuesan = enabled
+                showGuangxiSanyuesan = enabled,
+                todayDate = _todayDate.value
             )
             _selectedDay.value = updatedDay
         }
@@ -303,13 +307,30 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _selectedDay.value = dayInfo
     }
 
+    fun checkAndRefreshDate(): Boolean {
+        val current = CalendarDate.today()
+        val previous = _todayDate.value
+        if (current != previous) {
+            _todayDate.value = current
+            TodayPatternHolder.randomize()
+            // If the previously selected day was the old "today", auto-update to new today
+            _selectedDay.value?.let { sel ->
+                if (sel.year == previous.year && sel.month == previous.month && sel.day == previous.day) {
+                    _selectedDay.value = getTodayDayInfo()
+                }
+            }
+            syncAllConfigs()
+            return true
+        }
+        return false
+    }
+
     fun selectToday() {
-        val cal = LunarCalculator.getChinaCalendar()
-        val y = cal.get(Calendar.YEAR)
-        val m = cal.get(Calendar.MONTH) + 1
-        val d = cal.get(Calendar.DAY_OF_MONTH)
-        val days = getDaysForMonth(y, m)
-        val todayInfo = days.find { it.year == y && it.month == m && it.day == d }
+        checkAndRefreshDate()
+        val d = _todayDate.value
+        val days = getDaysForMonth(d.year, d.month)
+        val todayInfo = days.find { it.year == d.year && it.month == d.month && it.day == d.day }
+            ?: getTodayDayInfo()
         _selectedDay.value = todayInfo
     }
 
@@ -352,17 +373,15 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun getTodayDayInfo(): DayInfo {
-        val cal = LunarCalculator.getChinaCalendar()
-        val y = cal.get(Calendar.YEAR)
-        val m = cal.get(Calendar.MONTH) + 1
-        val d = cal.get(Calendar.DAY_OF_MONTH)
+        val d = _todayDate.value
         return LunarCalculator.getDayInfoForDate(
-            year = y,
-            month = m,
-            day = d,
+            year = d.year,
+            month = d.month,
+            day = d.day,
             mainConfig = config.value,
             nextConfig = nextYearConfig.value,
-            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+            showGuangxiSanyuesan = showGuangxiSanyuesan.value,
+            todayDate = d
         )
     }
 
@@ -376,7 +395,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Helper to get days for any month index using current config
+     * Helper to get days for any month index using current config and current todayDate
      */
     fun getDaysForMonth(year: Int, month: Int): List<DayInfo> {
         return LunarCalculator.getMonthDays(
@@ -384,7 +403,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             month = month,
             mainConfig = config.value,
             nextConfig = nextYearConfig.value,
-            showGuangxiSanyuesan = showGuangxiSanyuesan.value
+            showGuangxiSanyuesan = showGuangxiSanyuesan.value,
+            todayDate = _todayDate.value
         )
     }
 }
