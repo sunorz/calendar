@@ -19,8 +19,10 @@ import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
 import com.sunplace.calendar.widget.TodayAppWidgetProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +67,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         const val START_YEAR = 2020
         const val END_YEAR = 2040
         val TOTAL_MONTHS = (END_YEAR - START_YEAR + 1) * 12
+        const val SELECTION_TIMEOUT_MS = 10 * 60 * 1000L // 10 minutes timeout reset
 
         fun getMonthIndex(year: Int, month: Int): Int {
             val clampedYear = year.coerceIn(START_YEAR, END_YEAR)
@@ -94,6 +97,14 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     private val _selectedDay = MutableStateFlow<DayInfo?>(null)
     val selectedDay: StateFlow<DayInfo?> = _selectedDay.asStateFlow()
+
+    private val _resetScrollEvent = MutableStateFlow(0L)
+    val resetScrollEvent: StateFlow<Long> = _resetScrollEvent.asStateFlow()
+
+    private var lastSelectionTimeMillis: Long = 0L
+    private var lastBackgroundTimeMillis: Long = 0L
+    private var screenLockedWhileAway: Boolean = false
+    private var selectionTimeoutJob: Job? = null
 
     private val _remoteVersion = MutableStateFlow<String?>(null)
     val remoteVersion: StateFlow<String?> = _remoteVersion.asStateFlow()
@@ -303,8 +314,64 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _showSettingsDialog.value = false
     }
 
-    fun selectDay(dayInfo: DayInfo?) {
+    fun selectDay(dayInfo: DayInfo?, nowMillis: Long = System.currentTimeMillis()) {
         _selectedDay.value = dayInfo
+        selectionTimeoutJob?.cancel()
+        if (dayInfo != null) {
+            lastSelectionTimeMillis = nowMillis
+            selectionTimeoutJob = viewModelScope.launch {
+                delay(SELECTION_TIMEOUT_MS)
+                _selectedDay.value = null
+                lastSelectionTimeMillis = 0L
+            }
+        } else {
+            lastSelectionTimeMillis = 0L
+        }
+    }
+
+    fun onAppBackgrounded(nowMillis: Long = System.currentTimeMillis(), isScreenLocked: Boolean = false) {
+        lastBackgroundTimeMillis = nowMillis
+        if (isScreenLocked) {
+            onScreenLocked(nowMillis)
+        }
+    }
+
+    fun onScreenLocked(nowMillis: Long = System.currentTimeMillis()) {
+        screenLockedWhileAway = true
+        selectDay(null)
+        _resetScrollEvent.value = nowMillis
+    }
+
+    fun onUserUnlocked(nowMillis: Long = System.currentTimeMillis()): Boolean {
+        checkAndRefreshDate()
+        val hadSelection = _selectedDay.value != null
+        val wasLocked = screenLockedWhileAway
+        screenLockedWhileAway = false
+        selectDay(null)
+        _resetScrollEvent.value = nowMillis
+        return hadSelection || wasLocked
+    }
+
+    fun onAppResumed(nowMillis: Long = System.currentTimeMillis()): Boolean {
+        val dateChanged = checkAndRefreshDate()
+        val selectionTimedOut = _selectedDay.value != null &&
+            lastSelectionTimeMillis > 0L &&
+            (nowMillis - lastSelectionTimeMillis) >= SELECTION_TIMEOUT_MS
+        val backgroundTimedOut = lastBackgroundTimeMillis > 0L &&
+            (nowMillis - lastBackgroundTimeMillis) >= SELECTION_TIMEOUT_MS
+        val lockedReset = screenLockedWhileAway
+
+        lastBackgroundTimeMillis = 0L
+        screenLockedWhileAway = false
+
+        if (selectionTimedOut || backgroundTimedOut || dateChanged || lockedReset) {
+            selectDay(null)
+            if (backgroundTimedOut || dateChanged || lockedReset) {
+                _resetScrollEvent.value = nowMillis
+            }
+            return true
+        }
+        return false
     }
 
     fun checkAndRefreshDate(): Boolean {
@@ -313,12 +380,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         if (current != previous) {
             _todayDate.value = current
             TodayPatternHolder.randomize()
-            // If the previously selected day was the old "today", auto-update to new today
-            _selectedDay.value?.let { sel ->
-                if (sel.year == previous.year && sel.month == previous.month && sel.day == previous.day) {
-                    _selectedDay.value = getTodayDayInfo()
-                }
-            }
+            selectDay(null)
+            _resetScrollEvent.value = System.currentTimeMillis()
             syncAllConfigs()
             return true
         }
@@ -331,7 +394,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         val days = getDaysForMonth(d.year, d.month)
         val todayInfo = days.find { it.year == d.year && it.month == d.month && it.day == d.day }
             ?: getTodayDayInfo()
-        _selectedDay.value = todayInfo
+        selectDay(todayInfo)
     }
 
     fun getConfigUrl(): String = repository.getConfigUrl()

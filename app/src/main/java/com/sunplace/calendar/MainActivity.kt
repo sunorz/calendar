@@ -1,11 +1,13 @@
 package com.sunplace.calendar
 
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,17 +30,38 @@ class MainActivity : ComponentActivity() {
   private val dateChangeReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
       val action = intent?.action ?: return
-      if (action == Intent.ACTION_DATE_CHANGED ||
-          action == Intent.ACTION_TIME_TICK ||
-          action == Intent.ACTION_TIME_CHANGED ||
-          action == Intent.ACTION_TIMEZONE_CHANGED) {
-        val changed = calendarViewModel.checkAndRefreshDate()
-        if (changed && context != null) {
-          TodayAppWidgetProvider.updateAllWidgets(context)
-          MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+      when (action) {
+        Intent.ACTION_SCREEN_OFF -> {
+          calendarViewModel.onScreenLocked()
+        }
+        Intent.ACTION_USER_PRESENT -> {
+          calendarViewModel.onUserUnlocked()
+          if (context != null) {
+            TodayAppWidgetProvider.updateAllWidgets(context)
+            MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+          }
+        }
+        Intent.ACTION_DATE_CHANGED,
+        Intent.ACTION_TIME_TICK,
+        Intent.ACTION_TIME_CHANGED,
+        Intent.ACTION_TIMEZONE_CHANGED -> {
+          val changed = calendarViewModel.checkAndRefreshDate()
+          if (changed && context != null) {
+            TodayAppWidgetProvider.updateAllWidgets(context)
+            MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+          }
         }
       }
     }
+  }
+
+  private fun isDeviceLockedOrScreenOff(): Boolean {
+    val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+    val screenOff = powerManager != null && !powerManager.isInteractive
+    val keyguardLocked = keyguardManager != null &&
+        (keyguardManager.isKeyguardLocked || keyguardManager.isDeviceLocked)
+    return screenOff || keyguardLocked
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +76,8 @@ class MainActivity : ComponentActivity() {
       addAction(Intent.ACTION_TIME_TICK)
       addAction(Intent.ACTION_TIME_CHANGED)
       addAction(Intent.ACTION_TIMEZONE_CHANGED)
+      addAction(Intent.ACTION_SCREEN_OFF)
+      addAction(Intent.ACTION_USER_PRESENT)
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       registerReceiver(dateChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
@@ -73,9 +98,25 @@ class MainActivity : ComponentActivity() {
 
   override fun onResume() {
     super.onResume()
-    calendarViewModel.checkAndRefreshDate()
+    if (isDeviceLockedOrScreenOff()) {
+      calendarViewModel.onScreenLocked()
+    } else {
+      calendarViewModel.onAppResumed()
+    }
     TodayAppWidgetProvider.updateAllWidgets(this)
     MonthCalendarAppWidgetProvider.updateAllWidgets(this)
+  }
+
+  override fun onPause() {
+    super.onPause()
+    calendarViewModel.onAppBackgrounded(isScreenLocked = isDeviceLockedOrScreenOff())
+  }
+
+  override fun onStop() {
+    super.onStop()
+    if (isDeviceLockedOrScreenOff()) {
+      calendarViewModel.onScreenLocked()
+    }
   }
 
   override fun onDestroy() {

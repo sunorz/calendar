@@ -130,5 +130,56 @@ class CalendarRobolectricTest {
     assertTrue(todayInfo.isToday)
     assertEquals(viewModel.todayDate.value.day, todayInfo.day)
   }
+
+  @Test
+  fun `verify 10 minute timeout resets selected date and scroll position`() {
+    val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+    val viewModel = CalendarViewModel(app)
+    val days = viewModel.getDaysForMonth(2026, 9)
+    val day30 = days.find { it.day == 30 }
+    assertNotNull(day30)
+
+    val t0 = 1_000_000L
+    viewModel.selectDay(day30, nowMillis = t0)
+    assertEquals(30, viewModel.selectedDay.value?.day)
+
+    // Exit to background and return after 5 minutes (< 10 min): still selected
+    viewModel.onAppBackgrounded(nowMillis = t0 + 1_000L)
+    val reset5Min = viewModel.onAppResumed(nowMillis = t0 + 5 * 60 * 1000L)
+    assertEquals(false, reset5Min)
+    assertEquals(30, viewModel.selectedDay.value?.day)
+
+    // Exit to background and return after 10 minutes (>= 10 min): selection cleared & scroll reset triggered
+    val bgStart = t0 + 5 * 60 * 1000L
+    viewModel.onAppBackgrounded(nowMillis = bgStart)
+    val reset10Min = viewModel.onAppResumed(nowMillis = bgStart + CalendarViewModel.SELECTION_TIMEOUT_MS)
+    assertEquals(true, reset10Min)
+    assertEquals(null, viewModel.selectedDay.value)
+    assertTrue(viewModel.resetScrollEvent.value > 0L)
+  }
+
+  @Test
+  fun `verify screen lock and unlock resets selected date immediately`() {
+    val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+    val viewModel = CalendarViewModel(app)
+    val days = viewModel.getDaysForMonth(2026, 9)
+    val day30 = days.find { it.day == 30 }
+    assertNotNull(day30)
+
+    val t0 = 2_000_000L
+    viewModel.selectDay(day30, nowMillis = t0)
+    assertEquals(30, viewModel.selectedDay.value?.day)
+
+    // Simulate screen lock (even 3 seconds after selecting a date)
+    viewModel.onAppBackgrounded(nowMillis = t0 + 3_000L, isScreenLocked = true)
+    assertEquals(null, viewModel.selectedDay.value)
+
+    // Simulate unlock and resume 5 seconds later
+    val resetOnUnlock = viewModel.onUserUnlocked(nowMillis = t0 + 5_000L)
+    assertTrue(resetOnUnlock)
+    assertEquals(null, viewModel.selectedDay.value)
+    assertEquals(t0 + 5_000L, viewModel.resetScrollEvent.value)
+  }
 }
+
 

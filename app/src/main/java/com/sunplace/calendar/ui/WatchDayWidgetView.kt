@@ -82,11 +82,18 @@ fun WatchDayWidgetView(
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
     val currentTodayDate by viewModel.todayDate.collectAsState()
+    val resetScrollEvent by viewModel.resetScrollEvent.collectAsState()
 
     // Current selected date state in Watch mode (defaults to current real date in UTC+8)
     var currentYear by remember { mutableIntStateOf(currentTodayDate.year) }
     var currentMonth by remember { mutableIntStateOf(currentTodayDate.month) }
     var currentDay by remember { mutableIntStateOf(currentTodayDate.day) }
+
+    LaunchedEffect(resetScrollEvent, currentTodayDate) {
+        currentYear = currentTodayDate.year
+        currentMonth = currentTodayDate.month
+        currentDay = currentTodayDate.day
+    }
 
     // Dialog state for cross-date quick picker
     var showDatePickerDialog by remember { mutableStateOf(false) }

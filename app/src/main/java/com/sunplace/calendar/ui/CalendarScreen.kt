@@ -49,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -171,11 +172,18 @@ private fun StandardPhoneCalendarView(
     val selectedDay by viewModel.selectedDay.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
     val currentTodayDate by viewModel.todayDate.collectAsState()
+    val resetScrollEvent by viewModel.resetScrollEvent.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = viewModel.todayMonthIndex
     )
+
+    LaunchedEffect(resetScrollEvent) {
+        if (resetScrollEvent > 0L) {
+            listState.scrollToItem(viewModel.todayMonthIndex)
+        }
+    }
 
     // Compute currently visible Year and Month for TopBar title
     val currentVisibleYearMonth by remember {

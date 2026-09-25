@@ -51,6 +51,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -98,6 +99,7 @@ fun LargeScreenCalendarView(
     val selectedDay by viewModel.selectedDay.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
     val currentTodayDate by viewModel.todayDate.collectAsState()
+    val resetScrollEvent by viewModel.resetScrollEvent.collectAsState()
 
     val nextYearConfig by viewModel.nextYearConfig.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -178,6 +180,15 @@ fun LargeScreenCalendarView(
                 } else {
                     0
                 }
+            }
+        }
+
+        LaunchedEffect(resetScrollEvent) {
+            if (resetScrollEvent > 0L) {
+                gridState.scrollToItem(
+                    index = viewModel.todayMonthIndex,
+                    scrollOffset = computeTodayScrollOffset()
+                )
             }
         }
 
