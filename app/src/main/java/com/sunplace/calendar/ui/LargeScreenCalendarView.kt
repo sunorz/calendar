@@ -1,8 +1,8 @@
 package com.sunplace.calendar.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,19 +10,19 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -47,23 +46,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -73,19 +66,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.R
-import com.sunplace.calendar.data.model.CalendarConfig
 import com.sunplace.calendar.data.model.DayInfo
-import com.sunplace.calendar.util.LunarCalculator
+import com.sunplace.calendar.util.TranslationHelper
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 /**
  * Large Screen / Foldable / Tablet / Android TV / Landscape Adaptive Layout.
- * Features:
- * - Dynamic 1 to 4 month columns side-by-side depending on screen width (up to TV 4K resolution).
- * - Persistent right-hand Master-Detail Pane (no bottom sheet overlay obstructing the calendar).
- * - Each month in multi-column mode renders its own self-contained Weekday header (一 ~ 日).
- * - Clicking any date immediately reflects in the right detail panel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +93,6 @@ fun LargeScreenCalendarView(
         initialFirstVisibleItemIndex = viewModel.todayMonthIndex
     )
 
-    // Today's DayInfo fallback if no date is explicitly clicked
     val todayInfo = remember(currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
         viewModel.getTodayDayInfo()
     }
@@ -129,42 +114,35 @@ fun LargeScreenCalendarView(
         val totalHeight = maxHeight
         val density = LocalDensity.current
 
-        // Calculate right panel width based on total screen width
         val rightPanelWidth: Dp = when {
-            totalWidth >= 1400.dp -> 380.dp // TV or large display
-            totalWidth >= 840.dp -> 340.dp  // Large tablet or laptop
-            else -> 280.dp                 // Landscape phone / compact tablet
+            totalWidth >= 1400.dp -> 380.dp
+            totalWidth >= 840.dp -> 340.dp
+            else -> 280.dp
         }
 
-        // Available width for the month grid area
         val gridAreaWidth = totalWidth - rightPanelWidth
 
-        // Adaptive column count for months (1 to 4 columns)
         val columnCount = if (isElderlyMode) {
             when {
-                gridAreaWidth >= 1350.dp -> 3  // TV / Ultra-wide: 3 months
-                gridAreaWidth >= 880.dp -> 2   // Large tablet: 2 months
-                else -> 1                      // Tablet / Landscape phone: 1 spacious month
+                gridAreaWidth >= 1350.dp -> 3
+                gridAreaWidth >= 880.dp -> 2
+                else -> 1
             }
         } else {
             when {
-                gridAreaWidth >= 1200.dp -> 4  // TV / 4K landscape: 4 months
-                gridAreaWidth >= 820.dp -> 3   // Desktop / Ultra-wide: 3 months
-                gridAreaWidth >= 520.dp -> 2   // Tablet: 2 months
-                else -> 1                      // Landscape phone: 1 month
+                gridAreaWidth >= 1200.dp -> 4
+                gridAreaWidth >= 820.dp -> 3
+                gridAreaWidth >= 520.dp -> 2
+                else -> 1
             }
         }
 
-        // Helper to compute optimal vertical scroll offset so Today is comfortably visible and not cut off
         val computeTodayScrollOffset = remember(currentTodayDate, columnCount, isElderlyMode, totalHeight) {
             {
                 val todayDay = currentTodayDate.day
-                val todayYear = currentTodayDate.year
-                val todayMonth = currentTodayDate.month
-                val days = viewModel.getDaysForMonth(todayYear, todayMonth)
+                val days = viewModel.getDaysForMonth(currentTodayDate.year, currentTodayDate.month)
                 val firstDayOfWeek = days.firstOrNull()?.dayOfWeekNumber ?: 1
-                val leadingEmpty = firstDayOfWeek - 1
-                val todayCellIndex = leadingEmpty + (todayDay - 1)
+                val todayCellIndex = (firstDayOfWeek - 1) + (todayDay - 1)
                 val todayRow = todayCellIndex / 7
 
                 if (totalHeight < 550.dp || columnCount == 1) {
@@ -183,6 +161,17 @@ fun LargeScreenCalendarView(
             }
         }
 
+        val jumpToTodayAction: () -> Unit = {
+            viewModel.checkAndRefreshDate()
+            viewModel.selectToday()
+            coroutineScope.launch {
+                gridState.animateScrollToItem(
+                    index = viewModel.todayMonthIndex,
+                    scrollOffset = computeTodayScrollOffset()
+                )
+            }
+        }
+
         LaunchedEffect(resetScrollEvent) {
             if (resetScrollEvent > 0L) {
                 gridState.scrollToItem(
@@ -193,14 +182,13 @@ fun LargeScreenCalendarView(
         }
 
         Row(modifier = Modifier.fillMaxSize()) {
-            // LEFT AREA: Compact Top Bar + Dynamic Multi-Column Month Grid (Seamless Transparent Canvas)
+            // LEFT AREA: Compact Top Bar + Dynamic Multi-Column Month Grid
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.background)
             ) {
-                // Compact Landscape Top Bar (Spans full left width to screen edge x=0)
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.fillMaxWidth()
@@ -216,7 +204,6 @@ fun LargeScreenCalendarView(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Title & Icon
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -235,25 +222,14 @@ fun LargeScreenCalendarView(
                             )
                         }
 
-                        // Actions: Today Button + Mode Switch + Settings (Text in elderly mode, icons in standard mode)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 6.dp else 4.dp)
                         ) {
-                            // Quick "Today" Jump Button
                             Surface(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .clickable {
-                                        viewModel.checkAndRefreshDate()
-                                        viewModel.selectToday()
-                                        coroutineScope.launch {
-                                            gridState.animateScrollToItem(
-                                                index = viewModel.todayMonthIndex,
-                                                scrollOffset = computeTodayScrollOffset()
-                                            )
-                                        }
-                                    }
+                                    .clickable { jumpToTodayAction() }
                                     .testTag("large_screen_jump_today_top_button"),
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(20.dp)
@@ -268,10 +244,7 @@ fun LargeScreenCalendarView(
                                     )
                                 } else {
                                     Row(
-                                        modifier = Modifier.padding(
-                                            horizontal = 8.dp,
-                                            vertical = 3.5.dp
-                                        ),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                                     ) {
@@ -292,7 +265,6 @@ fun LargeScreenCalendarView(
                             }
 
                             if (isElderlyMode) {
-                                // Mode toggle as clear text
                                 Surface(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(20.dp))
@@ -310,7 +282,6 @@ fun LargeScreenCalendarView(
                                     )
                                 }
 
-                                // Settings / Theme Color as clear text
                                 Surface(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(20.dp))
@@ -328,7 +299,6 @@ fun LargeScreenCalendarView(
                                     )
                                 }
                             } else {
-                                // Mode toggle icon
                                 IconButton(
                                     onClick = { viewModel.toggleElderlyMode() },
                                     modifier = Modifier.size(36.dp)
@@ -341,7 +311,6 @@ fun LargeScreenCalendarView(
                                     )
                                 }
 
-                                // Settings icon
                                 IconButton(
                                     onClick = { viewModel.openSettingsDialog() },
                                     modifier = Modifier.size(36.dp)
@@ -363,7 +332,6 @@ fun LargeScreenCalendarView(
                     thickness = 0.8.dp
                 )
 
-                // Multi-Column Month Grid (1 to 4 columns, Transparent Canvas seamlessly blending with background)
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columnCount),
                     state = gridState,
@@ -394,7 +362,7 @@ fun LargeScreenCalendarView(
                                 days = days,
                                 selectedDay = selectedDay,
                                 isElderlyMode = isElderlyMode,
-                                showWeekdayHeader = true, // Each month column in grid has its own self-contained week header
+                                showWeekdayHeader = true,
                                 todayPattern = todayPattern,
                                 onDayClick = { day ->
                                     val nextSelected = if (selectedDay == day) null else day
@@ -415,26 +383,15 @@ fun LargeScreenCalendarView(
                 }
             }
 
-            // High-contrast Divider between Calendar Grid and Detail Panel
             VerticalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 thickness = 1.dp
             )
 
-            // RIGHT AREA: Persistent Master-Detail Supporting Pane
             LargeScreenDetailPanel(
                 dayInfo = displayDay,
                 isElderlyMode = isElderlyMode,
-                onJumpToday = {
-                    viewModel.checkAndRefreshDate()
-                    viewModel.selectToday()
-                    coroutineScope.launch {
-                        gridState.animateScrollToItem(
-                            index = viewModel.todayMonthIndex,
-                            scrollOffset = computeTodayScrollOffset()
-                        )
-                    }
-                },
+                onJumpToday = jumpToTodayAction,
                 modifier = Modifier
                     .width(rightPanelWidth)
                     .fillMaxHeight()
@@ -449,7 +406,6 @@ fun LargeScreenCalendarView(
 
 /**
  * Persistent Right-hand Day Detail Panel for Large Screen / TV / Tablet.
- * Vertically balanced and cohesive card layout without scattered spacing.
  */
 @Composable
 private fun LargeScreenDetailPanel(
@@ -475,7 +431,7 @@ private fun LargeScreenDetailPanel(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
-            border = androidx.compose.foundation.BorderStroke(
+            border = BorderStroke(
                 if (isElderlyMode) 1.5.dp else 1.dp,
                 MaterialTheme.colorScheme.outline
             )
@@ -486,7 +442,6 @@ private fun LargeScreenDetailPanel(
                     .padding(horizontal = 16.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Gregorian Date & Weekday
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     val dateTitle = if (dayInfo.isToday) {
                         stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
@@ -508,25 +463,20 @@ private fun LargeScreenDetailPanel(
                     )
                 }
 
-                // Workday / Restday & Today status badges
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val isRest = dayInfo.isRestDay
-                    val tagBgColor = if (isElderlyMode) {
-                        neutralBadgeBg
-                    } else if (isRest) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                    val tagBgColor = when {
+                        isElderlyMode -> neutralBadgeBg
+                        isRest -> MaterialTheme.colorScheme.primaryContainer
+                        else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
                     }
-                    val tagTextColor = if (isElderlyMode) {
-                        neutralBadgeText
-                    } else if (isRest) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    val tagTextColor = when {
+                        isElderlyMode -> neutralBadgeText
+                        isRest -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
                     }
 
                     Surface(
@@ -548,24 +498,19 @@ private fun LargeScreenDetailPanel(
                     thickness = 0.8.dp
                 )
 
-                // Lunar & Solar Term Details (Follows card lunar priority rule)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val lunarPriority = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+                    val lunarPriority = TranslationHelper.getCardLunarPriorityData(dayInfo)
 
                     if (lunarPriority.hasFestival) {
-                        val festBgColor = if (isElderlyMode) {
-                            neutralBadgeBg
-                        } else if (lunarPriority.isHolidayWithRest) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        val festBgColor = when {
+                            isElderlyMode -> neutralBadgeBg
+                            lunarPriority.isHolidayWithRest -> MaterialTheme.colorScheme.primaryContainer
+                            else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
                         }
-                        val festTextColor = if (isElderlyMode) {
-                            neutralBadgeText
-                        } else if (lunarPriority.isHolidayWithRest) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        val festTextColor = when {
+                            isElderlyMode -> neutralBadgeText
+                            lunarPriority.isHolidayWithRest -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
                         }
 
                         Surface(
@@ -602,7 +547,7 @@ private fun LargeScreenDetailPanel(
                         }
                     }
 
-                    val fullLunar = com.sunplace.calendar.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    val fullLunar = TranslationHelper.getLocalizedFullLunarText(dayInfo)
                     if (fullLunar.isNotBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -629,7 +574,6 @@ private fun LargeScreenDetailPanel(
                     thickness = 0.8.dp
                 )
 
-                // Return to Today Button
                 Button(
                     onClick = onJumpToday,
                     modifier = Modifier

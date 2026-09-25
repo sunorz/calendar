@@ -3,6 +3,7 @@ package com.sunplace.calendar.util
 import com.sunplace.calendar.data.model.CalendarConfig
 import com.sunplace.calendar.data.model.CalendarDate
 import com.sunplace.calendar.data.model.DayInfo
+import com.sunplace.calendar.data.model.YearConfig
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
@@ -43,48 +44,45 @@ object LunarCalculator {
         return HEAVENLY_STEMS[stemIndex] + EARTHLY_BRANCHES[branchIndex] + "年"
     }
 
+    private fun formatLunarMonthName(lunarMonth: Int, isLeap: Boolean): String {
+        val prefix = if (isLeap) "闰" else ""
+        return when (lunarMonth) {
+            1 -> "${prefix}正月"
+            11 -> "${prefix}冬月"
+            12 -> "${prefix}腊月"
+            else -> prefix + (CHINESE_DIGITS.getOrNull(lunarMonth - 1) ?: lunarMonth.toString()) + "月"
+        }
+    }
+
+    private fun formatLunarDayName(lunarDay: Int): String {
+        return when {
+            lunarDay < 11 -> "初" + CHINESE_DIGITS[lunarDay - 1]
+            lunarDay in 11..19 -> "十" + (if (lunarDay == 11) "一" else CHINESE_DIGITS[lunarDay - 11])
+            lunarDay == 20 -> "二十"
+            lunarDay in 21..29 -> "廿" + CHINESE_DIGITS[lunarDay - 21]
+            lunarDay == 30 -> "三十"
+            else -> lunarDay.toString()
+        }
+    }
+
+    fun getFullLunarDateString(lunar: LunarDate): String {
+        return getYearStemBranch(lunar.lunarYear) +
+            formatLunarMonthName(lunar.lunarMonth, lunar.isLeap) +
+            formatLunarDayName(lunar.lunarDay)
+    }
+
     fun getFullLunarDateString(year: Int, month: Int, day: Int): String {
-        val lunar = getLunarDate(year, month, day)
-        val yearStem = getYearStemBranch(lunar.lunarYear)
-        val monthPrefix = if (lunar.isLeap) "闰" else ""
-        val monthName = when (lunar.lunarMonth) {
-            1 -> monthPrefix + "正月"
-            11 -> monthPrefix + "冬月"
-            12 -> monthPrefix + "腊月"
-            else -> monthPrefix + (CHINESE_DIGITS.getOrNull(lunar.lunarMonth - 1) ?: lunar.lunarMonth.toString()) + "月"
-        }
-        val dayName = when {
-            lunar.lunarDay < 11 -> "初" + CHINESE_DIGITS[lunar.lunarDay - 1]
-            lunar.lunarDay in 11..19 -> "十" + (if (lunar.lunarDay == 11) "一" else CHINESE_DIGITS[lunar.lunarDay - 11])
-            lunar.lunarDay == 20 -> "二十"
-            lunar.lunarDay in 21..29 -> "廿" + CHINESE_DIGITS[lunar.lunarDay - 21]
-            lunar.lunarDay == 30 -> "三十"
-            else -> lunar.lunarDay.toString()
-        }
-        return yearStem + monthName + dayName
+        return getFullLunarDateString(getLunarDate(year, month, day))
     }
 
     private val WEEK_ABBRS = mapOf(
-        1 to "MON",
-        2 to "TUE",
-        3 to "WED",
-        4 to "THU",
-        5 to "FRI",
-        6 to "SAT",
-        7 to "SUN"
+        1 to "MON", 2 to "TUE", 3 to "WED", 4 to "THU", 5 to "FRI", 6 to "SAT", 7 to "SUN"
     )
 
     private val WEEK_CHINESE = mapOf(
-        1 to "周一",
-        2 to "周二",
-        3 to "周三",
-        4 to "周四",
-        5 to "周五",
-        6 to "周六",
-        7 to "周日"
+        1 to "周一", 2 to "周二", 3 to "周三", 4 to "周四", 5 to "周五", 6 to "周六", 7 to "周日"
     )
 
-    // Standard fixed solar festivals (Month-Day -> Name)
     private val DEFAULT_SOLAR_FESTIVALS = mapOf(
         "1-1" to "元旦",
         "1-10" to "警察节",
@@ -117,7 +115,6 @@ object LunarCalculator {
         "12-25" to "圣诞节"
     )
 
-    // 24 Solar Terms names in chronological order
     private val SOLAR_TERM_NAMES = listOf(
         "小寒", "大寒", // 1月
         "立春", "雨水", // 2月
@@ -133,7 +130,6 @@ object LunarCalculator {
         "大雪", "冬至"  // 12月
     )
 
-    // 21st century (2000-2099) C constants for 24 solar terms
     private val C_21ST = doubleArrayOf(
         5.4055, 20.12,   // 1月
         3.87, 18.73,     // 2月
@@ -150,8 +146,6 @@ object LunarCalculator {
     )
 
     // Standard Lunar Info database covering 1900 to 2099 (200 years)
-    // Hex encodes: leap month 30 days flag (bit 16) + month 1..12 days (bits 15..4) + leap month num (bits 3..0)
-    // Authoritative astronomical data verified with Chinese Academy of Sciences & HK Observatory
     private val LUNAR_INFO = intArrayOf(
         // 1900-1909
         0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
@@ -204,13 +198,6 @@ object LunarCalculator {
      * Converts Solar date (year, month, day) to LunarDate (lunarYear, lunarMonth, lunarDay, isLeap)
      */
     fun getLunarDate(year: Int, month: Int, day: Int): LunarDate {
-        return getLunarDateTable(year, month, day)
-    }
-
-    /**
-     * Converts Solar date to LunarDate using table fallback
-     */
-    private fun getLunarDateTable(year: Int, month: Int, day: Int): LunarDate {
         val targetDate = LocalDate.of(year, month, day)
         var offset = ChronoUnit.DAYS.between(BASE_DATE, targetDate).toInt()
         if (offset < 0 || year < 1900 || year > 2099) {
@@ -233,7 +220,6 @@ object LunarCalculator {
             val mask = 0x8000 shr (m - 1)
             val daysInMonth = if ((LUNAR_INFO[lunarYear - 1900] and mask) != 0) 30 else 29
 
-            // Check normal month m
             if (offset < daysInMonth) {
                 lunarMonth = m
                 isLeap = false
@@ -241,7 +227,6 @@ object LunarCalculator {
             }
             offset -= daysInMonth
 
-            // If this month m has a leap month (Leap m)
             if (m == leapMonth) {
                 val leapDays = getLeapDays(lunarYear)
                 if (offset < leapDays) {
@@ -253,8 +238,7 @@ object LunarCalculator {
             }
         }
 
-        val lunarDay = offset + 1
-        return LunarDate(lunarYear, lunarMonth, lunarDay, isLeap)
+        return LunarDate(lunarYear, lunarMonth, offset + 1, isLeap)
     }
 
     private fun getLunarYearDays(year: Int): Int {
@@ -274,54 +258,21 @@ object LunarCalculator {
         return 0
     }
 
-    private fun getLeapMonth(year: Int): Int {
-        return (LUNAR_INFO[year - 1900] and 0xf)
-    }
+    private fun getLeapMonth(year: Int): Int = LUNAR_INFO[year - 1900] and 0xf
 
     /**
      * Standard lunar date label (e.g. 正月, 初一, 初二, 十五, 二十, 廿三, 腊月, 闰四月)
      */
     fun getStandardLunarDayText(lunarMonth: Int, lunarDay: Int, isLeap: Boolean = false): String {
-        return if (lunarDay == 1) {
-            val prefix = if (isLeap) "闰" else ""
-            when (lunarMonth) {
-                1 -> prefix + "正月"
-                11 -> prefix + "冬月"
-                12 -> prefix + "腊月"
-                else -> prefix + (CHINESE_DIGITS.getOrNull(lunarMonth - 1) ?: lunarMonth.toString()) + "月"
-            }
-        } else {
-            when {
-                lunarDay < 11 -> "初" + CHINESE_DIGITS[lunarDay - 1]
-                lunarDay in 11..19 -> "十" + (if (lunarDay == 11) "一" else CHINESE_DIGITS[lunarDay - 11])
-                lunarDay == 20 -> "二十"
-                lunarDay in 21..29 -> "廿" + CHINESE_DIGITS[lunarDay - 21]
-                lunarDay == 30 -> "三十"
-                else -> lunarDay.toString()
-            }
-        }
+        return if (lunarDay == 1) formatLunarMonthName(lunarMonth, isLeap)
+        else formatLunarDayName(lunarDay)
     }
 
     /**
      * Lunar month and day text (e.g. 三月廿二, 七月初一, 腊月三十)
      */
     fun getLunarMonthAndDayText(lunarMonth: Int, lunarDay: Int, isLeap: Boolean = false): String {
-        val prefix = if (isLeap) "闰" else ""
-        val monthName = when (lunarMonth) {
-            1 -> prefix + "正"
-            11 -> prefix + "冬"
-            12 -> prefix + "腊"
-            else -> prefix + (CHINESE_DIGITS.getOrNull(lunarMonth - 1) ?: lunarMonth.toString())
-        } + "月"
-        val dayName = when {
-            lunarDay < 11 -> "初" + CHINESE_DIGITS[lunarDay - 1]
-            lunarDay in 11..19 -> "十" + (if (lunarDay == 11) "一" else CHINESE_DIGITS[lunarDay - 11])
-            lunarDay == 20 -> "二十"
-            lunarDay in 21..29 -> "廿" + CHINESE_DIGITS[lunarDay - 21]
-            lunarDay == 30 -> "三十"
-            else -> lunarDay.toString()
-        }
-        return monthName + dayName
+        return formatLunarMonthName(lunarMonth, isLeap) + formatLunarDayName(lunarDay)
     }
 
     /**
@@ -335,7 +286,6 @@ object LunarCalculator {
         val leapOffset = if (termIndex in 0..3) ((y - 1) / 4) else (y / 4)
         var day = (y * d + c).toInt() - leapOffset
 
-        // Astronomical offsets
         when (termIndex) {
             0 -> if (year == 2019) day -= 1 // 小寒
             1 -> if (year == 2082) day += 1 // 大寒
@@ -416,20 +366,10 @@ object LunarCalculator {
      * Standard Solar Festival (including fixed dates and floating dates like Mother's Day, Father's Day, Thanksgiving)
      */
     fun getDefaultSolarFestival(year: Int, month: Int, day: Int, dow: Int): String? {
-        // 1. Fixed solar festivals
-        val fixed = DEFAULT_SOLAR_FESTIVALS["$month-$day"]
-        if (fixed != null) return fixed
-
-        // 2. Dynamic solar festivals
-        // Mother's Day: 2nd Sunday in May (dow == 7, day in 8..14)
+        DEFAULT_SOLAR_FESTIVALS["$month-$day"]?.let { return it }
         if (month == 5 && dow == 7 && day in 8..14) return "母亲节"
-
-        // Father's Day: 3rd Sunday in June (dow == 7, day in 15..21)
         if (month == 6 && dow == 7 && day in 15..21) return "父亲节"
-
-        // Thanksgiving: 4th Thursday in November (dow == 4, day in 22..28)
         if (month == 11 && dow == 4 && day in 22..28) return "感恩节"
-
         return null
     }
 
@@ -445,21 +385,78 @@ object LunarCalculator {
         }
     }
 
+    private fun buildDayInfo(
+        year: Int,
+        month: Int,
+        day: Int,
+        dow: Int,
+        yearConfig: YearConfig?,
+        showGuangxiSanyuesan: Boolean,
+        isToday: Boolean
+    ): DayInfo {
+        val lunarDate = getLunarDate(year, month, day)
+        val standardLunarText = getStandardLunarDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
+        val lunarMonthAndDayText = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
+        val defaultLunarFestival = getDefaultLunarFestival(
+            year, month, day, lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap, showGuangxiSanyuesan
+        )
+        val solarTermName = getSolarTerm(year, month, day)
+        val defaultSolarFestival = getDefaultSolarFestival(year, month, day, dow)
+
+        val isRest: Boolean
+        var isLocale = false
+        var isExplicitLocale = false
+        var localeName: String? = null
+
+        if (yearConfig != null) {
+            isRest = yearConfig.isRestDay(month, day)
+            if (showGuangxiSanyuesan) {
+                isLocale = yearConfig.isLocaleHoliday(month, day)
+                isExplicitLocale = yearConfig.isExplicitLocaleHoliday(month, day)
+                if (isLocale) {
+                    localeName = "三月三假日"
+                }
+            }
+        } else {
+            isRest = (dow == 6 || dow == 7)
+        }
+
+        val festivalName = when {
+            defaultLunarFestival != null && defaultSolarFestival != null -> "$defaultLunarFestival·$defaultSolarFestival"
+            defaultLunarFestival != null -> defaultLunarFestival
+            defaultSolarFestival != null -> defaultSolarFestival
+            else -> null
+        }
+        val resolvedFestival = festivalName ?: solarTermName
+        val isHolidayWithRest = isRest && resolvedFestival != null &&
+            resolvedFestival.split("·").any { STATUTORY_HOLIDAY_NAMES.contains(it) }
+
+        return DayInfo(
+            year = year,
+            month = month,
+            day = day,
+            dayOfWeekNumber = dow,
+            dayOfWeekAbbr = getDayOfWeekAbbr(dow),
+            dayOfWeekChinese = getDayOfWeekChinese(dow),
+            isRestDay = isRest,
+            isWorkDay = !isRest,
+            lunarText = standardLunarText,
+            festivalName = festivalName,
+            isLunarFestival = defaultLunarFestival != null,
+            solarTermName = solarTermName,
+            lunarMonthAndDayText = lunarMonthAndDayText,
+            hasFestival = resolvedFestival != null,
+            isHolidayWithRest = isHolidayWithRest,
+            isLocaleHoliday = isLocale,
+            isExplicitLocaleHoliday = isExplicitLocale,
+            localeHolidayName = localeName,
+            isToday = isToday,
+            fullLunarText = getFullLunarDateString(lunarDate)
+        )
+    }
+
     /**
      * Generates DayInfo list for ANY given (year, month).
-     * 
-     * Core Design:
-     * 1. 200-year complete built-in Chinese / Solar / Lunar / 24-solar-terms library.
-     * 2. Number color:
-     *    - Rest days (weekends or JSON restDays): RED.
-     *    - Work days: NORMAL (black in light, white in dark).
-     * 3. Subtitle note color:
-     *    - ONLY red when the day HAS A FESTIVAL AND IT IS A REST DAY (isHolidayWithRest).
-     *    - Other rest days without festival: normal text color (NOT red).
-     *    - Locale festivals (e.g. 广西三月三 in localeFestivals): GREEN (not red).
-     * 4. Year matching:
-     *    - If year == config.curYear: Apply JSON restDays and localeFestivals.
-     *    - If year != config.curYear: Fall back to default weekend rest days.
      */
     fun getMonthDays(
         year: Int,
@@ -470,100 +467,24 @@ object LunarCalculator {
         todayDate: CalendarDate? = null
     ): List<DayInfo> {
         val daysInMonth = getDaysInMonth(year, month)
-        val todayCal = if (todayDate == null) getChinaCalendar() else null
-        val todayYear = todayDate?.year ?: todayCal!!.get(Calendar.YEAR)
-        val todayMonth = todayDate?.month ?: (todayCal!!.get(Calendar.MONTH) + 1)
-        val todayDay = todayDate?.day ?: todayCal!!.get(Calendar.DAY_OF_MONTH)
-
-        val result = ArrayList<DayInfo>(daysInMonth)
-        
+        val resolvedToday = todayDate ?: CalendarDate.today()
         val yearConfig = mainConfig.getYearConfig(year) ?: nextConfig?.getYearConfig(year)
 
-        // Calculate day of week for day 1 once outside the loop to eliminate GC overhead
-        val firstCalDow = getChinaCalendar().apply {
-            set(year, month - 1, 1, 0, 0, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.get(Calendar.DAY_OF_WEEK)
-        val firstDow = if (firstCalDow == Calendar.SUNDAY) 7 else firstCalDow - 1 // 1=Mon..7=Sun
+        val firstDow = LocalDate.of(year, month, 1).dayOfWeek.value // 1=Mon..7=Sun
+        val result = ArrayList<DayInfo>(daysInMonth)
 
         for (d in 1..daysInMonth) {
-            val dow = (firstDow + d - 2) % 7 + 1 // 1=Mon..7=Sun
-
-            // 1. Lunar date & festivals calculation (built-in full library)
-            val lunarDate = getLunarDate(year, month, d)
-            val standardLunarText = getStandardLunarDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
-            val lunarMonthAndDayText = getLunarMonthAndDayText(lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap)
-            val defaultLunarFestival = getDefaultLunarFestival(year, month, d, lunarDate.lunarMonth, lunarDate.lunarDay, lunarDate.isLeap, showGuangxiSanyuesan)
-            val defaultSolarTerm = getSolarTerm(year, month, d)
-            val defaultSolarFestival = getDefaultSolarFestival(year, month, d, dow)
-
-            val isRest: Boolean
-            var isLocale: Boolean = false
-            var isExplicitLocale: Boolean = false
-            var localeName: String? = null
-
-            if (yearConfig != null) {
-                // 1. 命中年份：完全依照配置（restDays 为休息日红字，其余为工作日黑字）
-                isRest = yearConfig.isRestDay(month, d)
-                if (showGuangxiSanyuesan) {
-                    isLocale = yearConfig.isLocaleHoliday(month, d)
-                    isExplicitLocale = yearConfig.isExplicitLocaleHoliday(month, d)
-                    if (isLocale) {
-                        localeName = "三月三假日"
-                    }
-                }
-            } else {
-                // 2. 未命中年份：保持周六和周日红色（休息日），其他日期黑色（工作日）
-                isRest = (dow == 6 || dow == 7)
-                isLocale = false
-                isExplicitLocale = false
-            }
-
-            val festivalParts = mutableListOf<String>()
-            if (defaultLunarFestival != null) festivalParts.add(defaultLunarFestival)
-            if (defaultSolarFestival != null) festivalParts.add(defaultSolarFestival)
-            
-            val festivalName = if (festivalParts.isNotEmpty()) festivalParts.joinToString("·") else null
-            val isLunarFest = defaultLunarFestival != null
-            val solarTermName = defaultSolarTerm
-
-            val resolvedFestival = festivalName ?: solarTermName
-            val hasFestival = (resolvedFestival != null)
-
-            // Rule: ONLY red subtitle when it is one of the statutory holidays AND it is a rest day
-            val isHolidayWithRest = isRest && resolvedFestival != null && resolvedFestival.split("·").any { STATUTORY_HOLIDAY_NAMES.contains(it) }
-            val fullLunar = getFullLunarDateString(year, month, d)
-
-            val isToday = (year == todayYear && month == todayMonth && d == todayDay)
-
-            val dayInfo = DayInfo(
-                year = year,
-                month = month,
-                day = d,
-                dayOfWeekNumber = dow,
-                dayOfWeekAbbr = getDayOfWeekAbbr(dow),
-                dayOfWeekChinese = getDayOfWeekChinese(dow),
-                isRestDay = isRest,
-                isWorkDay = !isRest,
-                lunarText = standardLunarText,
-                festivalName = festivalName,
-                isLunarFestival = isLunarFest,
-                solarTermName = solarTermName,
-                lunarMonthAndDayText = lunarMonthAndDayText,
-                hasFestival = hasFestival,
-                isHolidayWithRest = isHolidayWithRest,
-                isLocaleHoliday = isLocale,
-                isExplicitLocaleHoliday = isExplicitLocale,
-                localeHolidayName = localeName,
-                isToday = isToday,
-                fullLunarText = fullLunar
-            )
-            result.add(dayInfo)
+            val dow = (firstDow + d - 2) % 7 + 1
+            val isToday = (year == resolvedToday.year && month == resolvedToday.month && d == resolvedToday.day)
+            result.add(buildDayInfo(year, month, d, dow, yearConfig, showGuangxiSanyuesan, isToday))
         }
 
         return result
     }
 
+    /**
+     *Directly computes DayInfo for a single date without generating the entire month.
+     */
     fun getDayInfoForDate(
         year: Int,
         month: Int,
@@ -573,7 +494,11 @@ object LunarCalculator {
         showGuangxiSanyuesan: Boolean = true,
         todayDate: CalendarDate? = null
     ): DayInfo {
-        val list = getMonthDays(year, month, mainConfig, nextConfig, showGuangxiSanyuesan, todayDate)
-        return list.find { it.day == day } ?: list.first()
+        val resolvedToday = todayDate ?: CalendarDate.today()
+        val yearConfig = mainConfig.getYearConfig(year) ?: nextConfig?.getYearConfig(year)
+        val safeDay = day.coerceIn(1, getDaysInMonth(year, month))
+        val dow = LocalDate.of(year, month, safeDay).dayOfWeek.value // 1=Mon..7=Sun
+        val isToday = (year == resolvedToday.year && month == resolvedToday.month && safeDay == resolvedToday.day)
+        return buildDayInfo(year, month, safeDay, dow, yearConfig, showGuangxiSanyuesan, isToday)
     }
 }

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -14,14 +15,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import com.sunplace.calendar.ui.CalendarScreen
 import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.ui.theme.MyApplicationTheme
-import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
-import com.sunplace.calendar.widget.TodayAppWidgetProvider
+import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
 
 class MainActivity : ComponentActivity() {
 
@@ -37,8 +37,7 @@ class MainActivity : ComponentActivity() {
         Intent.ACTION_USER_PRESENT -> {
           calendarViewModel.onUserUnlocked()
           if (context != null) {
-            TodayAppWidgetProvider.updateAllWidgets(context)
-            MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+            BaseCalendarWidgetProvider.updateAllWidgets(context)
           }
         }
         Intent.ACTION_DATE_CHANGED,
@@ -47,8 +46,7 @@ class MainActivity : ComponentActivity() {
         Intent.ACTION_TIMEZONE_CHANGED -> {
           val changed = calendarViewModel.checkAndRefreshDate()
           if (changed && context != null) {
-            TodayAppWidgetProvider.updateAllWidgets(context)
-            MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+            BaseCalendarWidgetProvider.updateAllWidgets(context)
           }
         }
       }
@@ -68,8 +66,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     calendarViewModel.checkAndRefreshDate()
-    TodayAppWidgetProvider.updateAllWidgets(this)
-    MonthCalendarAppWidgetProvider.updateAllWidgets(this)
+    BaseCalendarWidgetProvider.updateAllWidgets(this)
 
     val filter = IntentFilter().apply {
       addAction(Intent.ACTION_DATE_CHANGED)
@@ -103,8 +100,7 @@ class MainActivity : ComponentActivity() {
     } else {
       calendarViewModel.onAppResumed()
     }
-    TodayAppWidgetProvider.updateAllWidgets(this)
-    MonthCalendarAppWidgetProvider.updateAllWidgets(this)
+    BaseCalendarWidgetProvider.updateAllWidgets(this)
   }
 
   override fun onPause() {
@@ -126,11 +122,9 @@ class MainActivity : ComponentActivity() {
     } catch (_: Exception) {}
   }
 
-  override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+  override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
     calendarViewModel.checkAndRefreshDate()
-    TodayAppWidgetProvider.updateAllWidgets(this)
-    MonthCalendarAppWidgetProvider.updateAllWidgets(this)
+    BaseCalendarWidgetProvider.updateAllWidgets(this)
   }
 }
-

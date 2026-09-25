@@ -7,36 +7,29 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.EventNote
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,24 +51,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.R
 import com.sunplace.calendar.data.model.DayInfo
-import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.util.TranslationHelper
 import kotlinx.coroutines.launch
 
@@ -88,7 +77,6 @@ fun CalendarScreen(
     val themeMode by viewModel.themeMode.collectAsState()
     val isElderlyMode by viewModel.isElderlyMode.collectAsState()
     val showGuangxiSanyuesan by viewModel.showGuangxiSanyuesan.collectAsState()
-    val syncState by viewModel.syncState.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
     val updateAvailable by viewModel.updateAvailable.collectAsState()
     val remoteVersion by viewModel.remoteVersion.collectAsState()
@@ -96,31 +84,22 @@ fun CalendarScreen(
     val downloadProgress by viewModel.downloadProgress.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
 
-    // Responsive Breakpoint Container:
-    // 1. < 360dp: Smartwatch (Wear OS) / Micro Outer-screen (Day-by-Day Widget with swipe & fast date picker)
-    // 2. >= 600dp: Tablet / Android TV / Landscape / Foldable (Dynamic 1-4 Month Columns + Persistent Detail Panel)
-    // 3. 360dp..599dp: Standard Phone (Single Column Infinite Calendar + Bottom Pill)
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val screenWidth = maxWidth
 
         when {
-            // Ultra-Small Screen: Android Watch / Wear OS / Tiny Cover Screen (< 360dp)
             screenWidth < 360.dp -> {
                 WatchDayWidgetView(
                     viewModel = viewModel,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-
-            // Large Screen: Landscape / Foldable / Tablet / 4K Android TV (>= 600dp)
             screenWidth >= 600.dp -> {
                 LargeScreenCalendarView(
                     viewModel = viewModel,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-
-            // Standard Smartphone Screen (360dp ~ 599dp)
             else -> {
                 StandardPhoneCalendarView(
                     viewModel = viewModel,
@@ -130,7 +109,6 @@ fun CalendarScreen(
         }
     }
 
-    // Full Screen Secondary Menu: SettingsScreen
     AnimatedVisibility(
         visible = showSettingsDialog,
         enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
@@ -185,11 +163,9 @@ private fun StandardPhoneCalendarView(
         }
     }
 
-    // Compute currently visible Year and Month for TopBar title
     val currentVisibleYearMonth by remember {
         derivedStateOf {
-            val visibleIndex = listState.firstVisibleItemIndex
-            CalendarViewModel.getYearMonthFromIndex(visibleIndex)
+            CalendarViewModel.getYearMonthFromIndex(listState.firstVisibleItemIndex)
         }
     }
 
@@ -208,14 +184,15 @@ private fun StandardPhoneCalendarView(
             Column(modifier = Modifier.fillMaxWidth()) {
                 CenterAlignedTopAppBar(
                     title = {
+                        val (visYear, visMonth) = currentVisibleYearMonth
                         val topBarTitle = if (TranslationHelper.isEnglish()) {
                             if (isElderlyMode) {
-                                TranslationHelper.formatShortYearMonth(currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                                TranslationHelper.formatShortYearMonth(visYear, visMonth)
                             } else {
-                                TranslationHelper.formatYearMonth(currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                                TranslationHelper.formatYearMonth(visYear, visMonth)
                             }
                         } else {
-                            stringResource(R.string.year_month_format, currentVisibleYearMonth.first, currentVisibleYearMonth.second)
+                            stringResource(R.string.year_month_format, visYear, visMonth)
                         }
                         Text(
                             text = topBarTitle,
@@ -228,7 +205,6 @@ private fun StandardPhoneCalendarView(
                         )
                     },
                     navigationIcon = {
-                        // "今日" Jump button (Flat style, background matching settings button, text matching today's color)
                         Surface(
                             modifier = Modifier
                                 .padding(start = if (isElderlyMode) 6.dp else 12.dp)
@@ -254,10 +230,7 @@ private fun StandardPhoneCalendarView(
                                 )
                             } else {
                                 Row(
-                                    modifier = Modifier.padding(
-                                        horizontal = 10.dp,
-                                        vertical = 5.dp
-                                    ),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
@@ -278,7 +251,6 @@ private fun StandardPhoneCalendarView(
                         }
                     },
                     actions = {
-                        // Senior-friendly Mode Toggle (Pure clear text for elderly mode, icon for standard mode)
                         if (isElderlyMode) {
                             Surface(
                                 modifier = Modifier
@@ -298,7 +270,6 @@ private fun StandardPhoneCalendarView(
                                 )
                             }
 
-                            // Theme Color / Settings (Pure clear text for elderly mode)
                             Surface(
                                 modifier = Modifier
                                     .padding(end = 6.dp)
@@ -351,7 +322,6 @@ private fun StandardPhoneCalendarView(
                     )
                 )
 
-                // Sticky Minimalist Weekday Header Row (一, 二, 三, 四, 五, 六, 日)
                 WeekdayHeaderRow(
                     isElderlyMode = isElderlyMode,
                     horizontalPadding = if (isElderlyMode) 10.dp else 12.dp,
@@ -373,10 +343,8 @@ private fun StandardPhoneCalendarView(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            val totalHeight = maxHeight
-            val elderlyCardMaxHeight = totalHeight * 2f / 3f
+            val elderlyCardMaxHeight = maxHeight * 2f / 3f
 
-            // Infinite Scrolling List of Months
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -404,7 +372,6 @@ private fun StandardPhoneCalendarView(
                             viewModel.selectDay(nextSelected)
                             if (nextSelected != null && isElderlyMode) {
                                 coroutineScope.launch {
-                                    // Scroll clicked month into view so the date row stays visible in top 1/3
                                     listState.animateScrollToItem(index)
                                 }
                             }
@@ -419,7 +386,6 @@ private fun StandardPhoneCalendarView(
                 }
             }
 
-            // Minimalist Selected Day Details Toast / Bottom Card
             AnimatedVisibility(
                 visible = selectedDay != null,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -456,32 +422,32 @@ private fun SelectedDayDetailPill(
     maxCardHeight: Dp? = null,
     modifier: Modifier = Modifier
 ) {
+    val dateTitle = if (dayInfo.isToday) {
+        stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
+    } else {
+        stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
+    }
+    val lunarPriority = TranslationHelper.getCardLunarPriorityData(dayInfo)
+
     if (isElderlyMode) {
-        // High-Legibility Senior-Friendly Day Card:
-        // Height adapts to content (wrapContentHeight), capped at maxCardHeight (~2/3 screen), so it never wastes space while remaining scrollable if needed.
         val surfaceModifier = if (maxCardHeight != null) {
-            modifier
-                .fillMaxWidth()
-                .heightIn(max = maxCardHeight)
+            modifier.fillMaxWidth().heightIn(max = maxCardHeight)
         } else {
             modifier.fillMaxWidth()
         }
 
-        // Neutral gray badge background and black/dark-ink text per user directive
         val neutralBadgeBg = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         val neutralBadgeText = MaterialTheme.colorScheme.onSurface
+        val pillShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
 
         Surface(
             modifier = surfaceModifier
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp))
+                .clip(pillShape)
                 .testTag("selected_day_detail_pill"),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+            shape = pillShape,
             color = MaterialTheme.colorScheme.surfaceVariant,
             shadowElevation = 12.dp,
-            border = androidx.compose.foundation.BorderStroke(
-                1.5.dp,
-                MaterialTheme.colorScheme.outline
-            )
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline)
         ) {
             Column(
                 modifier = Modifier
@@ -489,18 +455,12 @@ private fun SelectedDayDetailPill(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 22.dp, vertical = 22.dp)
             ) {
-                // Header Row: Full Date (with prominent '（今天）' if today), Weekday, and Enlarged Close Button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        val dateTitle = if (dayInfo.isToday) {
-                            stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
-                        } else {
-                            stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
-                        }
                         Text(
                             text = dateTitle,
                             fontWeight = FontWeight.ExtraBold,
@@ -522,7 +482,7 @@ private fun SelectedDayDetailPill(
                             .clip(RoundedCornerShape(20.dp))
                             .clickable { onDismiss() }
                             .testTag("close_detail_card_button"),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        color = neutralBadgeBg,
                         shape = RoundedCornerShape(20.dp)
                     ) {
                         Text(
@@ -542,56 +502,38 @@ private fun SelectedDayDetailPill(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Workday / Restday / Special day Status Badges:
-                // Strictly black text with light gray background, generous spacing, no red.
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = neutralBadgeBg
                 ) {
-                    val isRest = dayInfo.isRestDay
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = neutralBadgeBg
-                    ) {
-                        Text(
-                            text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                            fontSize = 21.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = neutralBadgeText
-                        )
-                    }
+                    Text(
+                        text = if (dayInfo.isRestDay) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = neutralBadgeText
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Lunar Date & Commemoration / Solar Term Information with generous line spacing
                 Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    val lunarPriority = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
-
-                    // 1. Festival (if present)
                     if (lunarPriority.hasFestival) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = neutralBadgeBg
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = neutralBadgeBg
-                            ) {
-                                Text(
-                                    text = lunarPriority.festivalText!!,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                    fontSize = 22.sp,
-                                    lineHeight = 30.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = neutralBadgeText
-                                )
-                            }
+                            Text(
+                                text = lunarPriority.festivalText!!,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                fontSize = 22.sp,
+                                lineHeight = 30.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = neutralBadgeText
+                            )
                         }
                     }
 
-                    // 2. 24 Solar Term (shown if present, either together with festival or by itself)
                     if (lunarPriority.hasSolarTerm) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -613,8 +555,7 @@ private fun SelectedDayDetailPill(
                         }
                     }
 
-                    // 3. Full lunar date
-                    val fullLunar = com.sunplace.calendar.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
+                    val fullLunar = TranslationHelper.getLocalizedFullLunarText(dayInfo)
                     if (fullLunar.isNotBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -639,7 +580,6 @@ private fun SelectedDayDetailPill(
             }
         }
     } else {
-        // Standard Mode Minimal Pill
         Surface(
             modifier = modifier
                 .fillMaxWidth()
@@ -648,10 +588,7 @@ private fun SelectedDayDetailPill(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surfaceVariant,
             shadowElevation = 6.dp,
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outline
-            )
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Row(
                 modifier = Modifier
@@ -665,11 +602,6 @@ private fun SelectedDayDetailPill(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val dateTitle = if (dayInfo.isToday) {
-                            stringResource(R.string.date_format_full_today, dayInfo.year, dayInfo.month, dayInfo.day)
-                        } else {
-                            stringResource(R.string.date_format_full, dayInfo.year, dayInfo.month, dayInfo.day)
-                        }
                         Text(
                             text = dateTitle,
                             fontWeight = FontWeight.Bold,
@@ -683,51 +615,35 @@ private fun SelectedDayDetailPill(
                         )
 
                         val isRest = dayInfo.isRestDay
-                        val tagBgColor = if (isRest) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                        }
-                        val tagTextColor = if (isRest) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = tagBgColor
+                            color = if (isRest) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
                         ) {
                             Text(
                                 text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = tagTextColor
+                                color = if (isRest) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(2.dp))
 
-                    val lunarPriority = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
-
                     if (lunarPriority.combinedText.isNotBlank()) {
-                        val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
-                        val separator = if (isEn) " · " else "·"
+                        val separator = if (TranslationHelper.isEnglish()) " · " else "·"
                         val normalColor = MaterialTheme.colorScheme.onSurfaceVariant
                         val festColor = if (lunarPriority.isHolidayWithRest) MaterialTheme.colorScheme.error else normalColor
-                        
+
                         val annotatedText = buildAnnotatedString {
-                            // 1. Lunar Date
                             val lunarStr = lunarPriority.ordinaryLunarText
                             if (lunarStr.isNotBlank()) {
                                 withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.Normal)) {
                                     append(lunarStr)
                                 }
                             }
-                            
-                            // 2. Solar Term
+
                             if (lunarPriority.hasSolarTerm) {
                                 if (this.length > 0) {
                                     withStyle(SpanStyle(color = normalColor, fontWeight = FontWeight.Normal)) {
@@ -738,8 +654,7 @@ private fun SelectedDayDetailPill(
                                     append(lunarPriority.solarTermText!!)
                                 }
                             }
-                            
-                            // 3. Festivals
+
                             if (lunarPriority.hasFestival) {
                                 val festParts = lunarPriority.festivalText!!.split(" · ", "·").filter { it.isNotBlank() }
                                 festParts.forEach { f ->
@@ -754,7 +669,7 @@ private fun SelectedDayDetailPill(
                                 }
                             }
                         }
-                        
+
                         Text(
                             text = annotatedText,
                             fontSize = 12.sp

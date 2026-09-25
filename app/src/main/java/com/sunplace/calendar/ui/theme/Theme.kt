@@ -1,6 +1,7 @@
 package com.sunplace.calendar.ui.theme
 
 import android.app.Activity
+import android.content.ContextWrapper
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -62,23 +63,6 @@ private val ElderlyLightColorScheme = lightColorScheme(
     outlineVariant = ElderlyLightOutlineVariant
 )
 
-private val ElderlyDarkColorScheme = darkColorScheme(
-    primary = ElderlyDarkPrimary,
-    onPrimary = ElderlyDarkOnPrimary,
-    primaryContainer = ElderlyDarkPrimaryContainer,
-    onPrimaryContainer = ElderlyDarkOnPrimaryContainer,
-    error = ElderlyDarkError,
-    onError = ElderlyDarkOnError,
-    background = ElderlyDarkBackground,
-    surface = ElderlyDarkSurface,
-    surfaceVariant = ElderlyDarkSurfaceVariant,
-    onBackground = ElderlyDarkOnBackground,
-    onSurface = ElderlyDarkOnSurface,
-    onSurfaceVariant = ElderlyDarkOnSurfaceVariant,
-    outline = ElderlyDarkOutline,
-    outlineVariant = ElderlyDarkOutlineVariant
-)
-
 @Composable
 fun MyApplicationTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -106,7 +90,7 @@ fun MyApplicationTheme(
     if (!view.isInEditMode) {
         SideEffect {
             var context = view.context
-            while (context is android.content.ContextWrapper) {
+            while (context is ContextWrapper) {
                 if (context is Activity) {
                     val window = context.window
                     val insetsController = WindowCompat.getInsetsController(window, view)

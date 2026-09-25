@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Base64
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,48 +17,38 @@ import com.sunplace.calendar.data.repository.CalendarRepository
 import com.sunplace.calendar.data.repository.SyncState
 import com.sunplace.calendar.data.repository.ThemePreferences
 import com.sunplace.calendar.util.LunarCalculator
-import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
-import com.sunplace.calendar.widget.TodayAppWidgetProvider
+import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Calendar
-
-data class MonthItem(
-    val index: Int,
-    val year: Int,
-    val month: Int,
-    val days: List<DayInfo>
-)
+import kotlin.random.Random
 
 object TodayPatternHolder {
-    var angle: Float = kotlin.random.Random.nextFloat() * 180f
+    var angle: Float = Random.nextFloat() * 180f
         private set
 
-    var normCenterX: Float = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+    var normCenterX: Float = 0.22f + Random.nextFloat() * 0.56f
         private set
 
-    var normCenterY: Float = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+    var normCenterY: Float = 0.22f + Random.nextFloat() * 0.56f
         private set
 
     fun randomize() {
-        angle = kotlin.random.Random.nextFloat() * 180f
-        normCenterX = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
-        normCenterY = 0.22f + kotlin.random.Random.nextFloat() * 0.56f
+        angle = Random.nextFloat() * 180f
+        normCenterX = 0.22f + Random.nextFloat() * 0.56f
+        normCenterY = 0.22f + Random.nextFloat() * 0.56f
     }
 }
 
@@ -132,21 +123,36 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         syncAllConfigs()
         checkVersion()
         viewModelScope.launch {
-            kotlinx.coroutines.flow.combine(config, nextYearConfig) { c, nc -> Pair(c, nc) }
+            combine(config, nextYearConfig) { c, nc -> Pair(c, nc) }
                 .collect { (c, nc) ->
-                    _selectedDay.value?.let { current ->
-                        val updatedDay = LunarCalculator.getDayInfoForDate(
-                            year = current.year,
-                            month = current.month,
-                            day = current.day,
-                            mainConfig = c,
-                            nextConfig = nc,
-                            showGuangxiSanyuesan = showGuangxiSanyuesan.value,
-                            todayDate = _todayDate.value
-                        )
-                        _selectedDay.value = updatedDay
-                    }
+                    refreshSelectedDay(c, nc, showGuangxiSanyuesan.value)
                 }
+        }
+    }
+
+    private fun refreshSelectedDay(
+        mainCfg: CalendarConfig = config.value,
+        nextCfg: CalendarConfig? = nextYearConfig.value,
+        sanyuesanEnabled: Boolean = showGuangxiSanyuesan.value
+    ) {
+        _selectedDay.value?.let { current ->
+            _selectedDay.value = LunarCalculator.getDayInfoForDate(
+                year = current.year,
+                month = current.month,
+                day = current.day,
+                mainConfig = mainCfg,
+                nextConfig = nextCfg,
+                showGuangxiSanyuesan = sanyuesanEnabled,
+                todayDate = _todayDate.value
+            )
+        }
+    }
+
+    private fun notifyWidgetsUpdated() {
+        try {
+            BaseCalendarWidgetProvider.updateAllWidgets(getApplication())
+        } catch (_: Throwable) {
+            // Silently ignore
         }
     }
 
@@ -164,8 +170,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     fun downloadAndUpdate() {
         if (_isDownloading.value) return
         val newVer = _remoteVersion.value ?: return
-        val baseDownloadUrl = String(android.util.Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", android.util.Base64.DEFAULT))
-        val endDownloadUrl = String(android.util.Base64.decode("LXJlbGVhc2UuYXBr", android.util.Base64.DEFAULT))
+        val baseDownloadUrl = String(Base64.decode("aHR0cHM6Ly9ra2lpLm9yZy9hcHAvY2FsZW5kYXItdg==", Base64.DEFAULT))
+        val endDownloadUrl = String(Base64.decode("LXJlbGVhc2UuYXBr", Base64.DEFAULT))
         val timestamp = System.currentTimeMillis() / 1000
         val downloadUrl = "$baseDownloadUrl$newVer$endDownloadUrl?d=$timestamp"
 
@@ -188,7 +194,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     }
                     val fileLength = connection.contentLength
                     val targetDir = context.externalCacheDir ?: context.cacheDir
-                    // 清理旧安装包，保持私有缓存干净不残留
                     targetDir.listFiles { _, name -> name.startsWith("update_") && name.endsWith(".apk") }
                         ?.forEach { it.delete() }
                     val file = File(targetDir, "update_v${newVer}.apk")
@@ -209,7 +214,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
                     file
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
@@ -219,7 +224,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
             if (downloadedFile != null && downloadedFile.exists() && downloadedFile.length() > 0) {
                 installApk(context, downloadedFile)
             } else {
-                // Fallback to browser if network direct download fails
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -252,49 +256,28 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun getAppVersion(): String {
-        return repository.getAppVersion()
-    }
+    fun getAppVersion(): String = repository.getAppVersion()
 
     fun setThemeMode(mode: ThemeMode) {
-        if (isElderlyMode.value) {
-            // In elderly mode, theme switching is forbidden; light mode is forced
-            return
-        }
+        if (isElderlyMode.value) return
         themePreferences.setThemeMode(mode)
-        TodayAppWidgetProvider.updateAllWidgets(getApplication())
-        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+        notifyWidgetsUpdated()
     }
 
     fun toggleElderlyMode() {
         themePreferences.toggleElderlyMode()
-        TodayAppWidgetProvider.updateAllWidgets(getApplication())
-        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+        notifyWidgetsUpdated()
     }
 
     fun setElderlyMode(enabled: Boolean) {
         themePreferences.setElderlyMode(enabled)
-        TodayAppWidgetProvider.updateAllWidgets(getApplication())
-        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
+        notifyWidgetsUpdated()
     }
 
     fun setShowGuangxiSanyuesan(enabled: Boolean) {
         themePreferences.setShowGuangxiSanyuesan(enabled)
-        TodayAppWidgetProvider.updateAllWidgets(getApplication())
-        MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
-        // Refresh selected day if currently selected
-        _selectedDay.value?.let { current ->
-            val updatedDay = LunarCalculator.getDayInfoForDate(
-                year = current.year,
-                month = current.month,
-                day = current.day,
-                mainConfig = config.value,
-                nextConfig = nextYearConfig.value,
-                showGuangxiSanyuesan = enabled,
-                todayDate = _todayDate.value
-            )
-            _selectedDay.value = updatedDay
-        }
+        notifyWidgetsUpdated()
+        refreshSelectedDay(sanyuesanEnabled = enabled)
     }
 
     fun toggleShowGuangxiSanyuesan() {
@@ -390,11 +373,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun selectToday() {
         checkAndRefreshDate()
-        val d = _todayDate.value
-        val days = getDaysForMonth(d.year, d.month)
-        val todayInfo = days.find { it.year == d.year && it.month == d.month && it.day == d.day }
-            ?: getTodayDayInfo()
-        selectDay(todayInfo)
+        selectDay(getTodayDayInfo())
     }
 
     fun getConfigUrl(): String = repository.getConfigUrl()
@@ -418,16 +397,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
                     currentDeferred.await()
                     nextDeferred.await()
                 }
-            } catch (t: Throwable) {
+            } catch (_: Throwable) {
                 // Silently ignore, never expose any error
             }
-            try {
-                // Update home screen widgets
-                TodayAppWidgetProvider.updateAllWidgets(getApplication())
-                MonthCalendarAppWidgetProvider.updateAllWidgets(getApplication())
-            } catch (t: Throwable) {
-                // Silently ignore
-            }
+            notifyWidgetsUpdated()
         }
     }
 
@@ -457,9 +430,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /**
-     * Helper to get days for any month index using current config and current todayDate
-     */
     fun getDaysForMonth(year: Int, month: Int): List<DayInfo> {
         return LunarCalculator.getMonthDays(
             year = year,

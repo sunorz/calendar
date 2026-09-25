@@ -1,14 +1,9 @@
 package com.sunplace.calendar.ui
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,52 +14,35 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.DrawStyle
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sunplace.calendar.R
@@ -74,6 +52,46 @@ import com.sunplace.calendar.util.TranslationHelper
 
 val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festivals like "三月三"
 
+val AbrilFatfaceFontFamily = FontFamily(
+    Font(R.font.abril_fatface, FontWeight.Normal)
+)
+
+val TodayBevelBorderBrush = Brush.verticalGradient(
+    colors = listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
+)
+
+private val TodayWorkdayBrush = Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
+private val TodayRestdayBrush = Brush.verticalGradient(listOf(Color(0xFFFF8585), Color(0xFFE53935)))
+private val TodayLocaleBrush = Brush.verticalGradient(listOf(Color(0xFF6EE7B7), Color(0xFF22C55E)))
+
+fun getTodayCardBrush(colorModeIndex: Int): Brush = when (colorModeIndex) {
+    1 -> TodayRestdayBrush
+    2 -> TodayLocaleBrush
+    else -> TodayWorkdayBrush
+}
+
+fun getTodayCardBrush(isExplicitLocaleHoliday: Boolean, isRestDay: Boolean): Brush = when {
+    isExplicitLocaleHoliday -> TodayLocaleBrush
+    isRestDay -> TodayRestdayBrush
+    else -> TodayWorkdayBrush
+}
+
+fun getTodayPatternTintColor(colorModeIndex: Int): Color =
+    if (colorModeIndex == 0) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.55f)
+
+fun getTodayPatternTintColor(isExplicitLocaleHoliday: Boolean, isRestDay: Boolean): Color =
+    if (!isExplicitLocaleHoliday && !isRestDay) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.55f)
+
+private val WEEKDAY_RES_IDS = listOf(
+    R.string.weekday_mon,
+    R.string.weekday_tue,
+    R.string.weekday_wed,
+    R.string.weekday_thu,
+    R.string.weekday_fri,
+    R.string.weekday_sat,
+    R.string.weekday_sun
+)
+
 /**
  * Minimalist Weekday Header Row
  * Displays Mon-Sun using localized string resources.
@@ -81,19 +99,10 @@ val LOCALE_FESTIVAL_COLOR = Color(0xFF2E7D32) // Fresh Green for locale festival
 @Composable
 fun WeekdayHeaderRow(
     isElderlyMode: Boolean = false,
-    horizontalPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    horizontalPadding: Dp = 0.dp,
     modifier: Modifier = Modifier
 ) {
     val restColor = MaterialTheme.colorScheme.error
-    val weekdayResIds = listOf(
-        R.string.weekday_mon,
-        R.string.weekday_tue,
-        R.string.weekday_wed,
-        R.string.weekday_thu,
-        R.string.weekday_fri,
-        R.string.weekday_sat,
-        R.string.weekday_sun
-    )
 
     Row(
         modifier = modifier
@@ -104,7 +113,7 @@ fun WeekdayHeaderRow(
             ),
         horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 3.dp else 2.dp)
     ) {
-        weekdayResIds.forEachIndexed { index, resId ->
+        WEEKDAY_RES_IDS.forEachIndexed { index, resId ->
             val isWeekend = index >= 5
             Box(
                 modifier = Modifier.weight(1f),
@@ -157,9 +166,8 @@ fun MinimalMonthSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isElderlyMode) {
-                // In elderly mode: Always show Year and Month together clearly
-                val monthTitle = if (com.sunplace.calendar.util.TranslationHelper.isEnglish()) {
-                    "${com.sunplace.calendar.util.TranslationHelper.getMonthName(month)} $year"
+                val monthTitle = if (TranslationHelper.isEnglish()) {
+                    "${TranslationHelper.getMonthName(month)} $year"
                 } else {
                     stringResource(R.string.year_month_format, year, month)
                 }
@@ -179,8 +187,8 @@ fun MinimalMonthSection(
                     )
                     Spacer(modifier = Modifier.size(6.dp))
                 }
-                val monthTitle = if (com.sunplace.calendar.util.TranslationHelper.isEnglish()) {
-                    com.sunplace.calendar.util.TranslationHelper.getMonthName(month)
+                val monthTitle = if (TranslationHelper.isEnglish()) {
+                    TranslationHelper.getMonthName(month)
                 } else {
                     stringResource(R.string.single_month_format, month)
                 }
@@ -220,15 +228,13 @@ fun MinimalMonthSection(
                     horizontalArrangement = Arrangement.spacedBy(if (isElderlyMode) 3.dp else 2.dp)
                 ) {
                     for (c in 0 until 7) {
-                        val cellIndex = r * 7 + c
-                        val dayIndex = cellIndex - leadingEmptyCount
-
+                        val dayIndex = (r * 7 + c) - leadingEmptyCount
                         if (dayIndex in days.indices) {
                             val dayInfo = days[dayIndex]
                             val isSelected = selectedDay != null &&
-                                    selectedDay.year == dayInfo.year &&
-                                    selectedDay.month == dayInfo.month &&
-                                    selectedDay.day == dayInfo.day
+                                selectedDay.year == dayInfo.year &&
+                                selectedDay.month == dayInfo.month &&
+                                selectedDay.day == dayInfo.day
 
                             Box(
                                 modifier = Modifier.weight(1f),
@@ -255,10 +261,6 @@ fun MinimalMonthSection(
 /**
  * Minimalist Day Cell:
  * Supports standard mode and Elderly Care mode (适老关怀模式)
- * - Large legible fonts
- * - Auspicious Chinese dual-color palette (Cinnabar Red for rest/festivals, Warm Ink/Moon Silk for workdays)
- * - No harsh stark black-and-white blocks
- * - Clear statutory rest/work tag indicators
  */
 @Composable
 fun MinimalDayCell(
@@ -269,14 +271,10 @@ fun MinimalDayCell(
     todayPattern: TodayPattern = TodayPattern.DEFAULT,
     modifier: Modifier = Modifier
 ) {
-    val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val isLightMode = MaterialTheme.colorScheme.background.luminance() >= 0.5f
     val restColor = MaterialTheme.colorScheme.error
     val workColor = MaterialTheme.colorScheme.onSurface
     val selectionBorderColor = MaterialTheme.colorScheme.primary
-    val isLightMode = !isAppDark
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
-    val density = LocalDensity.current
 
     val numColor = when {
         dayInfo.isExplicitLocaleHoliday -> LOCALE_FESTIVAL_COLOR
@@ -284,110 +282,56 @@ fun MinimalDayCell(
         else -> workColor
     }
 
-    // In elderly mode, cells are squarish and focus purely on huge numbers
     val cellAspectRatio = if (isElderlyMode) 1.0f else 0.92f
 
-    // Standard Mode Today: Dynamic 3-color highlight
     val todayBrush = remember(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
-        when {
-            dayInfo.isExplicitLocaleHoliday -> Brush.verticalGradient(
-                colors = listOf(Color(0xFF6EE7B7), Color(0xFF22C55E))
-            )
-            dayInfo.isRestDay -> Brush.verticalGradient(
-                colors = listOf(Color(0xFFFF8585), Color(0xFFE53935))
-            )
-            else -> Brush.verticalGradient(
-                colors = listOf(Color(0xFFFEF08A), Color(0xFFEAB308))
-            )
-        }
-    }
-
-    // Subtle edge rim light giving the card physical thickness
-    val todayBevelBorder = remember {
-        Brush.verticalGradient(
-            colors = listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f))
-        )
+        getTodayCardBrush(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay)
     }
 
     val todayTreeRingColor = remember(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay) {
-        if (!dayInfo.isExplicitLocaleHoliday && !dayInfo.isRestDay) {
-            Color.White.copy(alpha = 0.85f)
-        } else {
-            Color.White.copy(alpha = 0.55f)
-        }
+        getTodayPatternTintColor(dayInfo.isExplicitLocaleHoliday, dayInfo.isRestDay)
     }
     val todayTextColor = Color(0xFF000000)
-    val todaySubTextColor = todayTextColor
 
-    // Today & Selection cell styling
+    val cellClipShape = if (isElderlyMode) RoundedCornerShape(12.dp) else RoundedCornerShape(10.dp)
+
     val cellModifier = when {
-        isElderlyMode -> {
-            when {
-                isSelected -> Modifier.background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                dayInfo.isToday -> Modifier
-                    .background(
-                        color = if (isLightMode) Color(0xFFF7F2EC) else Color(0xFF2C2723),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = Color(0xFFB8251B).copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                else -> Modifier
-            }
-        }
-        dayInfo.isToday -> {
-            if (isSelected) {
-                Modifier
-                    .background(
-                        brush = todayBrush,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = selectionBorderColor,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-            } else {
-                Modifier
-                    .background(
-                        brush = todayBrush,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .border(
-                        width = 0.8.dp,
-                        brush = todayBevelBorder,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-            }
-        }
-        isSelected -> {
-            Modifier
+        isElderlyMode -> when {
+            isSelected -> Modifier.background(color = MaterialTheme.colorScheme.primary, shape = cellClipShape)
+            dayInfo.isToday -> Modifier
                 .background(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(10.dp)
+                    color = if (isLightMode) Color(0xFFF7F2EC) else Color(0xFF2C2723),
+                    shape = cellClipShape
                 )
                 .border(
                     width = 1.5.dp,
-                    color = selectionBorderColor,
-                    shape = RoundedCornerShape(10.dp)
+                    color = Color(0xFFB8251B).copy(alpha = 0.6f),
+                    shape = cellClipShape
                 )
+            else -> Modifier
         }
+        dayInfo.isToday -> {
+            val baseBg = Modifier.background(brush = todayBrush, shape = cellClipShape)
+            if (isSelected) {
+                baseBg.border(width = 1.5.dp, color = selectionBorderColor, shape = cellClipShape)
+            } else {
+                baseBg.border(width = 0.8.dp, brush = TodayBevelBorderBrush, shape = cellClipShape)
+            }
+        }
+        isSelected -> Modifier
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                shape = cellClipShape
+            )
+            .border(width = 1.5.dp, color = selectionBorderColor, shape = cellClipShape)
         else -> Modifier
     }
 
-    // Calculate text color (when selected in elderly mode with solid background, use high-contrast onPrimary)
     val displayNumColor = if (isElderlyMode && isSelected) {
         MaterialTheme.colorScheme.onPrimary
     } else {
         numColor
     }
-
-    val cellClipShape = if (isElderlyMode) RoundedCornerShape(12.dp) else RoundedCornerShape(10.dp)
 
     BoxWithConstraints(
         modifier = modifier
@@ -402,14 +346,10 @@ fun MinimalDayCell(
         val holeSize = 6.dp
 
         if (dayInfo.isToday && !isElderlyMode) {
-            // 图案自适应大小：与卡片尺寸相协调，既有水印的大气感，又确保主体花纹饱满呈现
             val patternSize = maxOf(maxWidth, maxHeight) * 1.12f
-
-            // 计算纹样的几何中心坐标（落在卡片内部核心区间）
             val centerXDp = maxWidth * TodayPatternHolder.normCenterX
             val centerYDp = maxHeight * TodayPatternHolder.normCenterY
 
-            // 图层 1: 今日祥纹图案（使用 graphicsLayer 像素级精确居中与 0~180° 旋转，边缘由卡片 clip 自然裁剪）
             Image(
                 painter = painterResource(id = todayPattern.drawableRes),
                 contentDescription = todayPattern.getDisplayName(TranslationHelper.isEnglish()),
@@ -425,7 +365,6 @@ fun MinimalDayCell(
                 colorFilter = ColorFilter.tint(todayTreeRingColor)
             )
 
-            // 图层 2: 卡片圆孔（位于左上角，若有重叠则置于石榴花图层之上）
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -435,13 +374,12 @@ fun MinimalDayCell(
                     .background(MaterialTheme.colorScheme.background)
                     .border(
                         width = 0.8.dp,
-                        brush = todayBevelBorder,
+                        brush = TodayBevelBorderBrush,
                         shape = CircleShape
                     )
             )
         }
 
-        // 图层 3 (最顶层): 日期数字与农历信息
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -449,7 +387,6 @@ fun MinimalDayCell(
             contentAlignment = Alignment.Center
         ) {
             if (isElderlyMode) {
-                // Elderly Mode: Clear, bold, readable numbers (comfortably fitting two digits on any screen size/landscape)
                 Text(
                     text = dayInfo.day.toString(),
                     color = displayNumColor,
@@ -460,31 +397,23 @@ fun MinimalDayCell(
                     softWrap = false
                 )
             } else if (dayInfo.isToday) {
-                // Standard Mode - Today: No lunar/festival subtitle, Abril Fatface handwritten day number
-                val abrilFatfaceFontFamily = FontFamily(
-                    androidx.compose.ui.text.font.Font(R.font.abril_fatface, FontWeight.Normal)
-                )
                 Text(
                     text = dayInfo.day.toString(),
                     color = todayTextColor,
                     fontSize = 24.sp,
-                    fontFamily = abrilFatfaceFontFamily,
+                    fontFamily = AbrilFatfaceFontFamily,
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,
                     style = LocalTextStyle.current.copy(
-                        platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
                     )
                 )
             } else {
-                // Standard Mode - Other days: Day number with lunar/festival subtitle
-                val subText = com.sunplace.calendar.util.TranslationHelper.getFilteredDisplayNote(dayInfo)
-                val subColor = when {
-                    dayInfo.isHolidayWithRest -> restColor
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-                val isEn = com.sunplace.calendar.util.TranslationHelper.isEnglish()
+                val subText = TranslationHelper.getFilteredDisplayNote(dayInfo)
+                val subColor = if (dayInfo.isHolidayWithRest) restColor else MaterialTheme.colorScheme.onSurfaceVariant
+                val isEn = TranslationHelper.isEnglish()
                 val subFontSize = when {
                     isEn && subText.length > 7 -> 7.5.sp
                     isEn && subText.length > 5 -> 8.sp
@@ -517,10 +446,10 @@ fun MinimalDayCell(
                             softWrap = false,
                             textAlign = TextAlign.Center,
                             style = LocalTextStyle.current.copy(
-                                platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
-                                lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
-                                    alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
-                                    trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.Both
+                                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                lineHeightStyle = LineHeightStyle(
+                                    alignment = LineHeightStyle.Alignment.Center,
+                                    trim = LineHeightStyle.Trim.Both
                                 )
                             )
                         )
@@ -544,45 +473,5 @@ fun getFullWeekdayResId(dayOfWeekNumber: Int): Int {
         6 -> R.string.weekday_full_sat
         7 -> R.string.weekday_full_sun
         else -> R.string.weekday_full_mon
-    }
-}
-
-/**
- * Draws a stroke-only outline of [text] using native Android Paint, in [strokeColor].
- * Meant to sit directly behind a normally-filled Text() of the same string/size,
- * so a tree-ring texture (or any busy background) is visually blocked around the
- * glyph edges. Reusable for both the day number and the lunar/festival subtitle.
- */
-@Composable
-private fun androidx.compose.foundation.layout.BoxScope.TodayTextStroke(
-    text: String,
-    fontSizeSp: Float,
-    strokeColor: Color,
-    strokeWidthDp: Float,
-    bold: Boolean,
-    density: androidx.compose.ui.unit.Density
-) {
-    val strokeColorArgb = strokeColor.toArgb()
-    val fontSizePx = with(density) { fontSizeSp.sp.toPx() }
-    val strokeWidthPx = with(density) { strokeWidthDp.dp.toPx() }
-    Canvas(modifier = Modifier.matchParentSize()) {
-        drawContext.canvas.nativeCanvas.apply {
-            val paint = android.graphics.Paint().apply {
-                isAntiAlias = true
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = strokeWidthPx
-                strokeJoin = android.graphics.Paint.Join.ROUND
-                strokeMiter = 2f
-                color = strokeColorArgb
-                textSize = fontSizePx
-                textAlign = android.graphics.Paint.Align.CENTER
-                typeface = if (bold) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
-            }
-            val bounds = android.graphics.Rect()
-            paint.getTextBounds(text, 0, text.length, bounds)
-            val cx = size.width / 2f
-            val cy = size.height / 2f + bounds.height() / 2f
-            drawText(text, cx, cy, paint)
-        }
     }
 }

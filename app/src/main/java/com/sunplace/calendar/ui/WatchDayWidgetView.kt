@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -18,10 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -29,7 +26,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -63,14 +58,11 @@ import androidx.compose.ui.window.Dialog
 import com.sunplace.calendar.R
 import com.sunplace.calendar.data.model.DayInfo
 import com.sunplace.calendar.util.LunarCalculator
+import com.sunplace.calendar.util.TranslationHelper
 import java.util.Calendar
 
 /**
  * Ultra-Small Screen / Smartwatch (Wear OS) / Micro Outer-screen Adaptive View.
- * Displays calendar in a day-by-day widget card format:
- * - Full vertical drag/swipe gestures to change days smoothly one by one.
- * - Minimal top navigation bar with quick "Today" jump, cross-date picker menu, and settings.
- * - Big, legible, high-contrast typography optimized for micro screens.
  */
 @Composable
 fun WatchDayWidgetView(
@@ -84,7 +76,6 @@ fun WatchDayWidgetView(
     val currentTodayDate by viewModel.todayDate.collectAsState()
     val resetScrollEvent by viewModel.resetScrollEvent.collectAsState()
 
-    // Current selected date state in Watch mode (defaults to current real date in UTC+8)
     var currentYear by remember { mutableIntStateOf(currentTodayDate.year) }
     var currentMonth by remember { mutableIntStateOf(currentTodayDate.month) }
     var currentDay by remember { mutableIntStateOf(currentTodayDate.day) }
@@ -95,15 +86,12 @@ fun WatchDayWidgetView(
         currentDay = currentTodayDate.day
     }
 
-    // Dialog state for cross-date quick picker
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
-    // Compute DayInfo for current date
     val dayInfo = remember(currentYear, currentMonth, currentDay, currentTodayDate, config, nextYearConfig, showGuangxiSanyuesan) {
         LunarCalculator.getDayInfoForDate(currentYear, currentMonth, currentDay, config, nextYearConfig, showGuangxiSanyuesan, currentTodayDate)
     }
 
-    // Helper functions to step days
     fun stepDay(delta: Int) {
         val cal = LunarCalculator.getChinaCalendar().apply {
             set(currentYear, currentMonth - 1, currentDay)
@@ -123,7 +111,6 @@ fun WatchDayWidgetView(
         currentDay = currentTodayDate.day
     }
 
-    // Accumulate drag delta for gesture threshold
     var dragAccumulator by remember { mutableFloatStateOf(0f) }
     val dragThreshold = 50f
 
@@ -135,10 +122,8 @@ fun WatchDayWidgetView(
                 detectVerticalDragGestures(
                     onDragEnd = {
                         if (dragAccumulator < -dragThreshold) {
-                            // Swiped up -> next day
                             stepDay(1)
                         } else if (dragAccumulator > dragThreshold) {
-                            // Swiped down -> previous day
                             stepDay(-1)
                         }
                         dragAccumulator = 0f
@@ -162,7 +147,6 @@ fun WatchDayWidgetView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // "今" Jump button
             Surface(
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
@@ -179,7 +163,6 @@ fun WatchDayWidgetView(
                 )
             }
 
-            // Center: Compact Date Picker Menu Button
             Surface(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
@@ -192,8 +175,8 @@ fun WatchDayWidgetView(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    val pickerText = if (com.sunplace.calendar.util.TranslationHelper.isEnglish()) {
-                        "${com.sunplace.calendar.util.TranslationHelper.getMonthName(currentMonth).take(3)} $currentYear"
+                    val pickerText = if (TranslationHelper.isEnglish()) {
+                        "${TranslationHelper.getShortMonthName(currentMonth)} $currentYear"
                     } else {
                         "${currentYear}.${currentMonth}"
                     }
@@ -212,7 +195,6 @@ fun WatchDayWidgetView(
                 }
             }
 
-            // Right icons: Settings
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = { viewModel.toggleElderlyMode() },
@@ -239,7 +221,6 @@ fun WatchDayWidgetView(
             }
         }
 
-        // Subtitle Up Arrow indicator
         Icon(
             imageVector = Icons.Default.KeyboardArrowUp,
             contentDescription = stringResource(R.string.watch_prev_day),
@@ -249,7 +230,6 @@ fun WatchDayWidgetView(
                 .clickable { stepDay(-1) }
         )
 
-        // Main Day Widget Card with smooth transition
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -272,7 +252,6 @@ fun WatchDayWidgetView(
             }
         }
 
-        // Down Arrow indicator
         Icon(
             imageVector = Icons.Default.KeyboardArrowDown,
             contentDescription = stringResource(R.string.watch_next_day),
@@ -284,7 +263,6 @@ fun WatchDayWidgetView(
         Spacer(modifier = Modifier.height(2.dp))
     }
 
-    // Cross-Date Quick Picker Dialog
     if (showDatePickerDialog) {
         WatchDatePickerDialog(
             initialYear = currentYear,
@@ -301,9 +279,6 @@ fun WatchDayWidgetView(
     }
 }
 
-/**
- * High-legibility Day Widget Card for small screen / watch
- */
 @Composable
 private fun WatchDayCard(
     dayInfo: DayInfo,
@@ -316,7 +291,7 @@ private fun WatchDayCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
         ),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
@@ -328,7 +303,6 @@ private fun WatchDayCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Row 1: Weekday & Rest/Work Tag
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -340,14 +314,12 @@ private fun WatchDayCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // High-contrast Gray background, black text badge
-                val isRest = dayInfo.isRestDay
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 ) {
                     Text(
-                        text = if (isRest) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
+                        text = if (dayInfo.isRestDay) stringResource(R.string.restday_label) else stringResource(R.string.workday_label),
                         fontSize = if (isElderlyMode) 13.sp else 11.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -371,7 +343,6 @@ private fun WatchDayCard(
                 }
             }
 
-            // Row 2: Giant Day Number
             Text(
                 text = dayInfo.day.toString(),
                 fontSize = if (isElderlyMode) 64.sp else 54.sp,
@@ -381,17 +352,15 @@ private fun WatchDayCard(
                 textAlign = TextAlign.Center
             )
 
-            // Row 3: Year & Month
-            val yearMonthText = com.sunplace.calendar.util.TranslationHelper.formatYearMonth(dayInfo.year, dayInfo.month)
             Text(
-                text = yearMonthText,
+                text = TranslationHelper.formatYearMonth(dayInfo.year, dayInfo.month),
                 fontSize = if (isElderlyMode) 15.sp else 12.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Row 4 & 5: Card Lunar Priority (Festival + Solar Term, or Solar Term, or Ordinary Lunar)
-            val lunarPriority = com.sunplace.calendar.util.TranslationHelper.getCardLunarPriorityData(dayInfo)
+            val lunarPriority = TranslationHelper.getCardLunarPriorityData(dayInfo)
+            val fullLunarText = TranslationHelper.getLocalizedFullLunarText(dayInfo)
 
             if (lunarPriority.hasFestival) {
                 Surface(
@@ -407,20 +376,17 @@ private fun WatchDayCard(
                         maxLines = 1
                     )
                 }
-                if (!lunarPriority.isLunarFestival) {
-                    val fullLunarText = com.sunplace.calendar.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
-                    if (fullLunarText.isNotBlank()) {
-                        Text(
-                            text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
-                            fontSize = if (isElderlyMode) 13.5.sp else 11.5.sp,
-                            lineHeight = if (isElderlyMode) 17.sp else 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
-                            softWrap = true,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                if (!lunarPriority.isLunarFestival && fullLunarText.isNotBlank()) {
+                    Text(
+                        text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
+                        fontSize = if (isElderlyMode) 13.5.sp else 11.5.sp,
+                        lineHeight = if (isElderlyMode) 17.sp else 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        softWrap = true,
+                        textAlign = TextAlign.Center
+                    )
                 }
                 if (lunarPriority.hasSolarTerm) {
                     Text(
@@ -447,7 +413,6 @@ private fun WatchDayCard(
                     )
                 }
             } else {
-                val fullLunarText = com.sunplace.calendar.util.TranslationHelper.getLocalizedFullLunarText(dayInfo)
                 Text(
                     text = (stringResource(R.string.lunar_label) + " " + fullLunarText).trim(),
                     fontSize = if (isElderlyMode) 13.5.sp else 11.5.sp,
@@ -463,9 +428,6 @@ private fun WatchDayCard(
     }
 }
 
-/**
- * Compact Cross-Date Quick Picker Dialog for small screen
- */
 @Composable
 private fun WatchDatePickerDialog(
     initialYear: Int,
@@ -479,15 +441,9 @@ private fun WatchDatePickerDialog(
     var selDay by remember { mutableIntStateOf(initialDay) }
 
     val maxDaysInMonth = remember(selYear, selMonth) {
-        val cal = LunarCalculator.getChinaCalendar().apply {
-            set(Calendar.YEAR, selYear)
-            set(Calendar.MONTH, selMonth - 1)
-            set(Calendar.DAY_OF_MONTH, 1)
-        }
-        cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+        LunarCalculator.getDaysInMonth(selYear, selMonth)
     }
 
-    // Clamp selDay
     if (selDay > maxDaysInMonth) {
         selDay = maxDaysInMonth
     }
@@ -511,95 +467,26 @@ private fun WatchDatePickerDialog(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Year selector row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.watch_year_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { if (selYear > CalendarViewModel.START_YEAR) selYear-- },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(
-                            text = stringResource(R.string.single_year_format, selYear),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(60.dp),
-                            textAlign = TextAlign.Center
-                        )
-                        IconButton(
-                            onClick = { if (selYear < CalendarViewModel.END_YEAR) selYear++ },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                DateNumberStepperRow(
+                    label = stringResource(R.string.watch_year_label),
+                    valueText = stringResource(R.string.single_year_format, selYear),
+                    onDecrement = { if (selYear > CalendarViewModel.START_YEAR) selYear-- },
+                    onIncrement = { if (selYear < CalendarViewModel.END_YEAR) selYear++ }
+                )
 
-                // Month selector row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.watch_month_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { if (selMonth > 1) selMonth-- },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(
-                            text = stringResource(R.string.single_month_format, selMonth),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(60.dp),
-                            textAlign = TextAlign.Center
-                        )
-                        IconButton(
-                            onClick = { if (selMonth < 12) selMonth++ },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                DateNumberStepperRow(
+                    label = stringResource(R.string.watch_month_label),
+                    valueText = stringResource(R.string.single_month_format, selMonth),
+                    onDecrement = { if (selMonth > 1) selMonth-- },
+                    onIncrement = { if (selMonth < 12) selMonth++ }
+                )
 
-                // Day selector row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.watch_day_label), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { if (selDay > 1) selDay-- },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(
-                            text = "$selDay",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(60.dp),
-                            textAlign = TextAlign.Center
-                        )
-                        IconButton(
-                            onClick = { if (selDay < maxDaysInMonth) selDay++ },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                DateNumberStepperRow(
+                    label = stringResource(R.string.watch_day_label),
+                    valueText = "$selDay",
+                    onDecrement = { if (selDay > 1) selDay-- },
+                    onIncrement = { if (selDay < maxDaysInMonth) selDay++ }
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -615,6 +502,47 @@ private fun WatchDatePickerDialog(
                         Text(stringResource(R.string.btn_jump), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateNumberStepperRow(
+    label: String,
+    valueText: String,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = onDecrement,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+            Text(
+                text = valueText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(60.dp),
+                textAlign = TextAlign.Center
+            )
+            IconButton(
+                onClick = onIncrement,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

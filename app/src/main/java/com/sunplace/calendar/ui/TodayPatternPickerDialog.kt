@@ -7,34 +7,63 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.input.key.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.sunplace.calendar.data.model.TodayPattern
 import com.sunplace.calendar.util.LunarCalculator
 import com.sunplace.calendar.util.TranslationHelper
-import com.sunplace.calendar.R
 import java.util.Calendar
-import java.util.TimeZone
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,44 +77,28 @@ fun TodayPatternPickerDialog(
     val isEnglish = TranslationHelper.isEnglish()
     val allPatterns = remember { TodayPattern.entries.toList() }
     val uriHandler = LocalUriHandler.current
-    
-    val now = LunarCalculator.getChinaCalendar()
-    val dayOfMonth = now.get(Calendar.DAY_OF_MONTH)
-    val dayOfMonthString = dayOfMonth.toString()
-    
+
+    val dayOfMonthString = remember {
+        LunarCalculator.getChinaCalendar().get(Calendar.DAY_OF_MONTH).toString()
+    }
+
     var colorModeIndex by remember { mutableIntStateOf(initialColorModeIndex) }
 
     LaunchedEffect(initialColorModeIndex) {
         colorModeIndex = initialColorModeIndex
     }
-    
-    var currentPatternIndex by remember { 
-        mutableIntStateOf(allPatterns.indexOf(selectedPattern).takeIf { it >= 0 } ?: 0) 
+
+    var currentPatternIndex by remember {
+        mutableIntStateOf(allPatterns.indexOf(selectedPattern).takeIf { it >= 0 } ?: 0)
     }
-    
+
     val currentPreviewPattern = allPatterns[currentPatternIndex]
 
     val todayBrush = remember(colorModeIndex) {
-        when (colorModeIndex) {
-            0 -> Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
-            1 -> Brush.verticalGradient(listOf(Color(0xFFFF8585), Color(0xFFE53935)))
-            2 -> Brush.verticalGradient(listOf(Color(0xFF6EE7B7), Color(0xFF22C55E)))
-            else -> Brush.verticalGradient(listOf(Color(0xFFFEF08A), Color(0xFFEAB308)))
-        }
+        getTodayCardBrush(colorModeIndex)
     }
-    
-    val todayBevelBorder = remember {
-        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.Black.copy(alpha = 0.15f)))
-    }
-    val AbrilFatfaceFontFamily = FontFamily(
-        androidx.compose.ui.text.font.Font(R.font.abril_fatface, FontWeight.Normal)
-    )
     val todayTreeRingColor = remember(colorModeIndex) {
-        if (colorModeIndex == 0) {
-            Color.White.copy(alpha = 0.85f)
-        } else {
-            Color.White.copy(alpha = 0.55f)
-        }
+        getTodayPatternTintColor(colorModeIndex)
     }
     val todayTextColor = Color(0xFF000000)
 
@@ -127,16 +140,16 @@ fun TodayPatternPickerDialog(
                         KeyEvent.KEYCODE_DPAD_DOWN -> { nextColor(); true }
                         KeyEvent.KEYCODE_DPAD_LEFT -> { prevPattern(); true }
                         KeyEvent.KEYCODE_DPAD_RIGHT -> { nextPattern(); true }
-                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { 
+                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
                             onSelectPattern(currentPreviewPattern)
                             onDismiss()
-                            true 
+                            true
                         }
                         else -> false
                     }
                 } else false
             },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier
@@ -171,13 +184,12 @@ fun TodayPatternPickerDialog(
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Fixed 200.dp x 200.dp Card
                 BoxWithConstraints(
                     modifier = Modifier
                         .size(200.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(brush = todayBrush, shape = RoundedCornerShape(16.dp))
-                        .border(width = 0.8.dp, brush = todayBevelBorder, shape = RoundedCornerShape(16.dp)),
+                        .border(width = 0.8.dp, brush = TodayBevelBorderBrush, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     val cardSize = 200.dp
@@ -200,7 +212,6 @@ fun TodayPatternPickerDialog(
                         colorFilter = ColorFilter.tint(todayTreeRingColor)
                     )
 
-                    // hole
                     val holeOffset = cardSize.value * 0.08f
                     val holeSize = cardSize.value * 0.12f
                     Box(
@@ -212,12 +223,11 @@ fun TodayPatternPickerDialog(
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 0.8.dp,
-                                brush = todayBevelBorder,
+                                brush = TodayBevelBorderBrush,
                                 shape = CircleShape
                             )
                     )
 
-                    // Standard Mode - Today: No lunar/festival subtitle, Abril Fatface handwritten day number
                     Text(
                         text = dayOfMonthString,
                         color = todayTextColor,
@@ -228,14 +238,13 @@ fun TodayPatternPickerDialog(
                         maxLines = 1,
                         softWrap = false,
                         style = LocalTextStyle.current.copy(
-                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
+                            platformStyle = PlatformTextStyle(includeFontPadding = false)
                         )
                     )
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // Pattern Name with fixed minimum height to prevent layout jumps on wrap
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -251,9 +260,9 @@ fun TodayPatternPickerDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Row(
                     modifier = Modifier.padding(top = 4.dp),
                     horizontalArrangement = Arrangement.Center,
