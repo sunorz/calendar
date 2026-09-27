@@ -88,6 +88,24 @@ class CalendarRobolectricTest {
     val root = views.apply(context, null) as android.view.ViewGroup
     assertNotNull(root)
 
+    // Measure and layout in a compact 2x2 widget container (e.g., 145dp x 145dp)
+    val density = context.resources.displayMetrics.density
+    val sizePx = (145 * density).toInt()
+    val widthSpec = android.view.View.MeasureSpec.makeMeasureSpec(sizePx, android.view.View.MeasureSpec.EXACTLY)
+    val heightSpec = android.view.View.MeasureSpec.makeMeasureSpec(sizePx, android.view.View.MeasureSpec.EXACTLY)
+
+    // 5-week month configuration (e.g. Sept 2026 where 28th is in row 4)
+    val row5 = root.findViewById<android.view.View>(R.id.widget_week_row_5)
+    row5.visibility = android.view.View.GONE
+    root.measure(widthSpec, heightSpec)
+    root.layout(0, 0, sizePx, sizePx)
+
+    val grid = root.findViewById<android.view.ViewGroup>(R.id.widget_days_grid)
+    val row4 = root.findViewById<android.view.ViewGroup>(R.id.widget_week_row_4)
+    val day28Cell = root.findViewById<android.widget.TextView>(R.id.widget_day_28)
+    assertTrue("Row 4 must fit completely within widget_days_grid without bottom clipping", row4.bottom <= grid.height)
+    assertTrue("Day 28 cell must have sufficient height for text and 4dp bottom bar", day28Cell.height >= (18 * density).toInt())
+
     // Run update logic
     com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider.updateAppWidget(context, appWidgetManager, 1001)
   }
