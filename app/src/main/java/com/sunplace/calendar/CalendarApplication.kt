@@ -7,9 +7,17 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import com.sunplace.calendar.data.repository.CalendarRepository
+import com.sunplace.calendar.util.ServerTimeManager
 import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class CalendarApplication : Application() {
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val widgetDateSyncReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -17,11 +25,18 @@ class CalendarApplication : Application() {
             val action = intent?.action
             Log.d("CalendarApp", "Received system broadcast in Application: $action, updating all widgets")
             BaseCalendarWidgetProvider.updateAllWidgets(ctx)
+            appScope.launch(Dispatchers.IO) {
+                CalendarRepository(ctx).syncServerTime()
+                launch(Dispatchers.Main) {
+                    BaseCalendarWidgetProvider.updateAllWidgets(ctx)
+                }
+            }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
+        ServerTimeManager.init(this)
         BaseCalendarWidgetProvider.updateAllWidgets(this)
 
         val filter = IntentFilter().apply {
@@ -40,6 +55,15 @@ class CalendarApplication : Application() {
             registerReceiver(widgetDateSyncReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             registerReceiver(widgetDateSyncReceiver, filter)
+        }
+
+        appScope.launch(Dispatchers.IO) {
+            val synced = CalendarRepository(this@CalendarApplication).syncServerTime()
+            if (synced) {
+                launch(Dispatchers.Main) {
+                    BaseCalendarWidgetProvider.updateAllWidgets(this@CalendarApplication)
+                }
+            }
         }
     }
 }

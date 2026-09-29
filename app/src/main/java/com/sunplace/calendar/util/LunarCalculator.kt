@@ -22,12 +22,12 @@ object LunarCalculator {
      * Fixed TimeZone for China Standard Time (UTC+8 / Asia/Shanghai).
      * Ensures all calendar and date calculations strictly reflect UTC+8 regardless of system/device timezone.
      */
-    val CHINA_TIME_ZONE: TimeZone = TimeZone.getTimeZone("GMT+8")
+    val CHINA_TIME_ZONE: TimeZone get() = ServerTimeManager.CHINA_TIME_ZONE
 
     /**
-     * Get a Calendar instance initialized to the fixed UTC+8 TimeZone.
+     * Get a Calendar instance initialized to the fixed UTC+8 TimeZone based on calibrated Server Time.
      */
-    fun getChinaCalendar(): Calendar = Calendar.getInstance(CHINA_TIME_ZONE)
+    fun getChinaCalendar(): Calendar = ServerTimeManager.getChinaCalendar()
 
     private val CHINESE_DIGITS = listOf("一", "二", "三", "四", "五", "六", "七", "八", "九", "十")
     private val HEAVENLY_STEMS = listOf("甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸")

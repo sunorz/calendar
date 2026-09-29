@@ -123,6 +123,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         syncAllConfigs()
         checkVersion()
         viewModelScope.launch {
+            repository.syncServerTime()
+            checkAndRefreshDate()
+        }
+        viewModelScope.launch {
             combine(config, nextYearConfig) { c, nc -> Pair(c, nc) }
                 .collect { (c, nc) ->
                     refreshSelectedDay(c, nc, showGuangxiSanyuesan.value)
@@ -327,6 +331,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun onUserUnlocked(nowMillis: Long = System.currentTimeMillis()): Boolean {
         checkAndRefreshDate()
+        viewModelScope.launch {
+            repository.syncServerTime()
+            checkAndRefreshDate()
+        }
         val hadSelection = _selectedDay.value != null
         val wasLocked = screenLockedWhileAway
         screenLockedWhileAway = false
@@ -336,6 +344,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onAppResumed(nowMillis: Long = System.currentTimeMillis()): Boolean {
+        viewModelScope.launch {
+            repository.syncServerTime()
+            checkAndRefreshDate()
+        }
         val dateChanged = checkAndRefreshDate()
         val selectionTimedOut = _selectedDay.value != null &&
             lastSelectionTimeMillis > 0L &&

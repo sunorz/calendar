@@ -209,6 +209,33 @@ class CalendarRobolectricTest {
     TodayAppWidgetProvider.scheduleMidnightUpdate(context)
     MonthCalendarAppWidgetProvider.scheduleMidnightUpdate(context)
   }
+
+  @Test
+  fun `verify ServerTimeManager dictates today date independent of local clock manipulation`() {
+    // 2026-09-29 10:05:00 CST (UTC+8) -> 2026-09-29 02:05:00 UTC
+    // In milliseconds: 1790647500000L
+    val calCst = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("GMT+8")).apply {
+      set(2026, java.util.Calendar.SEPTEMBER, 29, 10, 5, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+    val serverEpochMs = calCst.timeInMillis
+
+    com.sunplace.calendar.util.ServerTimeManager.calibrate(serverEpochMs)
+    assertTrue(com.sunplace.calendar.util.ServerTimeManager.isServerTimeCalibrated())
+
+    val todayDate = com.sunplace.calendar.data.model.CalendarDate.today()
+    assertEquals(2026, todayDate.year)
+    assertEquals(9, todayDate.month)
+    assertEquals(29, todayDate.day)
+
+    val chinaCal = LunarCalculator.getChinaCalendar()
+    assertEquals(2026, chinaCal.get(java.util.Calendar.YEAR))
+    assertEquals(java.util.Calendar.SEPTEMBER, chinaCal.get(java.util.Calendar.MONTH))
+    assertEquals(29, chinaCal.get(java.util.Calendar.DAY_OF_MONTH))
+
+    // Reset after test
+    com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
+  }
 }
 
 
