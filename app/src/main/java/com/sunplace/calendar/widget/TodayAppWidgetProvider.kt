@@ -37,6 +37,7 @@ class TodayAppWidgetProvider : BaseCalendarWidgetProvider() {
             appWidgetId: Int
         ) {
             try {
+                com.sunplace.calendar.util.ServerTimeManager.init(context)
                 val repository = CalendarRepository(context)
                 val themeMode = resolveEffectiveThemeMode(context)
                 val views = buildRemoteViews(context, themeMode, repository)

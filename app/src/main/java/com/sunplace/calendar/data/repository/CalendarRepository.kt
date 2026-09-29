@@ -140,17 +140,7 @@ class CalendarRepository(private val context: Context) {
     }
 
     suspend fun syncServerTime(): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = buildNoCacheGetRequest(VERSION_CHECK_URL)
-                val response = okHttpClient.newCall(request).execute()
-                com.sunplace.calendar.util.ServerTimeManager.calibrateFromResponse(response, context)
-                response.close()
-                true
-            } catch (_: Exception) {
-                false
-            }
-        }
+        return com.sunplace.calendar.util.ServerTimeManager.syncOptimalTime(context)
     }
 
     suspend fun checkAndSyncVersion(): Result<VersionCheckResult> {
@@ -158,7 +148,6 @@ class CalendarRepository(private val context: Context) {
             try {
                 val request = buildNoCacheGetRequest(VERSION_CHECK_URL)
                 val response = okHttpClient.newCall(request).execute()
-                com.sunplace.calendar.util.ServerTimeManager.calibrateFromResponse(response, context)
                 if (!response.isSuccessful) {
                     return@withContext Result.failure(Exception("HTTP ${response.code}"))
                 }
@@ -209,7 +198,6 @@ class CalendarRepository(private val context: Context) {
 
             try {
                 val response = okHttpClient.newCall(buildNoCacheGetRequest(finalUrl)).execute()
-                com.sunplace.calendar.util.ServerTimeManager.calibrateFromResponse(response, context)
                 val bodyString = if (response.isSuccessful) response.body?.string() else null
                 val config = if (!bodyString.isNullOrBlank()) parseConfigJson(bodyString) else null
 

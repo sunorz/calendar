@@ -1,5 +1,6 @@
 package com.sunplace.calendar.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -83,6 +84,15 @@ fun CalendarScreen(
     val isDownloading by viewModel.isDownloading.collectAsState()
     val downloadProgress by viewModel.downloadProgress.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
+    val selectedDay by viewModel.selectedDay.collectAsState()
+
+    BackHandler(enabled = showSettingsDialog) {
+        viewModel.closeSettingsDialog()
+    }
+
+    BackHandler(enabled = !showSettingsDialog && selectedDay != null) {
+        viewModel.selectDay(null)
+    }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val screenWidth = maxWidth

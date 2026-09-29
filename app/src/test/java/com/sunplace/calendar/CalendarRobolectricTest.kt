@@ -236,6 +236,53 @@ class CalendarRobolectricTest {
     // Reset after test
     com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
   }
+
+  @Test
+  fun `verify ServerTimeManager persistence and recovery from shared preferences`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val calCst = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("GMT+8")).apply {
+      set(2026, java.util.Calendar.OCTOBER, 1, 8, 0, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+    val serverEpochMs = calCst.timeInMillis
+
+    com.sunplace.calendar.util.ServerTimeManager.calibrate(serverEpochMs, context)
+    com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
+
+    // Init from context
+    com.sunplace.calendar.util.ServerTimeManager.init(context)
+    val chinaCal = LunarCalculator.getChinaCalendar()
+    assertEquals(2026, chinaCal.get(java.util.Calendar.YEAR))
+    assertEquals(java.util.Calendar.OCTOBER, chinaCal.get(java.util.Calendar.MONTH))
+    assertEquals(1, chinaCal.get(java.util.Calendar.DAY_OF_MONTH))
+
+    com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
+  }
+
+  @Test
+  fun `verify ServerTimeManager NTP servers list and CST conversion`() {
+    val servers = com.sunplace.calendar.util.ServerTimeManager.NTP_SERVERS
+    assertTrue(servers.contains("ntp.aliyun.com"))
+    assertTrue(servers.contains("time.cloudflare.com"))
+    assertTrue(servers.contains("pool.ntp.org"))
+
+    // Test UTC to CST conversion
+    // 2026-12-31 16:30:00 UTC -> 2027-01-01 00:30:00 CST (crosses year boundary)
+    val calUtc = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
+      set(2026, java.util.Calendar.DECEMBER, 31, 16, 30, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+    com.sunplace.calendar.util.ServerTimeManager.calibrate(calUtc.timeInMillis)
+    val cstCal = com.sunplace.calendar.util.ServerTimeManager.getChinaCalendar()
+    assertEquals(2027, cstCal.get(java.util.Calendar.YEAR))
+    assertEquals(java.util.Calendar.JANUARY, cstCal.get(java.util.Calendar.MONTH))
+    assertEquals(1, cstCal.get(java.util.Calendar.DAY_OF_MONTH))
+    assertEquals(0, cstCal.get(java.util.Calendar.HOUR_OF_DAY))
+    assertEquals(30, cstCal.get(java.util.Calendar.MINUTE))
+
+    com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
+  }
 }
+
 
 
