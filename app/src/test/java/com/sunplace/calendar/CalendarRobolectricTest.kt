@@ -5,6 +5,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.sunplace.calendar.data.repository.CalendarRepository
 import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.util.LunarCalculator
+import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
+import com.sunplace.calendar.widget.MonthCalendarAppWidgetProvider
+import com.sunplace.calendar.widget.TodayAppWidgetProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -66,7 +69,7 @@ class CalendarRobolectricTest {
   @Test
   fun `verify announcement content`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    assertEquals("终局之战", context.getString(R.string.announcement_content))
+    assertEquals("无限", context.getString(R.string.announcement_content))
   }
 
   @Test
@@ -111,10 +114,10 @@ class CalendarRobolectricTest {
   }
 
   @Test
-  fun `verify app version name is 1 1 5`() {
+  fun `verify app version name is 1 1 6`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val repository = CalendarRepository(context)
-    assertEquals("1.1.5", repository.getAppVersion())
+    assertEquals("1.1.6", repository.getAppVersion())
   }
 
   @Test
@@ -197,6 +200,14 @@ class CalendarRobolectricTest {
     assertTrue(resetOnUnlock)
     assertEquals(null, viewModel.selectedDay.value)
     assertEquals(t0 + 5_000L, viewModel.resetScrollEvent.value)
+  }
+
+  @Test
+  fun `verify CalendarApplication and widget midnight alarm scheduling`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    BaseCalendarWidgetProvider.updateAllWidgets(context)
+    TodayAppWidgetProvider.scheduleMidnightUpdate(context)
+    MonthCalendarAppWidgetProvider.scheduleMidnightUpdate(context)
   }
 }
 

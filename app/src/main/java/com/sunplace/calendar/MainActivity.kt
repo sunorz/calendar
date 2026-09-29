@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         Intent.ACTION_SCREEN_OFF -> {
           calendarViewModel.onScreenLocked()
         }
+        Intent.ACTION_SCREEN_ON,
         Intent.ACTION_USER_PRESENT -> {
           calendarViewModel.onUserUnlocked()
           if (context != null) {
@@ -74,10 +75,11 @@ class MainActivity : ComponentActivity() {
       addAction(Intent.ACTION_TIME_CHANGED)
       addAction(Intent.ACTION_TIMEZONE_CHANGED)
       addAction(Intent.ACTION_SCREEN_OFF)
+      addAction(Intent.ACTION_SCREEN_ON)
       addAction(Intent.ACTION_USER_PRESENT)
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      registerReceiver(dateChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+      registerReceiver(dateChangeReceiver, filter, Context.RECEIVER_EXPORTED)
     } else {
       registerReceiver(dateChangeReceiver, filter)
     }

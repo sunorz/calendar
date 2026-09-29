@@ -68,6 +68,7 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
             action == Intent.ACTION_BOOT_COMPLETED ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED ||
             action == Intent.ACTION_USER_PRESENT ||
+            action == Intent.ACTION_SCREEN_ON ||
             action == Intent.ACTION_CONFIGURATION_CHANGED ||
             action == midnightAction
         ) {
@@ -80,6 +81,8 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
         fun updateAllWidgets(context: Context) {
             TodayAppWidgetProvider.updateAllWidgets(context)
             MonthCalendarAppWidgetProvider.updateAllWidgets(context)
+            TodayAppWidgetProvider.scheduleMidnightUpdate(context)
+            MonthCalendarAppWidgetProvider.scheduleMidnightUpdate(context)
         }
 
         fun resolveEffectiveThemeMode(context: Context): ThemeMode {
@@ -160,34 +163,68 @@ abstract class BaseCalendarWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val cal = LunarCalculator.getChinaCalendar().apply {
+            val now = System.currentTimeMillis()
+            val localMidnight = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_MONTH, 1)
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 5)
+                set(Calendar.SECOND, 2)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val chinaMidnight = LunarCalculator.getChinaCalendar().apply {
+                add(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 2)
                 set(Calendar.MILLISECOND, 0)
             }
 
+            val triggerTime = listOf(localMidnight.timeInMillis, chinaMidnight.timeInMillis)
+                .filter { it > now }
+                .minOrNull() ?: (now + 60 * 60 * 1000L)
+
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (alarmManager.canScheduleExactAlarms()) {
+                        alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
+                    } else {
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
-                        cal.timeInMillis,
+                        triggerTime,
                         pendingIntent
                     )
                 } else {
                     alarmManager.setExact(
                         AlarmManager.RTC_WAKEUP,
-                        cal.timeInMillis,
+                        triggerTime,
                         pendingIntent
                     )
                 }
             } catch (_: SecurityException) {
-                alarmManager.set(
-                    AlarmManager.RTC_WAKEUP,
-                    cal.timeInMillis,
-                    pendingIntent
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
             }
         }
     }
