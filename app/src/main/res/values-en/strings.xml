@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">CN ShiftCal</string>
     <string name="widget_description">Dynamic Calendar Widget: Displays weekday, workday/restday status and date</string>
-    <string name="widget_today_name">Daily Card Widget</string>
-    <string name="widget_today_description">Dynamic daily widget with weekday, lunar date, and rest day status</string>
-    <string name="widget_month_name">Month Calendar Widget (2x2)</string>
-    <string name="widget_month_description">2x2 compact month calendar with full month dates and red rest days</string>
+    <string name="widget_today_name">Today</string>
+    <string name="widget_today_description">Quickly view today</string>
+    <string name="widget_month_name">Month Calendar</string>
+    <string name="widget_month_description">Monthly shift schedule</string>
     <string name="workday_label">Workday</string>
     <string name="restday_label">Rest Day</string>
     <string name="today_label">Today</string>
@@ -74,7 +74,7 @@
     <string name="pattern_btn_reset">Reset</string>
     <string name="about_section_title">About</string>
     <string name="announcement_label">Notice</string>
-    <string name="announcement_content">无限</string>
+    <string name="announcement_content">你并没有那么热爱工作</string>
     <string name="author_label">Author</string>
     <string name="website_label">Website</string>
     <string name="version_label">Version</string>

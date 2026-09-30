@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">调休日历</string>
     <string name="widget_description">动态日历小部件：展示星期缩写与工作日/休息日数字</string>
-    <string name="widget_today_name">今日卡片小组件</string>
-    <string name="widget_today_description">动态展示今日星期、农历节日与休班状态</string>
-    <string name="widget_month_name">当月月历小组件 (2x2)</string>
-    <string name="widget_month_description">2x2 极简月历：展示当月全部日期与红字休息日</string>
+    <string name="widget_today_name">显示今日</string>
+    <string name="widget_today_description">快速查看今天</string>
+    <string name="widget_month_name">月历</string>
+    <string name="widget_month_description">当月调休</string>
     <string name="workday_label">工作日</string>
     <string name="restday_label">休息日</string>
     <string name="today_label">今天</string>
@@ -74,7 +74,7 @@
     <string name="theme_dark">深色</string>
     <string name="about_section_title">关于应用</string>
     <string name="announcement_label">公告</string>
-    <string name="announcement_content">无限</string>
+    <string name="announcement_content">你并没有那么热爱工作</string>
     <string name="author_label">作者</string>
     <string name="website_label">官方网址</string>
     <string name="version_label">当前版本</string>

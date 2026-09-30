@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+
+    <!-- Card Background -->
+    <path
+        android:fillColor="@color/widget_bg"
+        android:strokeColor="@color/widget_border"
+        android:strokeWidth="1.5"
+        android:pathData="M28,4 L132,4 A24,24 0 0,1 156,28 L156,132 A24,24 0 0,1 132,156 L28,156 A24,24 0 0,1 4,132 L4,28 A24,24 0 0,1 28,4 Z" />
+
+    <!-- Top Header: Red Weekday Pill (周二) + Grey Month Pill (9月) -->
+    <path
+        android:fillColor="#D93025"
+        android:pathData="M48,30 L76,30 A5,5 0 0,1 81,35 L81,39 A5,5 0 0,1 76,44 L48,44 A5,5 0 0,1 43,39 L43,35 A5,5 0 0,1 48,30 Z" />
+    <path
+        android:fillColor="#70757A"
+        android:pathData="M91,30 L112,30 A5,5 0 0,1 117,35 L117,39 A5,5 0 0,1 112,44 L91,44 A5,5 0 0,1 86,39 L86,35 A5,5 0 0,1 91,30 Z" />
+
+    <!-- Big Number "1" (2026年9月1日) -->
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M68,56 L81,56 L81,114 L69,114 L69,69 L57,76 L57,65 Z" />
+
+    <!-- Vertical Lunar Notes on Right (七月二十) -->
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M100,58 L110,58 A2,2 0 0,1 112,60 L112,66 A2,2 0 0,1 110,68 L100,68 A2,2 0 0,1 98,66 L98,60 A2,2 0 0,1 100,58 Z" />
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M100,73 L110,73 A2,2 0 0,1 112,75 L112,81 A2,2 0 0,1 110,83 L100,83 A2,2 0 0,1 98,81 L98,75 A2,2 0 0,1 100,73 Z" />
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M100,88 L110,88 A2,2 0 0,1 112,90 L112,96 A2,2 0 0,1 110,98 L100,98 A2,2 0 0,1 98,96 L98,90 A2,2 0 0,1 100,88 Z" />
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M100,103 L110,103 A2,2 0 0,1 112,105 L112,111 A2,2 0 0,1 110,113 L100,113 A2,2 0 0,1 98,111 L98,105 A2,2 0 0,1 100,103 Z" />
+</vector>

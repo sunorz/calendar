@@ -33,7 +33,7 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- Week Row 0 -->
+        <!-- Week Row 0 (Sept 2026 starts on Tuesday: cell 1..6 = 1..6) -->
         <LinearLayout
             android:id="@+id/widget_week_row_0"
             android:layout_width="match_parent"
@@ -43,15 +43,15 @@
             android:gravity="center_vertical">
 
             <TextView android:id="@+id/widget_day_0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="1" android:background="@drawable/bg_widget_today" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="2" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="3" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="4" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="5" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="6" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Week Row 1 -->
+        <!-- Week Row 1 (7..13) -->
         <LinearLayout
             android:id="@+id/widget_week_row_1"
             android:layout_width="match_parent"
@@ -60,16 +60,16 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView android:id="@+id/widget_day_7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_10" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_11" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_12" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_13" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="7" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="8" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="9" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_10" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="10" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_11" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="11" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_12" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="12" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_13" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="13" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Week Row 2 -->
+        <!-- Week Row 2 (14..20, Sunday 20 is shift workday) -->
         <LinearLayout
             android:id="@+id/widget_week_row_2"
             android:layout_width="match_parent"
@@ -78,16 +78,16 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView android:id="@+id/widget_day_14" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_15" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_16" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_17" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_18" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_19" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_20" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_14" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="14" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_15" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="15" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_16" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="16" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_17" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="17" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_18" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="18" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_19" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="19" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_20" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="20" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Week Row 3 -->
+        <!-- Week Row 3 (21..27, Fri 25 - Sun 27 Mid-Autumn Festival) -->
         <LinearLayout
             android:id="@+id/widget_week_row_3"
             android:layout_width="match_parent"
@@ -96,16 +96,16 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView android:id="@+id/widget_day_21" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_22" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_23" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_24" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_25" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_26" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_27" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_21" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="21" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_22" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="22" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_23" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="23" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_24" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="24" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_25" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="25" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_26" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="26" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_27" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="27" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_red" android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Week Row 4 -->
+        <!-- Week Row 4 (28..30) -->
         <LinearLayout
             android:id="@+id/widget_week_row_4"
             android:layout_width="match_parent"
@@ -114,23 +114,24 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView android:id="@+id/widget_day_28" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_29" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
-            <TextView android:id="@+id/widget_day_30" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_28" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="28" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_29" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="29" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
+            <TextView android:id="@+id/widget_day_30" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:text="30" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
             <TextView android:id="@+id/widget_day_31" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
             <TextView android:id="@+id/widget_day_32" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
             <TextView android:id="@+id/widget_day_33" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
             <TextView android:id="@+id/widget_day_34" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
         </LinearLayout>
 
-        <!-- Week Row 5 (Optional 6th week) -->
+        <!-- Week Row 5 (Optional 6th week, hidden in default 5-week preview) -->
         <LinearLayout
             android:id="@+id/widget_week_row_5"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:visibility="gone">
 
             <TextView android:id="@+id/widget_day_35" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />
             <TextView android:id="@+id/widget_day_36" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:paddingBottom="3dp" android:textSize="11.5sp" android:textStyle="bold" android:textColor="@color/widget_text_primary" android:includeFontPadding="false" />

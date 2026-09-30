@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+
+    <!-- Card Background -->
+    <path
+        android:fillColor="@color/widget_bg"
+        android:strokeColor="@color/widget_border"
+        android:strokeWidth="1.5"
+        android:pathData="M28,4 L132,4 A24,24 0 0,1 156,28 L156,132 A24,24 0 0,1 132,156 L28,156 A24,24 0 0,1 4,132 L4,28 A24,24 0 0,1 28,4 Z" />
+
+    <!-- Month Title Bar at Top Center (2026年9月) -->
+    <path
+        android:fillColor="@color/widget_text_primary"
+        android:pathData="M54,18 L106,18 A5,5 0 0,1 111,23 L111,27 A5,5 0 0,1 106,32 L54,32 A5,5 0 0,1 49,27 L49,23 A5,5 0 0,1 54,18 Z" />
+
+    <!-- Row 1 (Days 1..6, starting Tue; Day 1 has green today highlight bar) -->
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M41,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path
+        android:fillColor="#188038"
+        android:pathData="M35,52 L47,52 A2,2 0 0,1 49,54 L49,54 A2,2 0 0,1 47,56 L35,56 A2,2 0 0,1 33,54 L33,54 A2,2 0 0,1 35,52 Z" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M60,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M79,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M98,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M117,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M136,44m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+
+    <!-- Row 2 (Days 7..13) -->
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M22,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M41,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M60,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M79,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M98,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M117,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M136,67m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+
+    <!-- Row 3 (Days 14..20, Saturday 19 is shift rest, Sunday 20 is workday) -->
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M22,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M41,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M60,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M79,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M98,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M117,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M136,90m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+
+    <!-- Row 4 (Days 21..27, Fri 25 - Sun 27 rest days) -->
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M22,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M41,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M60,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M79,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M98,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M117,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#D93025" android:pathData="M136,113m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+
+    <!-- Row 5 (Days 28..30) -->
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M22,136m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M41,136m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+    <path android:fillColor="@color/widget_text_primary" android:pathData="M60,136m-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0" />
+</vector>

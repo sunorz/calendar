@@ -6,6 +6,8 @@
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_month"
+    android:previewImage="@drawable/preview_widget_month"
+    android:previewLayout="@layout/widget_month"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
     android:description="@string/widget_month_description">
