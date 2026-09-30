@@ -282,7 +282,19 @@ class CalendarRobolectricTest {
 
     com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
   }
+
+  @Test
+  fun `verify widget preview PNG bitmaps decode via BitmapFactory for OEM launchers`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val todayPreview = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.preview_widget_today)
+    val monthPreview = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.preview_widget_month)
+    assertNotNull("Today widget preview must be a valid PNG bitmap", todayPreview)
+    assertNotNull("Month widget preview must be a valid PNG bitmap", monthPreview)
+    assertTrue(todayPreview.width > 0 && todayPreview.height > 0)
+    assertTrue(monthPreview.width > 0 && monthPreview.height > 0)
+  }
 }
+
 
 
 
