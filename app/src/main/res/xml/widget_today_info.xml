@@ -6,7 +6,7 @@
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_today"
-    android:previewLayout="@layout/widget_today"
+    android:previewImage="@drawable/preview_widget_today"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
     android:description="@string/widget_today_description">
