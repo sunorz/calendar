@@ -284,14 +284,42 @@ class CalendarRobolectricTest {
   }
 
   @Test
-  fun `verify widget preview PNG bitmaps decode via BitmapFactory for OEM launchers`() {
+  fun `verify widget previewLayout inflates with default fonts for 2026-09-01 in Chinese and English`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    val todayPreview = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.preview_widget_today)
-    val monthPreview = android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.preview_widget_month)
-    assertNotNull("Today widget preview must be a valid PNG bitmap", todayPreview)
-    assertNotNull("Month widget preview must be a valid PNG bitmap", monthPreview)
-    assertTrue(todayPreview.width > 0 && todayPreview.height > 0)
-    assertTrue(monthPreview.width > 0 && monthPreview.height > 0)
+
+    // 1. Inflate Today & Month widget preview layouts
+    val todayViews = android.widget.RemoteViews(context.packageName, R.layout.widget_today)
+    val todayRoot = todayViews.apply(context, null) as android.view.ViewGroup
+    assertNotNull("Today widget preview layout must inflate cleanly", todayRoot)
+
+    val monthViews = android.widget.RemoteViews(context.packageName, R.layout.widget_month)
+    val monthRoot = monthViews.apply(context, null) as android.view.ViewGroup
+    assertNotNull("Month widget preview layout must inflate cleanly", monthRoot)
+
+    // 2. Verify fixed date 2026-09-01 in both widgets
+    val todayDayText = todayRoot.findViewById<android.widget.TextView>(R.id.widget_text_day_number)
+    assertEquals("1", todayDayText.text.toString())
+
+    val monthDay1Text = monthRoot.findViewById<android.widget.TextView>(R.id.widget_day_1)
+    assertEquals("1", monthDay1Text.text.toString())
+    assertNotNull("September 1 cell in month preview must have today highlight background", monthDay1Text.background)
+
+    // 3. Verify localized preview strings for Chinese and English
+    val zhConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.SIMPLIFIED_CHINESE)
+    }
+    val zhContext = context.createConfigurationContext(zhConfig)
+    assertEquals("2026年9月", zhContext.getString(R.string.widget_preview_month_title))
+    assertEquals("周二", zhContext.getString(R.string.widget_preview_today_weekday))
+    assertEquals("9月", zhContext.getString(R.string.widget_preview_today_month))
+
+    val enConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.ENGLISH)
+    }
+    val enContext = context.createConfigurationContext(enConfig)
+    assertEquals("September 2026", enContext.getString(R.string.widget_preview_month_title))
+    assertEquals("Tuesday", enContext.getString(R.string.widget_preview_today_weekday))
+    assertEquals("September", enContext.getString(R.string.widget_preview_today_month))
   }
 }
 

@@ -96,4 +96,9 @@
     <string name="watch_mode_toggle">模式切换</string>
     <string name="btn_cancel">取消</string>
     <string name="btn_jump">跳转</string>
+    <string name="widget_preview_month_title">2026年9月</string>
+    <string name="widget_preview_today_weekday">周二</string>
+    <string name="widget_preview_today_month">9月</string>
+    <string name="widget_preview_today_day">1</string>
+    <string name="widget_preview_today_lunar">七\n月\n二\n十</string>
 </resources>

@@ -96,4 +96,9 @@
     <string name="watch_mode_toggle">Toggle Mode</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_jump">Jump</string>
+    <string name="widget_preview_month_title">September 2026</string>
+    <string name="widget_preview_today_weekday">Tuesday</string>
+    <string name="widget_preview_today_month">September</string>
+    <string name="widget_preview_today_day">1</string>
+    <string name="widget_preview_today_lunar">7/20</string>
 </resources>

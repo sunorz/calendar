@@ -16,7 +16,7 @@
         android:id="@+id/widget_month_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="2026年9月"
+        android:text="@string/widget_preview_month_title"
         android:textColor="@color/widget_text_primary"
         android:textSize="14sp"
         android:textStyle="bold"
