@@ -118,11 +118,11 @@ class CalendarRobolectricTest {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val repository = CalendarRepository(context)
     val version = repository.getAppVersion()
-    assertTrue("Version must be 1.1.8 or 1.1.8(hash), was: $version", version == "1.1.8" || version.startsWith("1.1.8("))
-    assertEquals("1.1.8(a3f9c2e)", repository.formatVersionWithGitHash("1.1.8", "a3f9c2e9988"))
-    assertFalse(repository.isVersionNewer("1.1.8", "1.1.8(a3f9c2e)"))
-    assertTrue(repository.isVersionNewer("1.1.9", "1.1.8(a3f9c2e)"))
-    assertFalse(repository.isVersionNewer("1.1.7", "1.1.8(a3f9c2e)"))
+    assertTrue("Version must be 1.1.8 or 1.1.8_hash, was: $version", version == "1.1.8" || version.startsWith("1.1.8_"))
+    assertEquals("1.1.8_a3f9c2e", repository.formatVersionWithGitHash("1.1.8", "a3f9c2e9988"))
+    assertFalse(repository.isVersionNewer("1.1.8", "1.1.8_a3f9c2e"))
+    assertTrue(repository.isVersionNewer("1.1.9", "1.1.8_a3f9c2e"))
+    assertFalse(repository.isVersionNewer("1.1.7", "1.1.8_a3f9c2e"))
   }
 
   @Test

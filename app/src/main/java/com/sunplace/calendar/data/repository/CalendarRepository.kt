@@ -98,14 +98,14 @@ class CalendarRepository(private val context: Context) {
     }
 
     fun formatVersionWithGitHash(baseVersion: String, gitHash: String?): String {
-        val cleanBase = baseVersion.substringBefore("(").trim()
+        val cleanBase = baseVersion.substringBefore("_").substringBefore("(").trim()
         val cleanHash = gitHash?.trim()?.take(7).orEmpty()
-        return if (cleanHash.isNotEmpty()) "$cleanBase($cleanHash)" else cleanBase
+        return if (cleanHash.isNotEmpty()) "${cleanBase}_${cleanHash}" else cleanBase
     }
 
     fun isVersionNewer(remoteVersion: String, localVersion: String): Boolean {
-        val cleanRemote = remoteVersion.substringBefore("(").trim()
-        val cleanLocal = localVersion.substringBefore("(").trim()
+        val cleanRemote = remoteVersion.substringBefore("_").substringBefore("(").trim()
+        val cleanLocal = localVersion.substringBefore("_").substringBefore("(").trim()
         try {
             val remoteParts = cleanRemote.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
             val localParts = cleanLocal.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }

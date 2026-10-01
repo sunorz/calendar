@@ -64,7 +64,7 @@ android {
     minSdk = 24
     targetSdk = 36
     versionCode = 44
-    versionName = if (gitShortHash.isNotEmpty()) "$baseVersionName($gitShortHash)" else baseVersionName
+    versionName = if (gitShortHash.isNotEmpty()) "${baseVersionName}_${gitShortHash}" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

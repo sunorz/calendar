@@ -486,14 +486,43 @@ fun SettingsScreen(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
+                                    val baseVersionText = currentVersion
+                                        .substringBefore("_")
+                                        .substringBefore("(")
+                                        .trim()
+                                    val gitHashText = when {
+                                        currentVersion.contains("_") -> currentVersion.substringAfter("_").trim()
+                                        currentVersion.contains("(") -> currentVersion.substringAfter("(").substringBefore(")").trim()
+                                        else -> ""
+                                    }
+
                                     Text(
-                                        text = "v$currentVersion",
+                                        text = "v$baseVersionText",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
+
+                                    if (gitHashText.isNotEmpty()) {
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant,
+                                            border = BorderStroke(
+                                                0.8.dp,
+                                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                                            )
+                                        ) {
+                                            Text(
+                                                text = gitHashText,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
 
                                     if (canUpdate) {
                                         if (isDownloading) {
