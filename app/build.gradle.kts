@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.io.File
 
 plugins {
   alias(libs.plugins.android.application)
@@ -9,6 +10,51 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+fun resolveGitShortHash(rootProjectDir: File, propHash: String?, envHash: String?, githubSha: String?): String {
+  val explicit = propHash?.trim().orEmpty()
+    .ifEmpty { envHash?.trim().orEmpty() }
+    .ifEmpty { githubSha?.trim()?.take(7).orEmpty() }
+  if (explicit.isNotEmpty()) return explicit.take(7)
+
+  try {
+    val headFile = File(rootProjectDir, ".git/HEAD")
+    if (headFile.exists()) {
+      val headContent = headFile.readText().trim()
+      if (headContent.startsWith("ref:")) {
+        val refPath = headContent.removePrefix("ref:").trim()
+        val refFile = File(rootProjectDir, ".git/$refPath")
+        if (refFile.exists()) {
+          val sha = refFile.readText().trim()
+          if (sha.length >= 7) return sha.take(7)
+        }
+        val packedRefs = File(rootProjectDir, ".git/packed-refs")
+        if (packedRefs.exists()) {
+          val matchLine = packedRefs.readLines().firstOrNull { line: String ->
+            !line.startsWith("#") && !line.startsWith("^") && line.endsWith(" $refPath")
+          }
+          if (matchLine != null) {
+            val sha = matchLine.substringBefore(" ").trim()
+            if (sha.length >= 7) return sha.take(7)
+          }
+        }
+      } else if (headContent.length >= 7) {
+        return headContent.take(7)
+      }
+    }
+  } catch (_: Exception) {
+  }
+
+  return ""
+}
+
+val baseVersionName = "1.1.8"
+val gitShortHash = resolveGitShortHash(
+  rootProjectDir = rootDir,
+  propHash = providers.gradleProperty("GIT_HASH").orNull,
+  envHash = providers.environmentVariable("GIT_HASH").orNull,
+  githubSha = providers.environmentVariable("GITHUB_SHA").orNull
+)
+
 android {
   namespace = "com.sunplace.calendar"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -17,8 +63,8 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 43
-    versionName = "1.1.7"
+    versionCode = 44
+    versionName = if (gitShortHash.isNotEmpty()) "$baseVersionName($gitShortHash)" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

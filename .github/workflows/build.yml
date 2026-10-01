@@ -99,7 +99,10 @@ jobs:
 
       - name: Build Release APK
         if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'
-        run: ./gradlew assembleRelease
+        run: |
+          GIT_HASH=$(git rev-parse --short=7 HEAD 2>/dev/null || echo "${GITHUB_SHA::7}")
+          echo "Building Release APK with GIT_HASH=${GIT_HASH}"
+          ./gradlew assembleRelease -PGIT_HASH="${GIT_HASH}"
 
       - name: Sign APK
         if: github.event_name != 'release' || steps.check_beta.outputs.FOUND_BETA != 'true'

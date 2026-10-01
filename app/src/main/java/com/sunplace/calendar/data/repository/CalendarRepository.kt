@@ -97,10 +97,18 @@ class CalendarRepository(private val context: Context) {
         prefs.edit().putString(KEY_APP_VERSION, version).apply()
     }
 
+    fun formatVersionWithGitHash(baseVersion: String, gitHash: String?): String {
+        val cleanBase = baseVersion.substringBefore("(").trim()
+        val cleanHash = gitHash?.trim()?.take(7).orEmpty()
+        return if (cleanHash.isNotEmpty()) "$cleanBase($cleanHash)" else cleanBase
+    }
+
     fun isVersionNewer(remoteVersion: String, localVersion: String): Boolean {
+        val cleanRemote = remoteVersion.substringBefore("(").trim()
+        val cleanLocal = localVersion.substringBefore("(").trim()
         try {
-            val remoteParts = remoteVersion.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
-            val localParts = localVersion.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
+            val remoteParts = cleanRemote.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
+            val localParts = cleanLocal.replace(Regex("[^0-9.]"), "").split(".").map { it.toIntOrNull() ?: 0 }
             val maxLen = maxOf(remoteParts.size, localParts.size)
             for (i in 0 until maxLen) {
                 val r = remoteParts.getOrElse(i) { 0 }
@@ -111,7 +119,7 @@ class CalendarRepository(private val context: Context) {
         } catch (_: Exception) {
             // fallback
         }
-        return remoteVersion != localVersion
+        return cleanRemote != cleanLocal
     }
 
     data class VersionCheckResult(
