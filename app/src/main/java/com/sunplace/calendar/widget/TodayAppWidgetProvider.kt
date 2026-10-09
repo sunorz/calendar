@@ -73,11 +73,21 @@ class TodayAppWidgetProvider : BaseCalendarWidgetProvider() {
                 views.setViewVisibility(R.id.widget_layout_cn, View.GONE)
                 views.setViewVisibility(R.id.widget_layout_en, View.VISIBLE)
 
-                views.setTextViewText(R.id.widget_en_text_weekday, context.getString(weekdayResId))
+                val shortWeekdayResId = when (dayInfo.dayOfWeekNumber) {
+                    1 -> R.string.weekday_mon
+                    2 -> R.string.weekday_tue
+                    3 -> R.string.weekday_wed
+                    4 -> R.string.weekday_thu
+                    5 -> R.string.weekday_fri
+                    6 -> R.string.weekday_sat
+                    7 -> R.string.weekday_sun
+                    else -> R.string.weekday_mon
+                }
+                views.setTextViewText(R.id.widget_en_text_weekday, context.getString(shortWeekdayResId))
                 applyTextColor(views, R.id.widget_en_text_weekday, themeMode, 0xFFF28B82.toInt(), 0xFFD93025.toInt(), context)
 
-                views.setTextViewText(R.id.widget_en_text_month, TranslationHelper.getMonthName(month))
-                applyTextColor(views, R.id.widget_en_text_month, themeMode, 0xFFE8EAED.toInt(), 0xFF202124.toInt(), context)
+                views.setTextViewText(R.id.widget_en_text_month, TranslationHelper.getShortMonthName(month))
+                applyTextColor(views, R.id.widget_en_text_month, themeMode, 0xFF9AA0A6.toInt(), 0xFF70757A.toInt(), context)
 
                 bindDayNumberView(
                     views = views,

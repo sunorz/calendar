@@ -317,6 +317,17 @@ class CalendarRobolectricTest {
     assertEquals("Tuesday", enContext.getString(R.string.widget_preview_today_weekday))
     assertEquals("September", enContext.getString(R.string.widget_preview_today_month))
   }
+
+  @Test
+  fun `verify today widget RemoteViews inflates without error`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val rv = android.widget.RemoteViews(context.packageName, R.layout.widget_today)
+    val inflated = rv.apply(context, android.widget.FrameLayout(context))
+    assertNotNull(inflated)
+
+    val appWidgetManager = AppWidgetManager.getInstance(context)
+    com.sunplace.calendar.widget.TodayAppWidgetProvider.updateAppWidget(context, appWidgetManager, 101)
+  }
 }
 
 

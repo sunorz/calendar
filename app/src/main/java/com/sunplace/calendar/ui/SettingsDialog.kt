@@ -2,6 +2,7 @@ package com.sunplace.calendar.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import android.util.Base64
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -174,8 +175,9 @@ fun SettingsScreen(
                     .widthIn(max = 680.dp)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(22.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+
                 // Section 1: Holiday & Feature Preferences / 节假日设置
                 Surface(
                     modifier = Modifier
@@ -544,6 +546,7 @@ fun SettingsScreen(
                                     }
                                 }
                             }
+
                         }
                     }
                 }
