@@ -23,6 +23,7 @@ import com.sunplace.calendar.ui.CalendarScreen
 import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.ui.theme.MyApplicationTheme
 import com.sunplace.calendar.util.ServerTimeManager
+import com.sunplace.calendar.util.TranslationHelper
 import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
 
 class MainActivity : ComponentActivity() {
@@ -92,12 +93,43 @@ class MainActivity : ComponentActivity() {
       registerReceiver(dateChangeReceiver, filter)
     }
 
+    val isChinese = !TranslationHelper.isEnglish(this)
+    if (isChinese) {
+      try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          val currentLocales = resources.configuration.locales
+          if (!currentLocales.isEmpty && !TranslationHelper.isChineseLanguage(currentLocales.get(0))) {
+            val correctedConfig = Configuration(resources.configuration).apply {
+              setLocales(android.os.LocaleList(java.util.Locale.SIMPLIFIED_CHINESE, java.util.Locale.ENGLISH))
+            }
+            @Suppress("DEPRECATION")
+            resources.updateConfiguration(correctedConfig, resources.displayMetrics)
+          }
+        }
+      } catch (_: Exception) {}
+    }
+
     setContent {
       val themeMode by calendarViewModel.themeMode.collectAsState()
       val isElderlyMode by calendarViewModel.isElderlyMode.collectAsState()
-      MyApplicationTheme(themeMode = themeMode, isElderlyMode = isElderlyMode) {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          CalendarScreen(viewModel = calendarViewModel)
+      val currentConfig = androidx.compose.ui.platform.LocalConfiguration.current
+      val effectiveConfig = remember(currentConfig) {
+        if (isChinese && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !currentConfig.locales.isEmpty && !TranslationHelper.isChineseLanguage(currentConfig.locales.get(0))) {
+          Configuration(currentConfig).apply {
+            setLocales(android.os.LocaleList(java.util.Locale.SIMPLIFIED_CHINESE, java.util.Locale.ENGLISH))
+          }
+        } else {
+          currentConfig
+        }
+      }
+
+      androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalConfiguration provides effectiveConfig
+      ) {
+        MyApplicationTheme(themeMode = themeMode, isElderlyMode = isElderlyMode) {
+          Surface(modifier = Modifier.fillMaxSize()) {
+            CalendarScreen(viewModel = calendarViewModel)
+          }
         }
       }
     }

@@ -63,7 +63,7 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 46
+    versionCode = 47
     versionName = if (gitShortHash.isNotEmpty()) "${baseVersionName}_${gitShortHash}" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

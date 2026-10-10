@@ -12,19 +12,31 @@ import java.util.Locale
  */
 object TranslationHelper {
     /**
+     * Checks if a locale represents any form of Chinese language.
+     */
+    fun isChineseLanguage(locale: Locale?): Boolean {
+        if (locale == null) return false
+        val lang = locale.language.lowercase()
+        return lang.startsWith("zh")
+    }
+
+    /**
      * Retrieves the primary Locale based on context or system default.
+     * Accurately corrects Android 7.0+ multi-locale fallback inversion (e.g., [en, zh-CN]).
      */
     fun getPrimaryLocale(context: Context? = null): Locale {
         return try {
-            if (context != null) {
-                val ctxLocale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    val appLocales = context.resources.configuration.locales
-                    if (!appLocales.isEmpty) appLocales.get(0) else null
-                } else {
-                    @Suppress("DEPRECATION")
-                    context.resources.configuration.locale
-                }
-                ctxLocale ?: getSystemDefaultLocale()
+            val appLocales = if (context != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                context.resources.configuration.locales
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                android.os.LocaleList.getDefault()
+            } else null
+
+            if (appLocales != null && !appLocales.isEmpty) {
+                appLocales.get(0)
+            } else if (context != null) {
+                @Suppress("DEPRECATION")
+                context.resources.configuration.locale ?: getSystemDefaultLocale()
             } else {
                 getSystemDefaultLocale()
             }
@@ -40,9 +52,7 @@ object TranslationHelper {
      */
     fun isEnglish(context: Context? = null): Boolean {
         val primaryLocale = getPrimaryLocale(context)
-        val lang = primaryLocale.language.lowercase()
-        val isChinese = lang.startsWith("zh")
-        return !isChinese
+        return !isChineseLanguage(primaryLocale)
     }
 
     /**

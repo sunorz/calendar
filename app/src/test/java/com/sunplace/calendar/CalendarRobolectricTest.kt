@@ -267,7 +267,7 @@ class CalendarRobolectricTest {
 
     // Init from context
     com.sunplace.calendar.util.ServerTimeManager.init(context)
-    val chinaCal = LunarCalculator.getChinaCalendar()
+    val chinaCal = com.sunplace.calendar.util.ServerTimeManager.getChinaCalendar()
     assertEquals(2026, chinaCal.get(java.util.Calendar.YEAR))
     assertEquals(java.util.Calendar.OCTOBER, chinaCal.get(java.util.Calendar.MONTH))
     assertEquals(1, chinaCal.get(java.util.Calendar.DAY_OF_MONTH))
