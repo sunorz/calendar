@@ -11,22 +11,41 @@ import java.util.Locale
  * (GB/T 33694-2017 & Standard Translation of Public Terms).
  */
 object TranslationHelper {
-
+    /**
+     * Checks if the primary display language is English (or non-Chinese).
+     * Follows standard 1.1.8 logic: when primary language is Chinese (zh), returns false (Chinese).
+     * Otherwise returns true (English).
+     */
     fun isEnglish(context: Context? = null): Boolean {
-        val locale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            android.os.LocaleList.getDefault().get(0)
-        } else {
+        val primaryLocale = try {
+            if (context != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    val appLocales = context.resources.configuration.locales
+                    if (!appLocales.isEmpty) appLocales.get(0) else Locale.getDefault()
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.resources.configuration.locale ?: Locale.getDefault()
+                }
+            } else {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    val sysLocales = android.content.res.Resources.getSystem().configuration.locales
+                    if (!sysLocales.isEmpty) {
+                        sysLocales.get(0)
+                    } else {
+                        Locale.getDefault()
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.content.res.Resources.getSystem().configuration.locale ?: Locale.getDefault()
+                }
+            }
+        } catch (_: Throwable) {
             Locale.getDefault()
         }
-        val lang = locale.language.lowercase()
-        val country = locale.country.lowercase()
-        val script = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) locale.script.lowercase() else ""
-        
-        val isChinese = lang == "zh"
-        val isTraditional = country in listOf("tw", "hk", "mo") || script == "hant"
-        val isSimplifiedChinese = isChinese && !isTraditional
-        
-        return !isSimplifiedChinese
+
+        val lang = primaryLocale.language.lowercase()
+        val isChinese = lang.startsWith("zh")
+        return !isChinese
     }
 
     // Official and authoritative translations for 24 Solar Terms (二十四节气 - GB/T 33694-2017)

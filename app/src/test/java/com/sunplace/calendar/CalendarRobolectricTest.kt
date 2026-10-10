@@ -329,6 +329,55 @@ class CalendarRobolectricTest {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     com.sunplace.calendar.widget.TodayAppWidgetProvider.updateAppWidget(context, appWidgetManager, 101)
   }
+
+  @Test
+  fun `verify TranslationHelper isEnglish conforms to 1 1 8 specification`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
+    // 1. Simplified Chinese primary -> false (display Chinese)
+    val zhCnConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.SIMPLIFIED_CHINESE)
+    }
+    val zhCnContext = context.createConfigurationContext(zhCnConfig)
+    assertFalse(com.sunplace.calendar.util.TranslationHelper.isEnglish(zhCnContext))
+
+    // 2. Traditional Chinese primary -> false (display Chinese, conforming to 1.1.8)
+    val zhTwConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.TRADITIONAL_CHINESE)
+    }
+    val zhTwContext = context.createConfigurationContext(zhTwConfig)
+    assertFalse(com.sunplace.calendar.util.TranslationHelper.isEnglish(zhTwContext))
+
+    // 3. English primary -> true (display English)
+    val enConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.US)
+    }
+    val enContext = context.createConfigurationContext(enConfig)
+    assertTrue(com.sunplace.calendar.util.TranslationHelper.isEnglish(enContext))
+
+    // 4. Other languages (Japanese, French, etc.) -> true (default to English)
+    val jaConfig = android.content.res.Configuration(context.resources.configuration).apply {
+      setLocale(java.util.Locale.JAPAN)
+    }
+    val jaContext = context.createConfigurationContext(jaConfig)
+    assertTrue(com.sunplace.calendar.util.TranslationHelper.isEnglish(jaContext))
+
+    // 5. Multi-language list: Chinese first, English second -> false (strictly respects primary language)
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+      val multiZhConfig = android.content.res.Configuration(context.resources.configuration).apply {
+        setLocales(android.os.LocaleList(java.util.Locale.SIMPLIFIED_CHINESE, java.util.Locale.US))
+      }
+      val multiZhContext = context.createConfigurationContext(multiZhConfig)
+      assertFalse(com.sunplace.calendar.util.TranslationHelper.isEnglish(multiZhContext))
+
+      // English first, Chinese second -> true
+      val multiEnConfig = android.content.res.Configuration(context.resources.configuration).apply {
+        setLocales(android.os.LocaleList(java.util.Locale.US, java.util.Locale.SIMPLIFIED_CHINESE))
+      }
+      val multiEnContext = context.createConfigurationContext(multiEnConfig)
+      assertTrue(com.sunplace.calendar.util.TranslationHelper.isEnglish(multiEnContext))
+    }
+  }
 }
 
 

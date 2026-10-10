@@ -1,0 +1,6 @@
+{
+  "summary":  "恢复 1.1.8 原有语言切换架构方案：\n1. 彻底清理之前额外生成的 values-zh、values-zh-rCN、layout-zh、drawable-zh 等非原有目录，恢复 1.1.8 的 values 基础中文与 values-en 英文的标准结构。\n2. 还原 TranslationHelper.kt 中的语言判断逻辑：以系统当前第一主语言为准，主语言以 'zh' 开头即判定为中文（显示中文），非 'zh' 语言均判定为英文。\n3. 验证编译与自动化单元测试，确保中英文切换符合 1.1.8 稳定表现。",
+  "updatedAt":  "2026-10-10T12:00:31.206468997Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
