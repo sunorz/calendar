@@ -1,5 +1,6 @@
 package com.sunplace.calendar.util
 
+import android.content.Context
 import com.sunplace.calendar.data.model.DayInfo
 import java.util.Locale
 
@@ -11,7 +12,24 @@ import java.util.Locale
  */
 object TranslationHelper {
 
-    fun isEnglish(): Boolean {
+    @Volatile
+    var appLanguageOverride: String? = null
+
+    fun isEnglish(context: Context? = null): Boolean {
+        val override = appLanguageOverride
+        if (override != null) {
+            return override.equals("en", ignoreCase = true)
+        }
+        if (context != null) {
+            try {
+                val prefs = context.getSharedPreferences("theme_preferences", Context.MODE_PRIVATE)
+                if (prefs.contains("key_app_language")) {
+                    val lang = prefs.getString("key_app_language", "zh") ?: "zh"
+                    appLanguageOverride = lang
+                    return lang.equals("en", ignoreCase = true)
+                }
+            } catch (_: Exception) {}
+        }
         return Locale.getDefault().language.equals("en", ignoreCase = true)
     }
 

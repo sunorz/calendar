@@ -84,6 +84,7 @@ fun SettingsScreen(
     isElderlyMode: Boolean = false,
     showGuangxiSanyuesan: Boolean = true,
     currentTodayPattern: TodayPattern = TodayPattern.DEFAULT,
+    appLanguage: String = "zh",
     currentVersion: String,
     updateAvailable: Boolean,
     remoteVersion: String?,
@@ -92,13 +93,14 @@ fun SettingsScreen(
     initialColorModeIndex: Int = 0,
     onThemeModeChange: (ThemeMode) -> Unit,
     onToggleShowGuangxiSanyuesan: (Boolean) -> Unit,
+    onToggleAppLanguage: (Boolean) -> Unit = {},
     onTodayPatternChange: (TodayPattern) -> Unit = {},
     onDownloadUpdate: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val isEnglish = TranslationHelper.isEnglish()
+    val isEnglish = appLanguage.equals("en", ignoreCase = true)
     var showPatternPicker by remember { mutableStateOf(false) }
 
     val todayBrush = remember(initialColorModeIndex) {
@@ -178,7 +180,81 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                // Section 1: Holiday & Feature Preferences / 节假日设置
+                // Section 1: Preferences / 偏好设置
+                // Language Preference / 应用语言设置 (开关直接切换，永久保存)
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { onToggleAppLanguage(!isEnglish) }
+                        .testTag("language_switch_card"),
+                    shape = RoundedCornerShape(18.dp),
+                    color = sectionCardColor,
+                    border = sectionCardBorder
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isEnglish) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Language,
+                                        contentDescription = null,
+                                        tint = if (isEnglish) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = stringResource(R.string.language_switch_title),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = if (isEnglish) {
+                                        stringResource(R.string.language_switch_desc_en)
+                                    } else {
+                                        stringResource(R.string.language_switch_desc_zh)
+                                    },
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = isEnglish,
+                            onCheckedChange = { onToggleAppLanguage(it) },
+                            modifier = Modifier.testTag("language_switch")
+                        )
+                    }
+                }
+
+                // Holiday Preference / 节假日设置
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()

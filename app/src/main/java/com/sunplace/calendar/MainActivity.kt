@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.os.LocaleList
 import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,13 +16,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import com.sunplace.calendar.ui.CalendarScreen
 import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.ui.theme.MyApplicationTheme
 import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -87,9 +92,24 @@ class MainActivity : ComponentActivity() {
     setContent {
       val themeMode by calendarViewModel.themeMode.collectAsState()
       val isElderlyMode by calendarViewModel.isElderlyMode.collectAsState()
-      MyApplicationTheme(themeMode = themeMode, isElderlyMode = isElderlyMode) {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          CalendarScreen(viewModel = calendarViewModel)
+      val appLanguage by calendarViewModel.appLanguage.collectAsState()
+
+      val configuration = LocalConfiguration.current
+      val localizedConfig = remember(appLanguage, configuration) {
+        Configuration(configuration).apply {
+          val locale = if (appLanguage.equals("en", ignoreCase = true)) Locale.ENGLISH else Locale.SIMPLIFIED_CHINESE
+          setLocale(locale)
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            setLocales(LocaleList(locale))
+          }
+        }
+      }
+
+      CompositionLocalProvider(LocalConfiguration provides localizedConfig) {
+        MyApplicationTheme(themeMode = themeMode, isElderlyMode = isElderlyMode) {
+          Surface(modifier = Modifier.fillMaxSize()) {
+            CalendarScreen(viewModel = calendarViewModel)
+          }
         }
       }
     }
@@ -127,6 +147,7 @@ class MainActivity : ComponentActivity() {
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
     calendarViewModel.checkAndRefreshDate()
+    calendarViewModel.checkSystemLanguageChange()
     BaseCalendarWidgetProvider.updateAllWidgets(this)
   }
 }
