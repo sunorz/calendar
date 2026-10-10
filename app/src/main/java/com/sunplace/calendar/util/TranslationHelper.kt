@@ -13,8 +13,20 @@ import java.util.Locale
 object TranslationHelper {
 
     fun isEnglish(context: Context? = null): Boolean {
-        val sysLocale = Locale.getDefault()
-        return !sysLocale.language.equals("zh", ignoreCase = true)
+        val locale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            android.os.LocaleList.getDefault().get(0)
+        } else {
+            Locale.getDefault()
+        }
+        val lang = locale.language.lowercase()
+        val country = locale.country.lowercase()
+        val script = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) locale.script.lowercase() else ""
+        
+        val isChinese = lang == "zh"
+        val isTraditional = country in listOf("tw", "hk", "mo") || script == "hant"
+        val isSimplifiedChinese = isChinese && !isTraditional
+        
+        return !isSimplifiedChinese
     }
 
     // Official and authoritative translations for 24 Solar Terms (二十四节气 - GB/T 33694-2017)
