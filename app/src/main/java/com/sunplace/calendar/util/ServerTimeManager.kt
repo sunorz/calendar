@@ -1,6 +1,9 @@
 package com.sunplace.calendar.util
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
@@ -62,27 +65,67 @@ object ServerTimeManager {
     @Volatile
     private var isCalibrated: Boolean = false
 
+    fun isNetworkAvailable(context: Context?): Boolean {
+        if (context == null) return false
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val network = cm?.activeNetwork ?: return false
+                val caps = cm.getNetworkCapabilities(network) ?: return false
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            } else {
+                @Suppress("DEPRECATION")
+                cm?.activeNetworkInfo?.isConnected == true
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun init(context: Context) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val savedServerEpoch = prefs.getLong(KEY_SERVER_EPOCH, 0L)
             val savedElapsed = prefs.getLong(KEY_ELAPSED_REALTIME, 0L)
-            val savedOffset = prefs.getLong(KEY_SERVER_OFFSET, 0L)
             val currentElapsed = SystemClock.elapsedRealtime()
-
-            fallbackServerOffset = savedOffset
 
             if (savedServerEpoch > 0L && savedElapsed > 0L && currentElapsed >= savedElapsed) {
                 serverEpochAnchor = savedServerEpoch
                 elapsedRealtimeAnchor = savedElapsed
+                fallbackServerOffset = prefs.getLong(KEY_SERVER_OFFSET, 0L)
                 isCalibrated = true
-                Log.d(TAG, "Restored exact server time calibration from prefs")
-            } else if (savedOffset != 0L) {
-                Log.d(TAG, "Device rebooted; restored fallback server offset=$savedOffset")
+                Log.d(TAG, "Restored active server time calibration from prefs")
+            } else {
+                markDegradedToSystemTime()
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to init ServerTimeManager from prefs", e)
+            Log.w(TAG, "Failed to init ServerTimeManager, falling back to system time", e)
+            markDegradedToSystemTime()
         }
+    }
+
+    /**
+     * Degrades strictly to system time. Converts to UTC+8 on demand.
+     */
+    fun markDegradedToSystemTime(context: Context? = null) {
+        isCalibrated = false
+        serverEpochAnchor = 0L
+        elapsedRealtimeAnchor = 0L
+        fallbackServerOffset = 0L
+        context?.let { ctx ->
+            try {
+                val prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                prefs.edit().clear().apply()
+            } catch (_: Exception) {}
+        }
+        Log.i(TAG, "Degraded to system time; will convert to UTC+8")
+    }
+
+    /**
+     * Called when system time or timezone changes, immediately invalidating any old offset.
+     */
+    fun onSystemTimeChanged(context: Context? = null) {
+        markDegradedToSystemTime(context)
     }
 
     /**
@@ -170,12 +213,17 @@ object ServerTimeManager {
     }
 
     /**
-     * Queries time.cloudflare.com, pool.ntp.org, and ntp.aliyun.com simultaneously,
-     * picking the optimal (lowest round-trip latency) response.
+     * Queries time servers. If offline or unreachable, cleanly degrades to system time in UTC+8.
      */
     suspend fun syncOptimalTime(context: Context? = null): Boolean {
         return withContext(Dispatchers.IO) {
             try {
+                if (context != null && !isNetworkAvailable(context)) {
+                    Log.d(TAG, "No network available for time sync, degrading to system time in UTC+8")
+                    markDegradedToSystemTime(context)
+                    return@withContext false
+                }
+
                 val results = withTimeoutOrNull(4000L) {
                     coroutineScope {
                         NTP_SERVERS.map { host ->
@@ -216,9 +264,13 @@ object ServerTimeManager {
                     } catch (_: Exception) {}
                 }
 
+                // All servers unreachable: degrade to system time
+                Log.w(TAG, "Time servers unreachable, degrading to system time in UTC+8")
+                markDegradedToSystemTime(context)
                 false
             } catch (e: Exception) {
-                Log.w(TAG, "syncOptimalTime error", e)
+                Log.w(TAG, "syncOptimalTime error, degrading to system time", e)
+                markDegradedToSystemTime(context)
                 false
             }
         }
@@ -227,22 +279,17 @@ object ServerTimeManager {
     fun isServerTimeCalibrated(): Boolean = isCalibrated
 
     fun nowEpochMillis(): Long {
-        return when {
-            isCalibrated && elapsedRealtimeAnchor > 0L -> {
-                val delta = SystemClock.elapsedRealtime() - elapsedRealtimeAnchor
-                serverEpochAnchor + delta
-            }
-            fallbackServerOffset != 0L -> {
-                System.currentTimeMillis() + fallbackServerOffset
-            }
-            else -> {
-                System.currentTimeMillis()
-            }
+        return if (isCalibrated && elapsedRealtimeAnchor > 0L) {
+            val delta = SystemClock.elapsedRealtime() - elapsedRealtimeAnchor
+            serverEpochAnchor + delta
+        } else {
+            System.currentTimeMillis()
         }
     }
 
     /**
      * Returns a Calendar instance strictly converted to China Standard Time (GMT+8 / CST).
+     * When server time is unavailable or degraded, system time is converted to UTC+8.
      */
     fun getChinaCalendar(): Calendar {
         val cal = Calendar.getInstance(CHINA_TIME_ZONE)

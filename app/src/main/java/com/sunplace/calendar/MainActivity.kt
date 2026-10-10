@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import com.sunplace.calendar.ui.CalendarScreen
 import com.sunplace.calendar.ui.CalendarViewModel
 import com.sunplace.calendar.ui.theme.MyApplicationTheme
+import com.sunplace.calendar.util.ServerTimeManager
 import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
 import java.util.Locale
 
@@ -46,10 +47,16 @@ class MainActivity : ComponentActivity() {
             BaseCalendarWidgetProvider.updateAllWidgets(context)
           }
         }
-        Intent.ACTION_DATE_CHANGED,
-        Intent.ACTION_TIME_TICK,
         Intent.ACTION_TIME_CHANGED,
         Intent.ACTION_TIMEZONE_CHANGED -> {
+          ServerTimeManager.onSystemTimeChanged(context)
+          val changed = calendarViewModel.checkAndRefreshDate()
+          if (context != null) {
+            BaseCalendarWidgetProvider.updateAllWidgets(context)
+          }
+        }
+        Intent.ACTION_DATE_CHANGED,
+        Intent.ACTION_TIME_TICK -> {
           val changed = calendarViewModel.checkAndRefreshDate()
           if (changed && context != null) {
             BaseCalendarWidgetProvider.updateAllWidgets(context)

@@ -54,9 +54,7 @@
     <!-- Settings Dialog -->
     <string name="settings_dialog_title">Settings</string>
     <string name="feature_section_title">Preferences</string>
-    <string name="language_switch_title">English Interface</string>
-    <string name="language_switch_desc_zh">Simplified Chinese (Turn on for English)</string>
-    <string name="language_switch_desc_en">English (Turn off for Simplified Chinese)</string>
+    <string name="language_section_title">Language</string>
     <string name="sanyuesan_switch_title">Guangxi Holidays</string>
     <string name="theme_section_title">Theme</string>
     <string name="elderly_mode_locked">Locked in Senior Mode</string>
@@ -77,7 +75,7 @@
     <string name="pattern_btn_reset">Reset</string>
     <string name="about_section_title">About</string>
     <string name="announcement_label">Notice</string>
-    <string name="announcement_content">你并没有那么热爱工作</string>
+    <string name="announcement_content">吃上调休红利</string>
     <string name="author_label">Author</string>
     <string name="website_label">Website</string>
     <string name="version_label">Version</string>

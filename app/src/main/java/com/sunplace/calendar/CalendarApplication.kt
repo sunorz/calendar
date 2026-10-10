@@ -24,6 +24,9 @@ class CalendarApplication : Application() {
             val ctx = context ?: this@CalendarApplication
             val action = intent?.action
             Log.d("CalendarApp", "Received system broadcast in Application: $action, updating all widgets")
+            if (action == Intent.ACTION_TIME_CHANGED || action == Intent.ACTION_TIMEZONE_CHANGED) {
+                ServerTimeManager.onSystemTimeChanged(ctx)
+            }
             BaseCalendarWidgetProvider.updateAllWidgets(ctx)
             appScope.launch(Dispatchers.IO) {
                 CalendarRepository(ctx).syncServerTime()

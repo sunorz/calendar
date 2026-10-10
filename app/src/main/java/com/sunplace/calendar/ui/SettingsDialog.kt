@@ -180,143 +180,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                // Section 1: Preferences / 偏好设置
-                // Language Preference / 应用语言设置 (开关直接切换，永久保存)
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onToggleAppLanguage(!isEnglish) }
-                        .testTag("language_switch_card"),
-                    shape = RoundedCornerShape(18.dp),
-                    color = sectionCardColor,
-                    border = sectionCardBorder
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isEnglish) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                },
-                                modifier = Modifier.size(38.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Language,
-                                        contentDescription = null,
-                                        tint = if (isEnglish) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    text = stringResource(R.string.language_switch_title),
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = if (isEnglish) {
-                                        stringResource(R.string.language_switch_desc_en)
-                                    } else {
-                                        stringResource(R.string.language_switch_desc_zh)
-                                    },
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Switch(
-                            checked = isEnglish,
-                            onCheckedChange = { onToggleAppLanguage(it) },
-                            modifier = Modifier.testTag("language_switch")
-                        )
-                    }
-                }
-
-                // Holiday Preference / 节假日设置
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onToggleShowGuangxiSanyuesan(!showGuangxiSanyuesan) }
-                        .testTag("sanyuesan_switch_card"),
-                    shape = RoundedCornerShape(18.dp),
-                    color = sectionCardColor,
-                    border = sectionCardBorder
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (showGuangxiSanyuesan) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                },
-                                modifier = Modifier.size(38.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Celebration,
-                                        contentDescription = null,
-                                        tint = if (showGuangxiSanyuesan) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = stringResource(R.string.sanyuesan_switch_title),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        Switch(
-                            checked = showGuangxiSanyuesan,
-                            onCheckedChange = { onToggleShowGuangxiSanyuesan(it) },
-                            modifier = Modifier.testTag("sanyuesan_switch")
-                        )
-                    }
-                }
-
-                // Section 2: Appearance & Theme / 外观主题
+                // 1. Appearance & Theme / 主题颜色
                 if (isElderlyMode) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -383,7 +247,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // Section 3: Today Card Pattern / 今日纹样自定义 - Hidden in Elderly Mode
+                // Today Card Pattern / 今日纹样自定义 - Hidden in Elderly Mode
                 if (!isElderlyMode) {
                     Surface(
                         modifier = Modifier
@@ -459,6 +323,161 @@ fun SettingsScreen(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. Holiday Preference / 广西节假日
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { onToggleShowGuangxiSanyuesan(!showGuangxiSanyuesan) }
+                        .testTag("sanyuesan_switch_card"),
+                    shape = RoundedCornerShape(18.dp),
+                    color = sectionCardColor,
+                    border = sectionCardBorder
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (showGuangxiSanyuesan) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Celebration,
+                                        contentDescription = null,
+                                        tint = if (showGuangxiSanyuesan) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = stringResource(R.string.sanyuesan_switch_title),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Switch(
+                            checked = showGuangxiSanyuesan,
+                            onCheckedChange = { onToggleShowGuangxiSanyuesan(it) },
+                            modifier = Modifier.testTag("sanyuesan_switch")
+                        )
+                    }
+                }
+
+                // 3. Language Preference / 中英文双向切换
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .testTag("language_switch_card"),
+                    shape = RoundedCornerShape(18.dp),
+                    color = sectionCardColor,
+                    border = sectionCardBorder
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Language,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = stringResource(R.string.language_section_title),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // 双向切换开关 (Two-way Switch / Segmented Control)
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(9.dp),
+                                    color = if (!isEnglish) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .clickable { if (isEnglish) onToggleAppLanguage(false) }
+                                        .testTag("lang_btn_zh")
+                                ) {
+                                    Text(
+                                        text = "简体中文",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (!isEnglish) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (!isEnglish) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(9.dp),
+                                    color = if (isEnglish) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .clickable { if (!isEnglish) onToggleAppLanguage(true) }
+                                        .testTag("lang_btn_en")
+                                ) {
+                                    Text(
+                                        text = "en-US",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (isEnglish) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isEnglish) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                                     )
                                 }
                             }

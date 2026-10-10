@@ -47,7 +47,7 @@ fun resolveGitShortHash(rootProjectDir: File, propHash: String?, envHash: String
   return ""
 }
 
-val baseVersionName = "1.1.8"
+val baseVersionName = "1.1.9"
 val gitShortHash = resolveGitShortHash(
   rootProjectDir = rootDir,
   propHash = providers.gradleProperty("GIT_HASH").orNull,
@@ -63,7 +63,7 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 44
+    versionCode = 45
     versionName = if (gitShortHash.isNotEmpty()) "${baseVersionName}_${gitShortHash}" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

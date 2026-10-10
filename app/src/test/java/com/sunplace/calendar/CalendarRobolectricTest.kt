@@ -1,5 +1,6 @@
 package com.sunplace.calendar
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.sunplace.calendar.data.repository.CalendarRepository
@@ -69,7 +70,7 @@ class CalendarRobolectricTest {
   @Test
   fun `verify announcement content`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    assertEquals("你并没有那么热爱工作", context.getString(R.string.announcement_content))
+    assertEquals("吃上调休红利", context.getString(R.string.announcement_content))
   }
 
   @Test
@@ -114,15 +115,15 @@ class CalendarRobolectricTest {
   }
 
   @Test
-  fun `verify app version name is 1 1 8 and supports git hash suffix`() {
+  fun `verify app version name is 1 1 9 and supports git hash suffix`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val repository = CalendarRepository(context)
     val version = repository.getAppVersion()
-    assertTrue("Version must be 1.1.8 or 1.1.8_hash, was: $version", version == "1.1.8" || version.startsWith("1.1.8_"))
-    assertEquals("1.1.8_a3f9c2e", repository.formatVersionWithGitHash("1.1.8", "a3f9c2e9988"))
-    assertFalse(repository.isVersionNewer("1.1.8", "1.1.8_a3f9c2e"))
+    assertTrue("Version must be 1.1.9 or 1.1.9_hash, was: $version", version == "1.1.9" || version.startsWith("1.1.9_"))
+    assertEquals("1.1.9_a3f9c2e", repository.formatVersionWithGitHash("1.1.9", "a3f9c2e9988"))
+    assertFalse(repository.isVersionNewer("1.1.9", "1.1.9_a3f9c2e"))
     assertTrue(repository.isVersionNewer("1.1.9", "1.1.8_a3f9c2e"))
-    assertFalse(repository.isVersionNewer("1.1.7", "1.1.8_a3f9c2e"))
+    assertFalse(repository.isVersionNewer("1.1.7", "1.1.9_a3f9c2e"))
   }
 
   @Test
