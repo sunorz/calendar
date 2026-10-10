@@ -11,6 +11,7 @@ import java.util.Locale
  * (GB/T 33694-2017 & Standard Translation of Public Terms).
  */
 object TranslationHelper {
+
     /**
      * Checks if a locale represents any form of Chinese language.
      */
@@ -22,7 +23,6 @@ object TranslationHelper {
 
     /**
      * Retrieves the primary Locale based on context or system default.
-     * Accurately corrects Android 7.0+ multi-locale fallback inversion (e.g., [en, zh-CN]).
      */
     fun getPrimaryLocale(context: Context? = null): Locale {
         return try {
@@ -47,78 +47,11 @@ object TranslationHelper {
 
     /**
      * Checks if the primary display language is English (or non-Chinese).
-     * Follows standard 1.1.8 logic: when primary language is Chinese (zh), returns false (Chinese).
-     * Otherwise returns true (English).
+     * Follows the device's primary system locale (Chinese -> Chinese, non-Chinese -> English).
      */
     fun isEnglish(context: Context? = null): Boolean {
         val primaryLocale = getPrimaryLocale(context)
         return !isChineseLanguage(primaryLocale)
-    }
-
-    /**
-     * Provides comprehensive diagnostic locale information for debugging.
-     */
-    fun getDebugLocaleInfo(context: Context? = null): String {
-        val primaryLocale = getPrimaryLocale(context)
-        val lang = primaryLocale.language.lowercase()
-        val isChinese = lang.startsWith("zh")
-        val isEn = !isChinese
-
-        val ctxLocalesStr = try {
-            if (context != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                context.resources.configuration.locales.toLanguageTags()
-            } else if (context != null) {
-                @Suppress("DEPRECATION")
-                context.resources.configuration.locale?.toString() ?: "null"
-            } else "context is null"
-        } catch (e: Throwable) {
-            "error: ${e.message}"
-        }
-
-        val sysLocaleListStr = try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                android.os.LocaleList.getDefault().toLanguageTags()
-            } else "N/A (< API 24)"
-        } catch (e: Throwable) {
-            "error: ${e.message}"
-        }
-
-        val jvmLocaleDefaultStr = try {
-            Locale.getDefault().toString()
-        } catch (e: Throwable) {
-            "error: ${e.message}"
-        }
-
-        val systemResourcesLocalesStr = try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                android.content.res.Resources.getSystem().configuration.locales.toLanguageTags()
-            } else {
-                @Suppress("DEPRECATION")
-                android.content.res.Resources.getSystem().configuration.locale?.toString() ?: "null"
-            }
-        } catch (e: Throwable) {
-            "error: ${e.message}"
-        }
-
-        return buildString {
-            appendLine("【核心语言判断】")
-            appendLine("primaryLocale.language.lowercase(): \"$lang\"")
-            appendLine("isChinese: $isChinese")
-            appendLine("isEnglish (显示英文): $isEn")
-            appendLine()
-            appendLine("【详细 Locale 对象】")
-            appendLine("primaryLocale: $primaryLocale")
-            appendLine("primaryLocale.toLanguageTag(): ${primaryLocale.toLanguageTag()}")
-            appendLine("primaryLocale.language: \"${primaryLocale.language}\"")
-            appendLine("primaryLocale.script: \"${primaryLocale.script}\"")
-            appendLine("primaryLocale.country: \"${primaryLocale.country}\"")
-            appendLine()
-            appendLine("【系统与应用环境】")
-            appendLine("context.resources.locales: $ctxLocalesStr")
-            appendLine("LocaleList.getDefault(): $sysLocaleListStr")
-            appendLine("Locale.getDefault(): $jvmLocaleDefaultStr")
-            appendLine("Resources.getSystem().locales: $systemResourcesLocalesStr")
-        }
     }
 
     private fun getSystemDefaultLocale(): Locale {

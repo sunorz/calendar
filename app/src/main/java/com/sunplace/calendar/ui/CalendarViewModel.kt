@@ -8,6 +8,7 @@ import android.util.Base64
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sunplace.calendar.data.model.AppLanguage
 import com.sunplace.calendar.data.model.CalendarConfig
 import com.sunplace.calendar.data.model.CalendarDate
 import com.sunplace.calendar.data.model.DayInfo
@@ -17,6 +18,7 @@ import com.sunplace.calendar.data.repository.CalendarRepository
 import com.sunplace.calendar.data.repository.SyncState
 import com.sunplace.calendar.data.repository.ThemePreferences
 import com.sunplace.calendar.util.LunarCalculator
+import com.sunplace.calendar.util.TranslationHelper
 import com.sunplace.calendar.widget.BaseCalendarWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -82,6 +84,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
     val showGuangxiSanyuesan: StateFlow<Boolean> = themePreferences.showGuangxiSanyuesan
     val todayPattern: StateFlow<TodayPattern> = themePreferences.todayPattern
+
 
     private val _showSettingsDialog = MutableStateFlow(false)
     val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
@@ -293,6 +296,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     fun setTodayPattern(pattern: TodayPattern) {
         themePreferences.setTodayPattern(pattern)
     }
+
+
 
     fun openSettingsDialog() {
         _showSettingsDialog.value = true
