@@ -22,6 +22,13 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class CalendarRobolectricTest {
 
+  @org.junit.Before
+  @org.junit.After
+  fun resetState() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    com.sunplace.calendar.util.ServerTimeManager.markDegradedToSystemTime(context)
+  }
+
   @Test
   fun `read string from context`() {
     val context = ApplicationProvider.getApplicationContext<Context>()

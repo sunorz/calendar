@@ -19,33 +19,41 @@ object TranslationHelper {
     fun isEnglish(context: Context? = null): Boolean {
         val primaryLocale = try {
             if (context != null) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                val ctxLocale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                     val appLocales = context.resources.configuration.locales
-                    if (!appLocales.isEmpty) appLocales.get(0) else Locale.getDefault()
+                    if (!appLocales.isEmpty) appLocales.get(0) else null
                 } else {
                     @Suppress("DEPRECATION")
-                    context.resources.configuration.locale ?: Locale.getDefault()
+                    context.resources.configuration.locale
                 }
+                ctxLocale ?: getSystemDefaultLocale()
             } else {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    val sysLocales = android.content.res.Resources.getSystem().configuration.locales
-                    if (!sysLocales.isEmpty) {
-                        sysLocales.get(0)
-                    } else {
-                        Locale.getDefault()
-                    }
-                } else {
-                    @Suppress("DEPRECATION")
-                    android.content.res.Resources.getSystem().configuration.locale ?: Locale.getDefault()
-                }
+                getSystemDefaultLocale()
             }
         } catch (_: Throwable) {
-            Locale.getDefault()
+            getSystemDefaultLocale()
         }
 
         val lang = primaryLocale.language.lowercase()
         val isChinese = lang.startsWith("zh")
         return !isChinese
+    }
+
+    private fun getSystemDefaultLocale(): Locale {
+        return try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                val sysLocales = android.os.LocaleList.getDefault()
+                if (!sysLocales.isEmpty) {
+                    sysLocales.get(0)
+                } else {
+                    Locale.getDefault()
+                }
+            } else {
+                Locale.getDefault()
+            }
+        } catch (_: Throwable) {
+            Locale.getDefault()
+        } ?: Locale.SIMPLIFIED_CHINESE
     }
 
     // Official and authoritative translations for 24 Solar Terms (二十四节气 - GB/T 33694-2017)

@@ -67,6 +67,7 @@ android {
     versionName = if (gitShortHash.isNotEmpty()) "${baseVersionName}_${gitShortHash}" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    resourceConfigurations += listOf("zh", "zh-rCN", "en")
   }
 
   signingConfigs {

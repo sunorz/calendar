@@ -37,9 +37,15 @@ class CalendarApplication : Application() {
         }
     }
 
+    companion object {
+        lateinit var instance: CalendarApplication
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
-            ServerTimeManager.init(this)
+        instance = this
+        ServerTimeManager.init(this)
         BaseCalendarWidgetProvider.updateAllWidgets(this)
 
         val filter = IntentFilter().apply {
