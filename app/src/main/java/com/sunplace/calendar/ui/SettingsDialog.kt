@@ -39,6 +39,15 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Verified
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -100,6 +109,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val isEnglish = remember(context) { TranslationHelper.isEnglish(context) }
     var showPatternPicker by remember { mutableStateOf(false) }
+    var showLocaleDebugDialog by remember { mutableStateOf(false) }
 
     val todayBrush = remember(initialColorModeIndex) {
         getTodayCardBrush(initialColorModeIndex)
@@ -547,11 +557,130 @@ fun SettingsScreen(
                                 }
                             }
 
+                            HorizontalDivider(color = dividerColor)
+
+                            val primaryLang = remember(context) {
+                                TranslationHelper.getPrimaryLocale(context).language.lowercase()
+                            }
+                            AboutInfoRow(
+                                icon = Icons.Default.BugReport,
+                                label = "语言调试 (Debug)",
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        Toast.makeText(
+                                            context,
+                                            "primaryLocale.language: \"$primaryLang\"",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        showLocaleDebugDialog = true
+                                    }
+                                    .padding(vertical = 2.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        border = BorderStroke(
+                                            0.8.dp,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = "lang: \"$primaryLang\"",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "查看诊断详情",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
                         }
                     }
                 }
             }
         }
+    }
+
+    if (showLocaleDebugDialog) {
+        val debugText = remember(context) { TranslationHelper.getDebugLocaleInfo(context) }
+        AlertDialog(
+            onDismissRequest = { showLocaleDebugDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.BugReport,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(
+                    text = "语言诊断 (Locale Debug)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = debugText,
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        val clip = ClipData.newPlainText("Locale Debug Info", debugText)
+                        clipboard?.setPrimaryClip(clip)
+                        Toast.makeText(context, "诊断信息已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text("复制信息")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLocaleDebugDialog = false }) {
+                    Text(stringResource(R.string.close_btn))
+                }
+            }
+        )
     }
 }
 

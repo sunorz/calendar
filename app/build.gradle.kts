@@ -63,11 +63,10 @@ android {
     applicationId = "com.sunplace.calendar"
     minSdk = 24
     targetSdk = 36
-    versionCode = 45
+    versionCode = 46
     versionName = if (gitShortHash.isNotEmpty()) "${baseVersionName}_${gitShortHash}" else baseVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    resourceConfigurations += listOf("zh", "zh-rCN", "en")
   }
 
   signingConfigs {

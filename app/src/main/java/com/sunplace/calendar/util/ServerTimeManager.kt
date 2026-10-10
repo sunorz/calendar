@@ -151,7 +151,7 @@ object ServerTimeManager {
                     .putLong(KEY_ELAPSED_REALTIME, currentElapsed)
                     .putLong(KEY_SYSTEM_TIME, currentSystemTime)
                     .putLong(KEY_SERVER_OFFSET, offset)
-                    .apply()
+                    .commit()
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to persist server time anchor", e)
             }

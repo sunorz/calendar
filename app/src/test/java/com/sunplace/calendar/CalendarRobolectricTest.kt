@@ -26,7 +26,10 @@ class CalendarRobolectricTest {
   @org.junit.After
   fun resetState() {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    com.sunplace.calendar.util.ServerTimeManager.markDegradedToSystemTime(context)
+    com.sunplace.calendar.util.ServerTimeManager.resetForTesting()
+    try {
+      context.getSharedPreferences("server_time_prefs", Context.MODE_PRIVATE).edit().clear().commit()
+    } catch (_: Exception) {}
   }
 
   @Test
