@@ -12,25 +12,9 @@ import java.util.Locale
  */
 object TranslationHelper {
 
-    @Volatile
-    var appLanguageOverride: String? = null
-
     fun isEnglish(context: Context? = null): Boolean {
-        val override = appLanguageOverride
-        if (override != null) {
-            return override.equals("en", ignoreCase = true)
-        }
-        if (context != null) {
-            try {
-                val prefs = context.getSharedPreferences("theme_preferences", Context.MODE_PRIVATE)
-                if (prefs.contains("key_app_language")) {
-                    val lang = prefs.getString("key_app_language", "zh") ?: "zh"
-                    appLanguageOverride = lang
-                    return lang.equals("en", ignoreCase = true)
-                }
-            } catch (_: Exception) {}
-        }
-        return Locale.getDefault().language.equals("en", ignoreCase = true)
+        val sysLocale = Locale.getDefault()
+        return !sysLocale.language.equals("zh", ignoreCase = true)
     }
 
     // Official and authoritative translations for 24 Solar Terms (二十四节气 - GB/T 33694-2017)

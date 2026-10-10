@@ -84,7 +84,6 @@ fun SettingsScreen(
     isElderlyMode: Boolean = false,
     showGuangxiSanyuesan: Boolean = true,
     currentTodayPattern: TodayPattern = TodayPattern.DEFAULT,
-    appLanguage: String = "zh",
     currentVersion: String,
     updateAvailable: Boolean,
     remoteVersion: String?,
@@ -93,14 +92,13 @@ fun SettingsScreen(
     initialColorModeIndex: Int = 0,
     onThemeModeChange: (ThemeMode) -> Unit,
     onToggleShowGuangxiSanyuesan: (Boolean) -> Unit,
-    onToggleAppLanguage: (Boolean) -> Unit = {},
     onTodayPatternChange: (TodayPattern) -> Unit = {},
     onDownloadUpdate: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val isEnglish = appLanguage.equals("en", ignoreCase = true)
+    val isEnglish = remember(context) { TranslationHelper.isEnglish(context) }
     var showPatternPicker by remember { mutableStateOf(false) }
 
     val todayBrush = remember(initialColorModeIndex) {
@@ -389,99 +387,6 @@ fun SettingsScreen(
                             onCheckedChange = { onToggleShowGuangxiSanyuesan(it) },
                             modifier = Modifier.testTag("sanyuesan_switch")
                         )
-                    }
-                }
-
-                // 3. Language Preference / 中英文双向切换
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .testTag("language_switch_card"),
-                    shape = RoundedCornerShape(18.dp),
-                    color = sectionCardColor,
-                    border = sectionCardBorder
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier.size(38.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Language,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = stringResource(R.string.language_section_title),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        // 双向切换开关 (Two-way Switch / Segmented Control)
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(3.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(9.dp),
-                                    color = if (!isEnglish) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(9.dp))
-                                        .clickable { if (isEnglish) onToggleAppLanguage(false) }
-                                        .testTag("lang_btn_zh")
-                                ) {
-                                    Text(
-                                        text = "简体中文",
-                                        fontSize = 12.5.sp,
-                                        fontWeight = if (!isEnglish) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (!isEnglish) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(9.dp),
-                                    color = if (isEnglish) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(9.dp))
-                                        .clickable { if (!isEnglish) onToggleAppLanguage(true) }
-                                        .testTag("lang_btn_en")
-                                ) {
-                                    Text(
-                                        text = "en-US",
-                                        fontSize = 12.5.sp,
-                                        fontWeight = if (isEnglish) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isEnglish) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
 

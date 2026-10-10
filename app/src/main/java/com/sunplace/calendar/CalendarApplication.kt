@@ -39,8 +39,7 @@ class CalendarApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        com.sunplace.calendar.data.repository.ThemePreferences(this).applySavedLanguage()
-        ServerTimeManager.init(this)
+            ServerTimeManager.init(this)
         BaseCalendarWidgetProvider.updateAllWidgets(this)
 
         val filter = IntentFilter().apply {

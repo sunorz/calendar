@@ -89,7 +89,6 @@ fun CalendarScreen(
     val downloadProgress by viewModel.downloadProgress.collectAsState()
     val todayPattern by viewModel.todayPattern.collectAsState()
     val selectedDay by viewModel.selectedDay.collectAsState()
-    val appLanguage by viewModel.appLanguage.collectAsState()
 
     BackHandler(enabled = showSettingsDialog) {
         viewModel.closeSettingsDialog()
@@ -134,7 +133,6 @@ fun CalendarScreen(
             isElderlyMode = isElderlyMode,
             showGuangxiSanyuesan = showGuangxiSanyuesan,
             currentTodayPattern = todayPattern,
-            appLanguage = appLanguage,
             currentVersion = viewModel.getAppVersion(),
             updateAvailable = updateAvailable,
             remoteVersion = remoteVersion,
@@ -143,9 +141,7 @@ fun CalendarScreen(
             initialColorModeIndex = viewModel.getTodayColorModeIndex(),
             onThemeModeChange = { viewModel.setThemeMode(it) },
             onToggleShowGuangxiSanyuesan = { viewModel.setShowGuangxiSanyuesan(it) },
-            onToggleAppLanguage = { enabled ->
-                viewModel.setAppLanguage(if (enabled) "en" else "zh")
-            },
+
             onTodayPatternChange = { viewModel.setTodayPattern(it) },
             onDownloadUpdate = { viewModel.downloadAndUpdate() },
             onNavigateBack = { viewModel.closeSettingsDialog() }

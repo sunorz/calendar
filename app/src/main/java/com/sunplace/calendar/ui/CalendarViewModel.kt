@@ -82,7 +82,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     val isElderlyMode: StateFlow<Boolean> = themePreferences.isElderlyMode
     val showGuangxiSanyuesan: StateFlow<Boolean> = themePreferences.showGuangxiSanyuesan
     val todayPattern: StateFlow<TodayPattern> = themePreferences.todayPattern
-    val appLanguage: StateFlow<String> = themePreferences.appLanguage
 
     private val _showSettingsDialog = MutableStateFlow(false)
     val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
@@ -274,15 +273,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         notifyWidgetsUpdated()
     }
 
-    fun setAppLanguage(lang: String) {
-        themePreferences.setAppLanguage(lang)
-        notifyWidgetsUpdated()
-    }
 
-    fun checkSystemLanguageChange() {
-        themePreferences.onSystemConfigurationChanged()
-        notifyWidgetsUpdated()
-    }
 
     fun setElderlyMode(enabled: Boolean) {
         themePreferences.setElderlyMode(enabled)
