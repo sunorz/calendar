@@ -12,3 +12,4 @@
 <li>x86 (32-bit emulators)</li>
 </ul>
 </div>
+<a href="README-zh.md">简体中文</a>
